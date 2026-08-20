@@ -176,9 +176,9 @@ function main() {
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     // Vertex data CPU side
     const positions = new Float32Array([
-        0.0, 0.0, // point 1
+        -0.5, 0.0, // point 1
         0.0, 0.5, // point 2
-        0.7, 0.0  // point 3
+        0.5, 0.0  // point 3
     ]);
     //Feed the vertex data to buffer GPU
     gl.bufferData(
