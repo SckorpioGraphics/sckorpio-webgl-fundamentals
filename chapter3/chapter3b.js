@@ -1,19 +1,15 @@
 /* #############################################################
-CHAPTER 1a: Creating a Basic Triangle
+CHAPTER 1c: 
+- Creating a Basic Rectangle
+- Vertex Data In Pixel space
+- Inverted Y coordinate
 
 Topics:
-- Webgl Canvas
-- Webgl context
-- Vertex Shader
-- Fragment shader
-- Shader program
-- Vertex Buffer
-- Vertex Array
-- Render function
-- drawArrays()
+- Uniforms ( for scrren space data)
+- Pixel space to Clip space math 
+- Inverted Y coordinates
 ###############################################################
 */
-
 
 // =============================================================
 // 1. GLSL Shader Sources 
@@ -25,9 +21,22 @@ Topics:
 // passing postion data in clip space[-1,+1] directly
 const vertexShaderSourceOld =  `
     attribute vec2 a_position;
+    uniform vec2 u_resolution;
 
     void main() {
-        gl_Position = vec4(a_position, 0.0, 1.0);
+        // pixel to [0,1]
+        vec2 zeroToOne = a_position / u_resolution;
+
+        // [-1,1] to [0,2]
+        vec2 zeroToTwo = zeroToOne * 2.0;
+
+        // [0,2] to [-1,1]
+        vec2 clipSpace = zeroToTwo - 1.0;
+
+        // Inver vertical (TopLeft corner= (0,0))
+        vec2 clipSpaceInverted = clipSpace * vec2(1.0,-1.0);
+
+        gl_Position = vec4(clipSpaceInverted, 0.0, 1.0);
     }
 `;
 
@@ -48,9 +57,22 @@ const fragmentShaderSourceOld = `
 // passing postion data in clip space[-1,+1] directly
 const vertexShaderSource =  `#version 300 es
     in vec2 a_position;
+    uniform vec2 u_resolution;
 
     void main() {
-        gl_Position = vec4(a_position, 0.0, 1.0);
+        // pixel to [0,1]
+        vec2 zeroToOne = a_position / u_resolution;
+
+        // [-1,1] to [0,2]
+        vec2 zeroToTwo = zeroToOne * 2.0;
+
+        // [0,2] to [-1,1]
+        vec2 clipSpace = zeroToTwo - 1.0;
+
+        // Inver vertical (TopLeft corner= (0,0))
+        vec2 clipSpaceInverted = clipSpace * vec2(1.0,-1.0);
+
+        gl_Position = vec4(clipSpaceInverted, 0.0, 1.0);
     }
 `;
 
@@ -65,6 +87,8 @@ const fragmentShaderSource = `#version 300 es
         out_Color = vec4(0.39, 0.33, 0.58, 1.0); //PURPLE
     }
 `;
+
+
 
 /**
  * Compiles a GLSL shader.
@@ -163,22 +187,26 @@ function main() {
     // Save Attribute locations
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
     // Future Uniform etc here..
+    const locationUniformResolution = gl.getUniformLocation(program, "u_resolution");
 
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
-
     // OBJECT 1
     // VERTEX BUFFER
-    // create Buffer (vbo: vertex buffer object)
-    var vbo = gl.createBuffer(); 
+    // create Buffer
+    var vbo = gl.createBuffer();
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     // Vertex data CPU side
     const positions = new Float32Array([
-        -0.5, 0.0, // point 1
-        0.0, 0.5, // point 2
-        0.5, 0.0  // point 3
+        10, 20,     // Left Bottom
+        80, 20,     // Right Bottom
+        10, 30,     // Left Top
+
+        10, 30,     // Left Top
+        80, 20,     // Right Bottom
+        80, 30,     // Right Top
     ]);
     //Feed the vertex data to buffer GPU
     gl.bufferData(
@@ -213,7 +241,6 @@ function main() {
         offset
     );
 
-
     // -------------------------------------------------------------
     // 5. RENDER (this will happen every frame)
     // -------------------------------------------------------------
@@ -232,6 +259,8 @@ function main() {
 
         // SHADER------------------------
         gl.useProgram(program);
+        // Pass dynamic canvas resolution to vertex shader uniform
+        gl.uniform2f(locationUniformResolution, gl.canvas.width, gl.canvas.height);
 
         // BUFFER/DATA--------------------
         // bY simply using Vertex Array
@@ -240,7 +269,7 @@ function main() {
         //DRAW CALL------------------------
         const draw_primitiveType = gl.TRIANGLES;
         const draw_offset = 0;
-        const draw_count = 3;
+        const draw_count = 6;
         gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
     }
 

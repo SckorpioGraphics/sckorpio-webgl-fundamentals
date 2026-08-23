@@ -1,0 +1,79 @@
+/* 
+#############################################################
+CHAPTER 1 (BASICS)
+#############################################################
+-------------------------------------------------------------
+CHAPTER 1a: Hello Triangle!
+
+Topics:
+- Webgl Canvas
+- Webgl context
+- Vertex Shader
+- Fragment shader
+- Shader program
+- Vertex Buffer
+- Vertex Array
+- Render function
+- drawArrays()
+
+
+*/
+
+
+/* 
+#############################################################
+CHAPTER 2 (SHADER DATA FLOW)
+#############################################################
+--------------------------------------------------------------
+CHAPTER 2a: Dynamic Buffer
+Topics:
+- Adding a basic UI to manipulate 
+- vertices positions
+--------------------------------------------------------------
+CHAPTER 2b: Uniform 
+
+Topics:
+- Adding a basic UI to manipulate 
+- vertices position
+- uniform color
+--------------------------------------------------------------
+CHAPTER 2c: Varying
+
+Topics:
+- Using Vertex data itself for Vertex Color
+- Adding a basic UI to manipulate 
+- vertices positions
+--------------------------------------------------------------
+CHAPTER 2d: Multiple Buffers
+
+Topics:
+- Using Separate Buffer for Vertex Color
+- Adding a basic UI to manipulate 
+- vertices positions
+- vertices color
+--------------------------------------------------------------
+CHAPTER 2e: Combined Buffer
+
+Topics:
+- Adding a basic UI to manipulate 
+- vertices positions
+- vertices color
+- uniform color
+--------------------------------------------------------------
+CHAPTER 2f: Varying & Uniform together
+
+Topics:
+- Using Combined Buffer for Vertex Color
+- Also use uniform color 
+- Final color as mixed colors
+- Adding a basic UI to manipulate 
+- vertices positions
+- vertices color
+- uniform color
+*/
+
+/* 
+#############################################################
+CHAPTER 3
+#############################################################
+*/

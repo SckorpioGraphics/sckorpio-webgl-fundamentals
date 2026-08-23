@@ -275,7 +275,7 @@ function main() {
         gl.uniform2f(locationUniformResolution, gl.canvas.width, gl.canvas.height);
 
         // BUFFER/DATA--------------------
-        // By simply using Vertex Array
+        // bY simply using Vertex Array
         gl.bindVertexArray(vao);
         // bind the buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, vbo);

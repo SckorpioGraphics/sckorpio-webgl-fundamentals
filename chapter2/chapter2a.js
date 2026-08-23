@@ -1,16 +1,8 @@
 /* #############################################################
-CHAPTER 1a: Creating a Basic Triangle
-
+CHAPTER 2a: Dynamic Buffer
 Topics:
-- Webgl Canvas
-- Webgl context
-- Vertex Shader
-- Fragment shader
-- Shader program
-- Vertex Buffer
-- Vertex Array
-- Render function
-- drawArrays()
+- Adding a basic UI to manipulate 
+- vertices positions
 ###############################################################
 */
 
@@ -18,29 +10,6 @@ Topics:
 // =============================================================
 // 1. GLSL Shader Sources 
 // =============================================================
-
-// OLD WebGL 1.0 Way...
-// -------------------------------------------------------------
-// basic vertex shader
-// passing postion data in clip space[-1,+1] directly
-const vertexShaderSourceOld =  `
-    attribute vec2 a_position;
-
-    void main() {
-        gl_Position = vec4(a_position, 0.0, 1.0);
-    }
-`;
-
-// basic fragment shader
-// using cyan/purple color for the pixel (sckorpio branding)
-const fragmentShaderSourceOld = `
-    precision mediump float;
-
-    void main() {
-        //gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
-        gl_FragColor = vec4(0.39, 0.33, 0.58, 1.0); //PURPLE
-    }
-`;
 
 // NEW WebGL 2.0 Way...
 // -------------------------------------------------------------
@@ -129,6 +98,29 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
   return false;
 }
 
+// =============================================================
+// 0. GUI using.. lil-gui
+// =============================================================
+
+var state = {
+    aX: -0.5,
+    aY: 0.0,
+    bX: 0.5,
+    Qy: 0.0,
+    Cx: 0.0,
+    Ry: 0.5,
+};
+
+function setupGUI(canvas, render) {
+    const gui = new lil.GUI();
+    const transformFolder = gui.addFolder("Transform");
+    transformFolder.add(state, "aX", -1, 1).name("aX").onChange(render);
+    transformFolder.add(state, "aY", -1, 1).name("aY").onChange(render);
+    transformFolder.add(state, "bX", -1, 1).name("bX").onChange(render);
+    transformFolder.add(state, "Qy", -1, 1).name("Qy").onChange(render);
+    transformFolder.add(state, "Cx", -1, 1).name("Cx").onChange(render);
+    transformFolder.add(state, "Ry", -1, 1).name("Ry").onChange(render);
+}
 
 // =============================================================
 // 3. Main Application Entry Point
@@ -152,6 +144,9 @@ function main() {
         return;
     }
 
+    // UI setup
+    setupGUI(canvas,render);
+
     // -------------------------------------------------------------
     // 2. SHADERS
     // -------------------------------------------------------------
@@ -174,18 +169,7 @@ function main() {
     var vbo = gl.createBuffer(); 
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    // Vertex data CPU side
-    const positions = new Float32Array([
-        -0.5, 0.0, // point 1
-        0.0, 0.5, // point 2
-        0.5, 0.0  // point 3
-    ]);
-    //Feed the vertex data to buffer GPU
-    gl.bufferData(
-        gl.ARRAY_BUFFER, // bind point
-        positions,       // cpu data
-        gl.STATIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
-    );
+    // Data will be taken from UI later...
 
     // -------------------------------------------------------------
     // 4. VERTEX ARRAY
@@ -236,6 +220,19 @@ function main() {
         // BUFFER/DATA--------------------
         // bY simply using Vertex Array
         gl.bindVertexArray(vao);
+
+        // Vertex data CPU side
+        const positions = new Float32Array([
+            state.aX, state.aY, // point 1
+            state.bX, state.Qy, // point 2
+            state.Cx, state.Ry  // point 3
+        ]);
+        //Feed the vertex data to buffer GPU
+        gl.bufferData(
+            gl.ARRAY_BUFFER, // bind point
+            positions,       // cpu data
+            gl.STATIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
+        );
 
         //DRAW CALL------------------------
         const draw_primitiveType = gl.TRIANGLES;

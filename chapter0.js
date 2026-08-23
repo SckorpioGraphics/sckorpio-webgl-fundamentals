@@ -1,44 +1,16 @@
-/* #############################################################
-CHAPTER 1c: 
-- Creating a a lot of Random Basic Rectangle
-- Vertex Data In Pixel space
-- Inverted Y coordinate
-
-Topics:
-- Uniforms ( for scrren space data)
-- Pixel space to Clip space math 
-- Inverted Y coordinates
-- Reusing the same buffer for creating mutlipe rectangles
-- RequestAnimationFrame() for renderloop
-###############################################################
-*/
-
 // =============================================================
 // 1. GLSL Shader Sources 
 // =============================================================
 
 // OLD WebGL 1.0 Way...
-// -------------------------------------------------------------
+// ##############################################################
 // basic vertex shader
 // passing postion data in clip space[-1,+1] directly
 const vertexShaderSourceOld =  `
     attribute vec2 a_position;
-    uniform vec2 u_resolution;
 
     void main() {
-        // pixel to [0,1]
-        vec2 zeroToOne = a_position / u_resolution;
-
-        // [-1,1] to [0,2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
-
-        // [0,2] to [-1,1]
-        vec2 clipSpace = zeroToTwo - 1.0;
-
-        // Inver vertical (TopLeft corner= (0,0))
-        vec2 clipSpaceInverted = clipSpace * vec2(1.0,-1.0);
-
-        gl_Position = vec4(clipSpaceInverted, 0.0, 1.0);
+        gl_Position = vec4(a_position, 0.0, 1.0);
     }
 `;
 
@@ -54,27 +26,14 @@ const fragmentShaderSourceOld = `
 `;
 
 // NEW WebGL 2.0 Way...
-// -------------------------------------------------------------
+// ##############################################################
 // basic vertex shader
 // passing postion data in clip space[-1,+1] directly
 const vertexShaderSource =  `#version 300 es
     in vec2 a_position;
-    uniform vec2 u_resolution;
 
     void main() {
-        // pixel to [0,1]
-        vec2 zeroToOne = a_position / u_resolution;
-
-        // [-1,1] to [0,2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
-
-        // [0,2] to [-1,1]
-        vec2 clipSpace = zeroToTwo - 1.0;
-
-        // Inver vertical (TopLeft corner= (0,0))
-        vec2 clipSpaceInverted = clipSpace * vec2(1.0,-1.0);
-
-        gl_Position = vec4(clipSpaceInverted, 0.0, 1.0);
+        gl_Position = vec4(a_position, 0.0, 1.0);
     }
 `;
 
@@ -82,17 +41,13 @@ const vertexShaderSource =  `#version 300 es
 // using cyan/purple color for the pixel (sckorpio branding)
 const fragmentShaderSource = `#version 300 es
     precision mediump float;
-    out vec4 out_color;
-    uniform vec4 u_color; 
+    out vec4 out_Color;
 
     void main() {
         //out_Color = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
-        //out_Color = vec4(0.39, 0.33, 0.58, 1.0); //PURPLE
-        out_color = u_color;
+        out_Color = vec4(0.39, 0.33, 0.58, 1.0); //PURPLE
     }
 `;
-
-
 
 /**
  * Compiles a GLSL shader.
@@ -157,29 +112,6 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
   return false;
 }
 
-// Returns a random integer from 0 to range - 1.
-function randomInt(range) {
-  return Math.floor(Math.random() * range);
-}
-
-// Fill the buffer with the values that define a rectangle.
-function setRectangle(gl, x, y, width, height) {
-  var x1 = x;
-  var x2 = x + width;
-  var y1 = y;
-  var y2 = y + height;
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-     x1, y1,
-     x2, y1,
-     x1, y2,
-     x1, y2,
-     x2, y1,
-     x2, y2,
-  ]), gl.STATIC_DRAW);
-}
-
-
-
 
 // =============================================================
 // 3. Main Application Entry Point
@@ -213,20 +145,30 @@ function main() {
 
     // Save Attribute locations
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
-    // Save Uniform locations
-    const locationUniformResolution = gl.getUniformLocation(program, "u_resolution");
-    const locationUniformColor = gl.getUniformLocation(program, "u_color");
+    // Future Uniform etc here..
 
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
+
     // OBJECT 1
     // VERTEX BUFFER
-    // create Buffer
-    var vbo = gl.createBuffer();
+    // create Buffer (vbo: vertex buffer object)
+    var vbo = gl.createBuffer(); 
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    // PASS NO DATA FOR NOW
+    // Vertex data CPU side
+    const positions = new Float32Array([
+        0.0, 0.0, // point 1
+        0.0, 0.5, // point 2
+        0.7, 0.0  // point 3
+    ]);
+    //Feed the vertex data to buffer GPU
+    gl.bufferData(
+        gl.ARRAY_BUFFER, // bind point
+        positions,       // cpu data
+        gl.STATIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
+    );
 
     // -------------------------------------------------------------
     // 4. VERTEX ARRAY
@@ -254,6 +196,7 @@ function main() {
         offset
     );
 
+
     // -------------------------------------------------------------
     // 5. RENDER (this will happen every frame)
     // -------------------------------------------------------------
@@ -272,37 +215,20 @@ function main() {
 
         // SHADER------------------------
         gl.useProgram(program);
-        // Pass dynamic canvas resolution to vertex shader uniform
-        gl.uniform2f(locationUniformResolution, gl.canvas.width, gl.canvas.height);
 
         // BUFFER/DATA--------------------
-        // By simply using Vertex Array
+        // bY simply using Vertex Array
         gl.bindVertexArray(vao);
-        // bind the buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 
-         //DRAW CALL------------------------
-        // draw 50 random rectangles in random colors
-        for (var ii = 0; ii < 50; ++ii) {
-            // Put a rectangle in the position buffer
-            setRectangle(gl, randomInt(300), randomInt(300), randomInt(300), randomInt(300));
-
-            // Set a random color.
-            gl.uniform4f(locationUniformColor, Math.random(), Math.random(), Math.random(), 1);
-
-            // Draw the rectangle.
-            const draw_primitiveType = gl.TRIANGLES;
-            const draw_offset = 0;
-            const draw_count = 6;
-            gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
-        }
-
-        // Request next animation frame
-        requestAnimationFrame(render);
+        //DRAW CALL------------------------
+        const draw_primitiveType = gl.TRIANGLES;
+        const draw_offset = 0;
+        const draw_count = 3;
+        gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
     }
 
-    // Request next animation frame
-    requestAnimationFrame(render);
+    // Execute first render call
+    render();
 
     // Listen for Window resize
     // when window get resized ... we render again

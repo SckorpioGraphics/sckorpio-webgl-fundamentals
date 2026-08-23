@@ -3,7 +3,7 @@ CHAPTER 3: 2D Transformations
 
 Topics:
 - Making a colored triangle
-- By passing the color as uniform
+- bY passing the color as uniform
 
 ALSO
 - 3x3 transformation matrices
