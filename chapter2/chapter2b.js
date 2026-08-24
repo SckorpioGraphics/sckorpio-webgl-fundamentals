@@ -109,8 +109,8 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 var state = {
     // Vertices
     aX: -0.5, aY: 0.0,
-    bX: 0.5, Qy: 0.0,
-    Cx: 0.0, Ry: 0.5,
+    bX: 0.5, bY: 0.0,
+    cX: 0.0, cY: 0.5,
     // Color
     R: 0.39 , G: 0.33, B: 0.58
 };
@@ -121,10 +121,9 @@ function setupGUI(canvas, render) {
     transformFolder.add(state, "aX", -1, 1).name("aX").onChange(render);
     transformFolder.add(state, "aY", -1, 1).name("aY").onChange(render);
     transformFolder.add(state, "bX", -1, 1).name("bX").onChange(render);
-    transformFolder.add(state, "Qy", -1, 1).name("Qy").onChange(render);
-    transformFolder.add(state, "Cx", -1, 1).name("Cx").onChange(render);
-    transformFolder.add(state, "Ry", -1, 1).name("Ry").onChange(render);
-
+    transformFolder.add(state, "bY", -1, 1).name("bY").onChange(render);
+    transformFolder.add(state, "cX", -1, 1).name("cX").onChange(render);
+    transformFolder.add(state, "cY", -1, 1).name("cY").onChange(render);
     const colorFolder = gui.addFolder("Color");
     colorFolder.add(state, "R", 0, 1).name("R").onChange(render);
     colorFolder.add(state, "G", 0, 1).name("G").onChange(render);
@@ -238,8 +237,8 @@ function main() {
         const positions = new Float32Array([
             // Vertices
             state.aX, state.aY, // point 1
-            state.bX, state.Qy, // point 2
-            state.Cx, state.Ry  // point 3
+            state.bX, state.bY, // point 2
+            state.cX, state.cY  // point 3
         ]);
         //Feed the vertex data to buffer GPU
         gl.bufferData(
