@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 3a: Dynamic Buffer
+CHAPTER 4a: Dynamic Buffer
 Topics:
 - Adding a basic UI to manipulate 
 - vertices positions

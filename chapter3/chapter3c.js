@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 2c: Learning Topolgy LINES
+CHAPTER 3c: Learning Topolgy LINES
 Topics:
 - making Line zig-zag connected
 ###############################################################

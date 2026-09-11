@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 2e: Learning Topolgy TRAINGLE_FAN
+CHAPTER 3h: Learning Topolgy TRAINGLE_FAN
 Topics:
 - making a filled polygon hexagon
 ###############################################################

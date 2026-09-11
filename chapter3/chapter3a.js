@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 2a: Learning Topolgy POINTS
+CHAPTER 3a: Learning Topolgy POINTS
 Topics:
 - making points
 ###############################################################

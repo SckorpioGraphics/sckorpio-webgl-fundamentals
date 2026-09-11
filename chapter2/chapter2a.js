@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 1b: Creating multiple Triangles
+CHAPTER 2a: Creating multiple Triangles
 
 Topics:
 - Multiple triangles in single draw call

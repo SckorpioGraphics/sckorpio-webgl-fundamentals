@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 5c: 
+CHAPTER 6c: 
 - Creating a a lot of Random Basic Rectangle
 - Vertex Data In Pixel space
 - Inverted Y coordinate

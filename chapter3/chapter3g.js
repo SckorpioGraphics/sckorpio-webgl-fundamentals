@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 2h: Learning Topolgy TRIANGLES_STRIP
+CHAPTER 3g: Learning Topolgy TRIANGLES_STRIP
 Topics:
 - making strip of triangles
 ###############################################################

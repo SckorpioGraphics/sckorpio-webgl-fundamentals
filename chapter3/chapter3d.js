@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 2d: Learning Topolgy LINES_LOOP
+CHAPTER 3d: Learning Topolgy LINES_LOOP
 Topics:
 - making Lines zig-zig end point connected
 ###############################################################

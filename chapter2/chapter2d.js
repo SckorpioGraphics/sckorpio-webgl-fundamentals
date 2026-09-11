@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 1e: Making a Geometry using triangles (F letter)
+CHAPTER 2d: Making a Geometry using triangles (F letter)
 Topics:
 - Letter F using Triangles
 - Using Index Buffer

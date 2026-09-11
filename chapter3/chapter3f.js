@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 2g: Learning Topolgy TRIANGLES
+CHAPTER 3f: Learning Topolgy TRIANGLES
 Topics:
 - making multiple triangles
 ###############################################################

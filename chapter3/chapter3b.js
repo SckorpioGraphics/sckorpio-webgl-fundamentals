@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 2b: Learning Topolgy LINES
+CHAPTER 3b: Learning Topolgy LINES
 Topics:
 - making Lines parallel
 ###############################################################

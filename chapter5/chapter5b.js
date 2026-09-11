@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 4b: Varying
+CHAPTER 5b: Varying
 
 Topics:
 - Using Vertex data itself for Vertex Color

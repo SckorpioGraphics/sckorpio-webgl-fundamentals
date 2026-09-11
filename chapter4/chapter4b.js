@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 3b: Dynamic Buffer
+CHAPTER 4b: Dynamic Buffer
 Topics:
 - Making a rectangle
 - Adding a basic UI to manipulate  

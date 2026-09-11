@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 1d: Introducing Index Buffer
+CHAPTER 2c: Introducing Index Buffer
 
 Topics:
 - Rectangle using Triangles

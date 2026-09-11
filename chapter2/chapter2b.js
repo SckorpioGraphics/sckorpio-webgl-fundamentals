@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 1c: Creating a Rectangle using Triangles
+CHAPTER 2b: Creating a Rectangle using Triangles
 
 Topics:
 - Rectangle using Triangles

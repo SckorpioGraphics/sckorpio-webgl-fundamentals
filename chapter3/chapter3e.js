@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 2e: Learning Topolgy LINE_LOOP
+CHAPTER 3e: Learning Topolgy LINE_LOOP
 Topics:
 - making a polygon hexagon
 ###############################################################

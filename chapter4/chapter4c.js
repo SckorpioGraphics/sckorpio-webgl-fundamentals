@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 3c: Learning Topolgy LINE_LOOP
+CHAPTER 4c: Learning Topolgy LINE_LOOP
 Topics:
 - making a Polygon to Circle
 ###############################################################

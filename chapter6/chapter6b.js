@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 5b: 
+CHAPTER 6b: 
 - Creating a Basic Rectangle
 - Vertex Data In Pixel space
 - Inverted Y coordinate

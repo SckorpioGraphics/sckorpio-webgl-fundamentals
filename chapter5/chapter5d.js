@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 4d: Combined Buffer
+CHAPTER 5d: Combined Buffer
 
 Topics:
 - Adding a basic UI to manipulate 
