@@ -1,167 +1,116 @@
 SCKORPIO WEBGL FUNDAMENTALS
 ==========================
 
-Project overview
-----------------
-This repository is a practical learning path for WebGL 2.0 and shader-based graphics. The goal is to understand how the GPU pipeline works, how buffers and shader data flow, how geometry is built, and how transformations are used to render real-time visuals.
+CURRENT CHAPTER INDEX
+---------------------
+This index reflects the files and folders currently present in the repository.
 
-The examples are written in JavaScript and use the WebGL 2 API with GLSL ES 3.00.
-
-
-CHAPTER 0
----------
+ROOT
+----
 chapter0.js
-- Initial WebGL setup and reference code
-- Basic shader boilerplate
-- Early triangle example used as a starting template
+- standalone setup and reference code
+- basic WebGL boilerplate
+- starting point for the project
 
-
-CHAPTER 1 - Geometry Basics
----------------------------
+CHAPTER 1
+---------
 Folder: chapter1/
 
-chapter1a.js - Basic triangle
+chapter1a.js - Creating a Basic Triangle
 - WebGL canvas setup
-- shader compilation and linking
-- vertex buffer and vertex array object
-- basic drawArrays() rendering
+- shader creation
+- vertex buffer and VAO
+- first draw call
 
-chapter1b.js - Multiple triangles
-- multiple triangular shapes in a single draw call
-- geometry layout and vertex reuse
-
-chapter1c.js - Rectangle from triangles
-- constructing a quad using two triangles
-- understanding polygon creation
-
-chapter1d.js - Index buffer introduction
-- using an element array buffer
-- drawElements() and vertex indexing
-
-chapter1e.js - Complex geometry (letter F)
-- building a custom shape from triangles
-- reusing vertices and more advanced geometry composition
-
-Focus: vertex data, primitive assembly, buffers, VAOs, and the basics of drawing geometry.
-
-
-CHAPTER 2 - Primitive Topologies
---------------------------------
+CHAPTER 2
+---------
 Folder: chapter2/
 
-chapter2a.js - POINTS
-- rendering individual points
-- gl_PointSize and point-based primitives
+chapter2a.js - Multiple Triangles
+chapter2b.js - Rectangle using Triangles
+chapter2c.js - Index Buffer
+chapter2d.js - Letter F geometry
 
-chapter2b.js - LINES
-- simple line rendering
-- parallel line patterns
+Focus:
+- geometry creation
+- triangle composition
+- indexed rendering
+- reuse of vertices
 
-chapter2c.js - Connected zig-zag lines
-- line strips / chained vertex connections
-
-chapter2d.js - LINE_LOOP
-- repeated end-to-end connections
-- closed line loop concept
-
-chapter2e.js - Polygon / hexagon outline
-- polygon-style line drawing
-
-chapter2f.js - TRIANGLES
-- triangle primitive topology
-
-chapter2g.js - TRIANGLE_STRIP
-- connected triangles sharing edges
-
-chapter2h.js - TRIANGLE_FAN
-- fan-based triangle construction
-
-Focus: how WebGL draws different primitive types and how topology changes the final shape.
-
-
-CHAPTER 3 - Dynamic Buffers and Interactive Data
---------------------------------------------------
+CHAPTER 3
+---------
 Folder: chapter3/
 
-chapter3a.js - Dynamic buffer / vertex manipulation
-- updating geometry at runtime
-- UI-driven shape editing
+chapter3a.js - POINTS
+chapter3b.js - LINES
+chapter3c.js - additional line pattern
+chapter3d.js - LINE_LOOP
+chapter3e.js - LINE_LOOP / polygon-style drawing
+chapter3f.js - TRIANGLES
+chapter3g.js - TRIANGLE_STRIP
+chapter3h.js - TRIANGLE_FAN
 
-chapter3b.js - Dynamic buffer continuation
-- further interactive editing of vertex values
+Focus:
+- primitive topologies
+- different drawing modes
+- connected line and triangle structures
 
-chapter3c.js - Additional topology-based experiments
-- learning by modifying how data is displayed
-
-chapter3d.js - More dynamic visual examples
-- iterative practice with data-driven geometry
-
-Focus: updating GPU data live, interactive experimentation, and changing vertex positions over time.
-
-
-CHAPTER 4 - Shader Data Flow
-----------------------------
+CHAPTER 4
+---------
 Folder: chapter4/
 
-chapter4a.js - Uniform color
-- passing a uniform value into the fragment shader
-- controlling color from JavaScript
+chapter4a.js - Dynamic Buffer
+chapter4b.js - Dynamic Buffer
+chapter4c.js - topology/data experiment
+chapter4d.js - interactive drawing experiment
 
-chapter4b.js - Varying color
-- passing interpolated vertex data to the fragment shader
+Focus:
+- live data updates
+- vertex manipulation
+- exploring buffer behavior
 
-chapter4c.js - Multiple buffers
-- separating position and color buffers
-
-chapter4d.js - Combined buffer
-- storing position and color together in one array
-
-chapter4e.js - Varying + Uniform together
-- combining per-vertex color and global uniform color
-- final output mixing shader data
-
-Focus: how vertex attributes, varying values, and uniforms work together in the shader pipeline.
-
-
-CHAPTER 5 - Render Loop and Transformations
--------------------------------------------
+CHAPTER 5
+---------
 Folder: chapter5/
 
-chapter5.js - Render loop fundamentals
-- clearing the screen
-- drawing every frame
-- setting up the animation loop
+chapter5a.js - Uniform color
+chapter5b.js - Varying color
+chapter5c.js - Multiple Buffers
+chapter5d.js - Combined Buffer
+chapter5e.js - Varying + Uniform together
 
-chapter5a.js to chapter5e.js - Transformations and matrices
-- translation
-- rotation
-- scaling
-- matrix multiplication
-- 2D transform logic
-- gl-matrix style pipeline patterns
-
-chapter5e.js - 2D Transformations
-- model, view, and projection-style matrix workflow
-- GUI-controlled interactions for transform values
-
-Focus: animation, 2D transforms, matrix math, and building a more engine-like rendering setup.
-
+Focus:
+- uniforms
+- varying values
+- buffer organization
+- shader data flow
 
 CHAPTER 6
 ---------
 Folder: chapter6/
-- reserved for future advanced topics
-- currently empty / not yet implemented
 
+chapter6a.js - render loop work
+chapter6b.js - render loop continuation
+chapter6c.js - render loop exercise
+chapter6d.js - transformation setup
+chapter6e.js - 2D Transformations
+
+Focus:
+- render loop
+- matrix and transform math
+- animation fundamentals
+
+CHAPTER EXTRA
+-------------
+Folder: chapterExtra/
+
+chapterExtra1.js - extra experiments / bonus work
+
+CHAPTER 7
+---------
+Folder: chapter7/
+- empty placeholder for future lessons
 
 PROJECT SUMMARY
 ---------------
-This project moves from the most basic WebGL concepts into more advanced renderer-like thinking:
-- geometry creation
-- primitive drawing modes
-- GPU data flow
-- uniforms and varying values
-- dynamic updates
-- transforms and animation
-
-The repository is designed as a learning progression, leading toward a more complete understanding of graphics pipelines and renderer architecture.
+This repository is structured as a practical learning progression in WebGL fundamentals, starting from the first triangle and progressing through geometry, topology, shader data flow, and transforms.

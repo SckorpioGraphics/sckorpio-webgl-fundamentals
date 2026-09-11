@@ -1,40 +1,82 @@
 # WebGL Fundamentals
 
-A hands-on journey from **the first triangle to graphics engine architecture**.
-<img width="400" height="400" alt="Screenshot 2026-08-20 at 6 28 18 PM" src="https://github.com/user-attachments/assets/c3fdcc9c-2eea-4c42-9b7d-a489518d3424" />
-<img width="400" height="400" alt="Screenshot 2026-08-20 at 6 30 12 PM" src="https://github.com/user-attachments/assets/639b01ff-4dc7-43a2-828f-9049d4bf1c0c" />
+A practical WebGL learning repo focused on the fundamentals of drawing, shaders, geometry, and real-time graphics programming.
 
-Built with **WebGL 2.0 + GLSL ES 3.00**, this series explores the fundamentals behind real-time graphics — step by step, from GPU resources and shaders to transformations, 3D rendering, lighting, materials, optimization, and eventually renderer/engine architecture.
+## Current project structure
 
-### Journey
+This repository currently contains the following chapter groups:
 
-**WebGL Basics → Buffers & VAOs → Shaders → Coordinates → Transformations → 3D → Textures → Camera & Depth → Lighting → Materials → Advanced Rendering → GPU Programming → Renderer → Engine**
+- Root: `chapter0.js` — starter WebGL boilerplate / reference setup
+- `chapter1/` — first triangle and basic WebGL setup
+- `chapter2/` — geometry basics and index buffer work
+- `chapter3/` — primitive topology experiments
+- `chapter4/` — dynamic buffer and editing examples
+- `chapter5/` — shader data flow and uniforms/varying examples
+- `chapter6/` — render loop and transformation work
+- `chapterExtra/` — extra experiments / bonus examples
+- `chapter7/` — empty placeholder for future work
 
-### Current
+## Chapter overview
 
-- WebGL 2.0 fundamentals
-- VBOs & VAOs
-- GLSL shaders
-- Pixel-space rendering
-- Render loops & animation
-- 2D transformations
-- `gl-matrix`
-- `lil-gui`
+### chapter1
+- `chapter1a.js` — Creating a Basic Triangle
 
-### Future
+### chapter2
+- `chapter2a.js` — Multiple Triangles
+- `chapter2b.js` — Rectangle using Triangles
+- `chapter2c.js` — Index Buffer
+- `chapter2d.js` — Letter F geometry
 
-- 3D & cameras
-- Textures & materials
-- Lighting & shadows
-- Framebuffers & post-processing
-- Instancing & GPU techniques
-- Performance & optimization
-- Renderer architecture
-- Graphics engine fundamentals
+### chapter3
+- `chapter3a.js` — POINTS
+- `chapter3b.js` — LINES
+- `chapter3c.js` — LINES (alternate pattern)
+- `chapter3d.js` — LINE_LOOP
+- `chapter3e.js` — LINE_LOOP / polygon-style drawing
+- `chapter3f.js` — TRIANGLES
+- `chapter3g.js` — TRIANGLE_STRIP
+- `chapter3h.js` — TRIANGLE_FAN
 
-### Philosophy
+### chapter4
+- `chapter4a.js` — Dynamic Buffer
+- `chapter4b.js` — Dynamic Buffer
+- `chapter4c.js` — Topology experiments
+- `chapter4d.js` — More topology/data-driven experiments
 
-> **Understand the pixels. Build the renderer. Understand the sckorpio engine.**
+### chapter5
+- `chapter5a.js` — Uniform color
+- `chapter5b.js` — Varying color
+- `chapter5c.js` — Multiple buffers
+- `chapter5d.js` — Combined buffer
+- `chapter5e.js` — Varying + Uniform together
 
-Part of **Sckorpio Graphics**.
+### chapter6
+- `chapter6a.js` to `chapter6e.js` — render loop and 2D transformation work
+
+### chapterExtra
+- `chapterExtra1.js` — extra rendering experiments
+
+## Learning flow
+
+This project is organized as a step-by-step path:
+
+1. Create a first triangle
+2. Build geometry with triangles and indices
+3. Explore primitive topologies
+4. Make data dynamic and interactive
+5. Pass data through shaders using uniforms and varying values
+6. Add render loops and transforms
+7. Extend toward more advanced graphics concepts
+
+## Tech focus
+
+- WebGL 2.0
+- GLSL ES 3.00
+- Buffers, VAOs, and shaders
+- Geometry assembly and index drawing
+- Primitive modes and topology
+- Shader data flow
+- Matrix-based 2D transforms
+
+Part of the Sckorpio Graphics learning series.
 
