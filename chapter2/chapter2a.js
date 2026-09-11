@@ -106,20 +106,29 @@ var state = {
     aX: -0.5,
     aY: 0.0,
     bX: 0.5,
-    Qy: 0.0,
-    Cx: 0.0,
-    Ry: 0.5,
+    bY: 0.0,
+    cX: 0.0,
+    cY: 0.5,
 };
 
-function setupGUI(canvas, render) {
+function setupGUI(render) {
     const gui = new lil.GUI();
-    const transformFolder = gui.addFolder("Transform");
-    transformFolder.add(state, "aX", -1, 1).name("aX").onChange(render);
-    transformFolder.add(state, "aY", -1, 1).name("aY").onChange(render);
-    transformFolder.add(state, "bX", -1, 1).name("bX").onChange(render);
-    transformFolder.add(state, "Qy", -1, 1).name("Qy").onChange(render);
-    transformFolder.add(state, "Cx", -1, 1).name("Cx").onChange(render);
-    transformFolder.add(state, "Ry", -1, 1).name("Ry").onChange(render);
+    const vertexFolder = gui.addFolder("Vertex Positions");
+
+    // Point A
+    const pointAFolder = vertexFolder.addFolder("Point A");
+    pointAFolder.add(state, "aX", -1, 1).name("X").onChange(render);
+    pointAFolder.add(state, "aY", -1, 1).name("Y").onChange(render);
+
+    // Point B
+    const pointBFolder = vertexFolder.addFolder("Point B");
+    pointBFolder.add(state, "bX", -1, 1).name("X").onChange(render);
+    pointBFolder.add(state, "bY", -1, 1).name("Y").onChange(render);
+
+    // Point C
+    const pointCFolder = vertexFolder.addFolder("Point C");
+    pointCFolder.add(state, "cX", -1, 1).name("X").onChange(render);
+    pointCFolder.add(state, "cY", -1, 1).name("Y").onChange(render);
 }
 
 // =============================================================
@@ -145,7 +154,7 @@ function main() {
     }
 
     // UI setup
-    setupGUI(canvas,render);
+    setupGUI(render);
 
     // -------------------------------------------------------------
     // 2. SHADERS
@@ -224,14 +233,14 @@ function main() {
         // Vertex data CPU side
         const positions = new Float32Array([
             state.aX, state.aY, // point 1
-            state.bX, state.Qy, // point 2
-            state.Cx, state.Ry  // point 3
+            state.bX, state.bY, // point 2
+            state.cX, state.cY  // point 3
         ]);
         //Feed the vertex data to buffer GPU
         gl.bufferData(
             gl.ARRAY_BUFFER, // bind point
             positions,       // cpu data
-            gl.STATIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
+            gl.DYNAMIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
         );
 
         //DRAW CALL------------------------

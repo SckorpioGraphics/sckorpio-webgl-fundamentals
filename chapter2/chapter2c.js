@@ -113,15 +113,24 @@ var state = {
     cX: 0.0,  cY: 0.5,
 };
 
-function setupGUI(canvas, render) {
+function setupGUI(render) {
     const gui = new lil.GUI();
-    const transformFolder = gui.addFolder("Vertices");
-    transformFolder.add(state, "aX", -1, 1).name("aX").onChange(render);
-    transformFolder.add(state, "aY", -1, 1).name("aY").onChange(render);
-    transformFolder.add(state, "bX", -1, 1).name("bX").onChange(render);
-    transformFolder.add(state, "bY", -1, 1).name("bY").onChange(render);
-    transformFolder.add(state, "cX", -1, 1).name("cX").onChange(render);
-    transformFolder.add(state, "cY", -1, 1).name("cY").onChange(render);
+    const vertexFolder = gui.addFolder("Vertex Positions");
+
+    // Point A
+    const pointAFolder = vertexFolder.addFolder("Point A");
+    pointAFolder.add(state, "aX", -1, 1).name("X").onChange(render);
+    pointAFolder.add(state, "aY", -1, 1).name("Y").onChange(render);
+
+    // Point B
+    const pointBFolder = vertexFolder.addFolder("Point B");
+    pointBFolder.add(state, "bX", -1, 1).name("X").onChange(render);
+    pointBFolder.add(state, "bY", -1, 1).name("Y").onChange(render);
+
+    // Point C
+    const pointCFolder = vertexFolder.addFolder("Point C");
+    pointCFolder.add(state, "cX", -1, 1).name("X").onChange(render);
+    pointCFolder.add(state, "cY", -1, 1).name("Y").onChange(render);
 }
 
 // =============================================================
@@ -147,7 +156,7 @@ function main() {
     }
 
     // UI setup
-    setupGUI(canvas,render);
+    setupGUI(render);
 
     // -------------------------------------------------------------
     // 2. SHADERS
@@ -238,7 +247,7 @@ function main() {
         gl.bufferData(
             gl.ARRAY_BUFFER, // bind point
             positions,       // cpu data
-            gl.STATIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
+            gl.DYNAMIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
         );
 
         //DRAW CALL------------------------
