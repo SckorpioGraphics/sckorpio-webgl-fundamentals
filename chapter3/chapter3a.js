@@ -1,53 +1,15 @@
 /* #############################################################
-CHAPTER 1b: 
-- Creating a Basic Rectangle
-- Vertex Data In Pixel space
-
+CHAPTER 2a: Dynamic Buffer
 Topics:
-- Uniforms ( for scrren space data)
-- Pixel space to Clip space math 
+- Adding a basic UI to manipulate 
+- vertices positions
 ###############################################################
 */
+
 
 // =============================================================
 // 1. GLSL Shader Sources 
 // =============================================================
-
-// OLD WebGL 1.0 Way...
-// -------------------------------------------------------------
-// basic vertex shader
-// passing postion data in clip space[-1,+1] directly
-const vertexShaderSourceOld =  `
-    attribute vec2 a_position;
-    uniform vec2 u_resolution;
-
-    void main() {
-        // pixel to [0,1]
-        vec2 zeroToOne = a_position / u_resolution;
-
-        // [-1,1] to [0,2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
-
-        // [0,2] to [-1,1]
-        vec2 clipSpace = zeroToTwo - 1.0;
-
-        // Inver vertical (TopLeft corner= (0,0))
-        vec2 clipSpaceInverted = clipSpace * vec2(1.0,-1.0);
-
-        gl_Position = vec4(clipSpaceInverted, 0.0, 1.0);
-    }
-`;
-
-// basic fragment shader
-// using cyan/purple color for the pixel (sckorpio branding)
-const fragmentShaderSourceOld = `
-    precision mediump float;
-
-    void main() {
-        //gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
-        gl_FragColor = vec4(0.39, 0.33, 0.58, 1.0); //PURPLE
-    }
-`;
 
 // NEW WebGL 2.0 Way...
 // -------------------------------------------------------------
@@ -55,19 +17,9 @@ const fragmentShaderSourceOld = `
 // passing postion data in clip space[-1,+1] directly
 const vertexShaderSource =  `#version 300 es
     in vec2 a_position;
-    uniform vec2 u_resolution;
 
     void main() {
-        // pixel to [0,1]
-        vec2 zeroToOne = a_position / u_resolution;
-
-        // [-1,1] to [0,2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
-
-        // [0,2] to [-1,1]
-        vec2 clipSpace = zeroToTwo - 1.0;
-
-        gl_Position = vec4(clipSpace, 0.0, 1.0);
+        gl_Position = vec4(a_position, 0.0, 1.0);
     }
 `;
 
@@ -146,6 +98,38 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
   return false;
 }
 
+// =============================================================
+// 0. GUI using.. lil-gui
+// =============================================================
+
+var state = {
+    aX: -0.5,
+    aY: 0.0,
+    bX: 0.5,
+    bY: 0.0,
+    cX: 0.0,
+    cY: 0.5,
+};
+
+function setupGUI(render) {
+    const gui = new lil.GUI();
+    const vertexFolder = gui.addFolder("Vertex Positions");
+
+    // Point A
+    const pointAFolder = vertexFolder.addFolder("Point A");
+    pointAFolder.add(state, "aX", -1, 1).name("X").onChange(render);
+    pointAFolder.add(state, "aY", -1, 1).name("Y").onChange(render);
+
+    // Point B
+    const pointBFolder = vertexFolder.addFolder("Point B");
+    pointBFolder.add(state, "bX", -1, 1).name("X").onChange(render);
+    pointBFolder.add(state, "bY", -1, 1).name("Y").onChange(render);
+
+    // Point C
+    const pointCFolder = vertexFolder.addFolder("Point C");
+    pointCFolder.add(state, "cX", -1, 1).name("X").onChange(render);
+    pointCFolder.add(state, "cY", -1, 1).name("Y").onChange(render);
+}
 
 // =============================================================
 // 3. Main Application Entry Point
@@ -169,6 +153,9 @@ function main() {
         return;
     }
 
+    // UI setup
+    setupGUI(render);
+
     // -------------------------------------------------------------
     // 2. SHADERS
     // -------------------------------------------------------------
@@ -180,33 +167,18 @@ function main() {
     // Save Attribute locations
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
     // Future Uniform etc here..
-    const locationUniformResolution = gl.getUniformLocation(program, "u_resolution");
 
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
+
     // OBJECT 1
     // VERTEX BUFFER
-    // create Buffer
-    var vbo = gl.createBuffer();
+    // create Buffer (vbo: vertex buffer object)
+    var vbo = gl.createBuffer(); 
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    // Vertex data CPU side
-    const positions = new Float32Array([
-        10, 20,     // Left Bottom
-        80, 20,     // Right Bottom
-        10, 30,     // Left Top
-
-        10, 30,     // Left Top
-        80, 20,     // Right Bottom
-        80, 30,     // Right Top
-    ]);
-    //Feed the vertex data to buffer GPU
-    gl.bufferData(
-        gl.ARRAY_BUFFER, // bind point
-        positions,       // cpu data
-        gl.STATIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
-    );
+    // Data will be taken from UI later...
 
     // -------------------------------------------------------------
     // 4. VERTEX ARRAY
@@ -234,6 +206,7 @@ function main() {
         offset
     );
 
+
     // -------------------------------------------------------------
     // 5. RENDER (this will happen every frame)
     // -------------------------------------------------------------
@@ -252,17 +225,28 @@ function main() {
 
         // SHADER------------------------
         gl.useProgram(program);
-        // Pass dynamic canvas resolution to vertex shader uniform
-        gl.uniform2f(locationUniformResolution, gl.canvas.width, gl.canvas.height);
 
         // BUFFER/DATA--------------------
         // bY simply using Vertex Array
         gl.bindVertexArray(vao);
 
+        // Vertex data CPU side
+        const positions = new Float32Array([
+            state.aX, state.aY, // point 1
+            state.bX, state.bY, // point 2
+            state.cX, state.cY  // point 3
+        ]);
+        //Feed the vertex data to buffer GPU
+        gl.bufferData(
+            gl.ARRAY_BUFFER, // bind point
+            positions,       // cpu data
+            gl.DYNAMIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
+        );
+
         //DRAW CALL------------------------
         const draw_primitiveType = gl.TRIANGLES;
         const draw_offset = 0;
-        const draw_count = 6;
+        const draw_count = 3;
         gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
     }
 
