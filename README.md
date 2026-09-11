@@ -4,6 +4,9 @@ A practical WebGL learning repo focused on the fundamentals of drawing, shaders,
 
 ## Current project structure
 
+<img width="2100" height="1532" alt="All" src="https://github.com/user-attachments/assets/cf642e37-a1b9-4e4c-a16f-0b16333fd7ac" />
+
+
 This repository currently contains the following chapter groups:
 
 - Root: `chapter0.js` — starter WebGL boilerplate / reference setup
