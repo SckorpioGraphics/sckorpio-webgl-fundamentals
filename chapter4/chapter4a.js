@@ -1,10 +1,8 @@
 /* #############################################################
-CHAPTER 4b: Uniform 
-
+CHAPTER 3a: Dynamic Buffer
 Topics:
 - Adding a basic UI to manipulate 
-- vertices position
-- uniform color
+- vertices positions
 ###############################################################
 */
 
@@ -30,12 +28,10 @@ const vertexShaderSource =  `#version 300 es
 const fragmentShaderSource = `#version 300 es
     precision mediump float;
     out vec4 out_Color;
-    uniform vec4 u_color;
 
     void main() {
         //out_Color = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
-        //out_Color = vec4(0.39, 0.33, 0.58, 1.0); //PURPLE
-        out_Color = u_color;
+        out_Color = vec4(0.39, 0.33, 0.58, 1.0); //PURPLE
     }
 `;
 
@@ -107,39 +103,32 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // =============================================================
 
 var state = {
-    // Vertices
-    aX: -0.5, aY: 0.0,
-    bX: 0.5, bY: 0.0,
-    cX: 0.0, cY: 0.5,
-    // Color
-    R: 0.39 , G: 0.33, B: 0.58
+    aX: -0.5,
+    aY: 0.0,
+    bX: 0.5,
+    bY: 0.0,
+    cX: 0.0,
+    cY: 0.5,
 };
 
 function setupGUI(render) {
-
     const gui = new lil.GUI();
-
-    const verticesFolder = gui.addFolder("Vertices");
+    const vertexFolder = gui.addFolder("Vertex Positions");
 
     // Point A
-    const pointAFolder = verticesFolder.addFolder("Point A");
+    const pointAFolder = vertexFolder.addFolder("Point A");
     pointAFolder.add(state, "aX", -1, 1).name("X").onChange(render);
     pointAFolder.add(state, "aY", -1, 1).name("Y").onChange(render);
 
     // Point B
-    const pointBFolder = verticesFolder.addFolder("Point B");
+    const pointBFolder = vertexFolder.addFolder("Point B");
     pointBFolder.add(state, "bX", -1, 1).name("X").onChange(render);
     pointBFolder.add(state, "bY", -1, 1).name("Y").onChange(render);
 
     // Point C
-    const pointCFolder = verticesFolder.addFolder("Point C");
+    const pointCFolder = vertexFolder.addFolder("Point C");
     pointCFolder.add(state, "cX", -1, 1).name("X").onChange(render);
     pointCFolder.add(state, "cY", -1, 1).name("Y").onChange(render);
-
-    const colorFolder = gui.addFolder("Color");
-    colorFolder.add(state, "R", 0, 1).name("R").onChange(render);
-    colorFolder.add(state, "G", 0, 1).name("G").onChange(render);
-    colorFolder.add(state, "B", 0, 1).name("B").onChange(render);
 }
 
 // =============================================================
@@ -178,7 +167,6 @@ function main() {
     // Save Attribute locations
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
     // Future Uniform etc here..
-    const uniformColorPosition = gl.getUniformLocation(program, "u_color");
 
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
@@ -237,9 +225,6 @@ function main() {
 
         // SHADER------------------------
         gl.useProgram(program);
-        // Set the color from UI values
-        gl.uniform4f(uniformColorPosition, state.R, state.G, state.B, 1);
-
 
         // BUFFER/DATA--------------------
         // bY simply using Vertex Array
@@ -247,7 +232,6 @@ function main() {
 
         // Vertex data CPU side
         const positions = new Float32Array([
-            // Vertices
             state.aX, state.aY, // point 1
             state.bX, state.bY, // point 2
             state.cX, state.cY  // point 3
@@ -256,7 +240,7 @@ function main() {
         gl.bufferData(
             gl.ARRAY_BUFFER, // bind point
             positions,       // cpu data
-            gl.DYNAMIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
+            gl.DYNAMIC_DRAW  // how frequent we gonna use it (STATIC/DYNAMIC)
         );
 
         //DRAW CALL------------------------

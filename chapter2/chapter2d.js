@@ -1,7 +1,10 @@
 /* #############################################################
-CHAPTER 2d: Learning Topolgy LINES_LOOP
+CHAPTER 1e: Making a Geometry using triangles (F letter)
 Topics:
-- making Lines zig-zig end point connected
+- Letter F using Triangles
+- Using Index Buffer
+- Vertex Reuse
+- drawElements()
 ###############################################################
 */
 
@@ -171,14 +174,28 @@ function main() {
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
-
     // OBJECT 1
 
-    // v0          v2         v4
-    //   \          \          \
-    //    \          \          \
-    //     v1         v3         v5
+    /*
+        v2-------v3--------v4
+        |\       |\         |
+        |\       |   \      |
+        | \      |      \   |
+        | \      v6________v5
+        |  \     |      
+        |   \    v7_____v8
+        |   \    |  \    |
+        |    \   |    \  |
+        |    \   v10____v9
+        |    \   |
+        |     \  |
+        |     \  |
+        v0_____\v1
 
+
+
+    */
+   
     // -------------------------------------------------------------
     // VERTEX BUFFER
     // -------------------------------------------------------------
@@ -189,13 +206,26 @@ function main() {
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 
+
     const positions = new Float32Array([
-        -0.6,  0.2,   // v0
-        -0.4, -0.2,   // v1
-        -0.2,  0.2,   // v2
-        0.0, -0.2,    // v3
-        0.2,  0.2,    // v4
-        0.4, -0.2     // v5
+
+        // Left column
+        -0.4, -0.6,   // 0
+        -0.2, -0.6,   // 1
+        -0.4,  0.6,   // 2
+        -0.2,  0.6,   // 3
+
+        // Top bar
+        0.2,  0.6,    // 4
+        0.2,  0.4,    // 5
+        -0.4, 0.4,     // 6
+
+        // Middle bar
+        -0.4, 0.2,   // 7
+        0.1,  0.2,   // 8
+        0.1,  0.0,    // 9
+        -0.4, 0.0    // 10
+
     ]);
 
 
@@ -220,13 +250,24 @@ function main() {
 
     // Index data CPU side
     const indices = new Uint16Array([
-        0, 1, 2, 3, 4, 5
+
+        // LEFT COLUMN
+        0, 1, 2,
+        2, 1, 3,
+
+        // TOP BAR
+        3, 6, 5,
+        3, 5, 4,
+
+        // MIDDLE BAR
+        7, 10, 9,
+        7, 9, 8
     ]);
 
 
     // Feed index data to buffer GPU
     gl.bufferData(
-        gl.ELEMENT_ARRAY_BUFFER,  // bind point
+        gl.ELEMENT_ARRAY_BUFFER, // bind point
         indices,                  // CPU index data
         gl.STATIC_DRAW            // how frequently we use it
     );
@@ -289,29 +330,52 @@ function main() {
         resizeCanvasToDisplaySize(gl.canvas);
 
         // set view port
-        gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+        gl.viewport(
+            0,
+            0,
+            gl.canvas.width,
+            gl.canvas.height
+        );
+
 
         // BACKGROUND------------------------
+
         // Clear Background
-        gl.clearColor(0.0,1.0,1.0,1.0);
+        gl.clearColor(
+            0.0,
+            1.0,
+            1.0,
+            1.0
+        );
 
         // Clear BG
         gl.clear(gl.COLOR_BUFFER_BIT);
 
 
         // SHADER------------------------
+
         gl.useProgram(program);
+
 
         // BUFFER/DATA--------------------
 
         // Simply using Vertex Array
         gl.bindVertexArray(vao);
 
+
         // DRAW CALL------------------------
-        const draw_primitiveType = gl.LINE_LOOP;
+
+        const draw_primitiveType = gl.TRIANGLES;
+
+        // Number of indices to process
         const draw_count = indices.length;
+
+        // Data type of each index
         const draw_type = gl.UNSIGNED_SHORT;
+
+        // Byte offset into index buffer
         const draw_offset = 0;
+
 
         gl.drawElements(
             draw_primitiveType,
@@ -320,6 +384,7 @@ function main() {
             draw_offset
         );
     }
+
 
     // Execute first render call
     render();

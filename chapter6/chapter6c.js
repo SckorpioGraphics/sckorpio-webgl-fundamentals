@@ -1,21 +1,56 @@
 /* #############################################################
-CHAPTER 4e: Varying & Uniform together
+CHAPTER 5c: 
+- Creating a a lot of Random Basic Rectangle
+- Vertex Data In Pixel space
+- Inverted Y coordinate
 
 Topics:
-- Using Combined Buffer for Vertex Color
-- Also use uniform color 
-- Final color as mixed colors
-- Adding a basic UI to manipulate 
-- vertices positions
-- vertices color
-- uniform color
+- Uniforms ( for scrren space data)
+- Pixel space to Clip space math 
+- Inverted Y coordinates
+- Reusing the same buffer for creating mutlipe rectangles
 ###############################################################
 */
-
 
 // =============================================================
 // 1. GLSL Shader Sources 
 // =============================================================
+
+// OLD WebGL 1.0 Way...
+// -------------------------------------------------------------
+// basic vertex shader
+// passing postion data in clip space[-1,+1] directly
+const vertexShaderSourceOld =  `
+    attribute vec2 a_position;
+    uniform vec2 u_resolution;
+
+    void main() {
+        // pixel to [0,1]
+        vec2 zeroToOne = a_position / u_resolution;
+
+        // [-1,1] to [0,2]
+        vec2 zeroToTwo = zeroToOne * 2.0;
+
+        // [0,2] to [-1,1]
+        vec2 clipSpace = zeroToTwo - 1.0;
+
+        // Inver vertical (TopLeft corner= (0,0))
+        vec2 clipSpaceInverted = clipSpace * vec2(1.0,-1.0);
+
+        gl_Position = vec4(clipSpaceInverted, 0.0, 1.0);
+    }
+`;
+
+// basic fragment shader
+// using cyan/purple color for the pixel (sckorpio branding)
+const fragmentShaderSourceOld = `
+    precision mediump float;
+
+    void main() {
+        //gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
+        gl_FragColor = vec4(0.39, 0.33, 0.58, 1.0); //PURPLE
+    }
+`;
 
 // NEW WebGL 2.0 Way...
 // -------------------------------------------------------------
@@ -23,27 +58,40 @@ Topics:
 // passing postion data in clip space[-1,+1] directly
 const vertexShaderSource =  `#version 300 es
     in vec2 a_position;
-    in vec3 a_color;
-    out vec4 v_color;
+    uniform vec2 u_resolution;
 
     void main() {
-        gl_Position = vec4(a_position, 0.0, 1.0);
-        v_color = vec4(a_color, 1.0);
+        // pixel to [0,1]
+        vec2 zeroToOne = a_position / u_resolution;
+
+        // [-1,1] to [0,2]
+        vec2 zeroToTwo = zeroToOne * 2.0;
+
+        // [0,2] to [-1,1]
+        vec2 clipSpace = zeroToTwo - 1.0;
+
+        // Inver vertical (TopLeft corner= (0,0))
+        vec2 clipSpaceInverted = clipSpace * vec2(1.0,-1.0);
+
+        gl_Position = vec4(clipSpaceInverted, 0.0, 1.0);
     }
 `;
 
 // basic fragment shader
 // using cyan/purple color for the pixel (sckorpio branding)
 const fragmentShaderSource = `#version 300 es
-    precision highp float;
-    in vec4 v_color;
+    precision mediump float;
     out vec4 out_color;
-    uniform vec4 u_color;
+    uniform vec4 u_color; 
 
     void main() {
-        out_color = mix(v_color, u_color, 0.5);
+        //out_Color = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
+        //out_Color = vec4(0.39, 0.33, 0.58, 1.0); //PURPLE
+        out_color = u_color;
     }
 `;
+
+
 
 /**
  * Compiles a GLSL shader.
@@ -108,70 +156,29 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
   return false;
 }
 
-// =============================================================
-// 0. GUI using.. lil-gui
-// =============================================================
-
-var state = {
-    // Vertices Positions
-    aX: -0.5, aY: 0.0,
-    bX: 0.5,  bY: 0.0,
-    cX: 0.0,  cY: 0.5,
-    // Vertices Color 
-    aR: 1.0 , aG: 0.0, aB: 0.0,
-    bR: 0.0 , bG: 1.0, bB: 0.0,
-    cR: 0.0 , cG: 0.0, cB: 1.0,
-    //Uniform Color
-    R: 0, G: 0, B: 0,
-};
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-
-    const verticesFolder = gui.addFolder("Vertices");
-
-    // Point A
-    const pointAFolder = verticesFolder.addFolder("Point A");
-    pointAFolder.add(state, "aX", -1, 1).name("X").onChange(render);
-    pointAFolder.add(state, "aY", -1, 1).name("Y").onChange(render);
-
-    // Point B
-    const pointBFolder = verticesFolder.addFolder("Point B");
-    pointBFolder.add(state, "bX", -1, 1).name("X").onChange(render);
-    pointBFolder.add(state, "bY", -1, 1).name("Y").onChange(render);
-
-    // Point C
-    const pointCFolder = verticesFolder.addFolder("Point C");
-    pointCFolder.add(state, "cX", -1, 1).name("X").onChange(render);
-    pointCFolder.add(state, "cY", -1, 1).name("Y").onChange(render);
-
-
-    const colorFolder = gui.addFolder("Color");
-
-    // Point A
-    const pointAColorFolder = colorFolder.addFolder("Point A");
-    pointAColorFolder.add(state, "aR", 0, 1).name("R").onChange(render);
-    pointAColorFolder.add(state, "aG", 0, 1).name("G").onChange(render);
-    pointAColorFolder.add(state, "aB", 0, 1).name("B").onChange(render);
-
-    // Point B
-    const pointBColorFolder = colorFolder.addFolder("Point B");
-    pointBColorFolder.add(state, "bR", 0, 1).name("R").onChange(render);
-    pointBColorFolder.add(state, "bG", 0, 1).name("G").onChange(render);
-    pointBColorFolder.add(state, "bB", 0, 1).name("B").onChange(render);
-
-    // Point C
-    const pointCColorFolder = colorFolder.addFolder("Point C");
-    pointCColorFolder.add(state, "cR", 0, 1).name("R").onChange(render);
-    pointCColorFolder.add(state, "cG", 0, 1).name("G").onChange(render);
-    pointCColorFolder.add(state, "cB", 0, 1).name("B").onChange(render);
-
-
-    const uniformColorFolder = gui.addFolder("Uniform Color");
-    uniformColorFolder.add(state, "R", 0, 1).name("R").onChange(render);
-    uniformColorFolder.add(state, "G", 0, 1).name("G").onChange(render);
-    uniformColorFolder.add(state, "B", 0, 1).name("B").onChange(render);
+// Returns a random integer from 0 to range - 1.
+function randomInt(range) {
+  return Math.floor(Math.random() * range);
 }
+
+// Fill the buffer with the values that define a rectangle.
+function setRectangle(gl, x, y, width, height) {
+  var x1 = x;
+  var x2 = x + width;
+  var y1 = y;
+  var y2 = y + height;
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+     x1, y1,
+     x2, y1,
+     x1, y2,
+     x1, y2,
+     x2, y1,
+     x2, y2,
+  ]), gl.STATIC_DRAW);
+}
+
+
+
 
 // =============================================================
 // 3. Main Application Entry Point
@@ -195,9 +202,6 @@ function main() {
         return;
     }
 
-    // UI setup
-    setupGUI(render);
-
     // -------------------------------------------------------------
     // 2. SHADERS
     // -------------------------------------------------------------
@@ -208,21 +212,20 @@ function main() {
 
     // Save Attribute locations
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
-    const locationAttributeColor = gl.getAttribLocation(program, "a_color");
-    // Future Uniform etc here..
-    const uniformColorPosition = gl.getUniformLocation(program, "u_color");
+    // Save Uniform locations
+    const locationUniformResolution = gl.getUniformLocation(program, "u_resolution");
+    const locationUniformColor = gl.getUniformLocation(program, "u_color");
 
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
-
     // OBJECT 1
-    // VERTEX POSITION BUFFER
-    // create Buffer (vbo: vertex buffer object)
-    var vbo = gl.createBuffer(); 
+    // VERTEX BUFFER
+    // create Buffer
+    var vbo = gl.createBuffer();
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    // Data will be taken from UI later...
+    // PASS NO DATA FOR NOW
 
     // -------------------------------------------------------------
     // 4. VERTEX ARRAY
@@ -231,45 +234,24 @@ function main() {
     var vao = gl.createVertexArray();
     // bind the vertex array
     gl.bindVertexArray(vao);
-    // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    //------vertex positions-----
     // enable that attrib
     gl.enableVertexAttribArray(locationAttributePosition);
-    // Buffer data format
-    const size1 = 2;          // 2 components (X, Y) per vertex
-    const type1 = gl.FLOAT;   // 32-bit float values
-    const normalize1 = false; // Do not normalize
-    const stride1 = 5 * Float32Array.BYTES_PER_ELEMENT;        // Total stride (2(x,y) + 3(r,g,b))
-    const offset1 = 0 * Float32Array.BYTES_PER_ELEMENT;        // Start reading from index 0
-    gl.vertexAttribPointer(
-        locationAttributePosition,
-        size1,
-        type1,
-        normalize1,
-        stride1,
-        offset1
-    );
-    //------vertex colors-----
-    // enable that attrib
-    gl.enableVertexAttribArray(locationAttributeColor);
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     // Buffer data format
-    const size2 = 3;          // 3 components (R, G, B) per vertex
-    const type2 = gl.FLOAT;   // 32-bit float values
-    const normalize2 = false; // Do not normalize
-    const stride2 = 5 * Float32Array.BYTES_PER_ELEMENT;        // Total stride (2(x,y) + 3(r,g,b))
-    const offset2 = 2 * Float32Array.BYTES_PER_ELEMENT;        // Start reading from index 2
+    const size = 2;          // 2 components (X, Y) per vertex
+    const type = gl.FLOAT;   // 32-bit float values
+    const normalize = false; // Do not normalize
+    const stride = 0;        // Auto stride
+    const offset = 0;        // Start reading from index 0
     gl.vertexAttribPointer(
-        locationAttributeColor,
-        size2,
-        type2,
-        normalize2,
-        stride2,
-        offset2
+        locationAttributePosition,
+        size,
+        type,
+        normalize,
+        stride,
+        offset
     );
-
 
     // -------------------------------------------------------------
     // 5. RENDER (this will happen every frame)
@@ -289,34 +271,30 @@ function main() {
 
         // SHADER------------------------
         gl.useProgram(program);
-        // Set the color from UI values
-        gl.uniform4f(uniformColorPosition, state.R, state.G, state.B, 1);
-
+        // Pass dynamic canvas resolution to vertex shader uniform
+        gl.uniform2f(locationUniformResolution, gl.canvas.width, gl.canvas.height);
 
         // BUFFER/DATA--------------------
         // bY simply using Vertex Array
         gl.bindVertexArray(vao);
-
-        // Update Positions----
+        // bind the buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-        // Vertex data CPU side
-        const vertexData = new Float32Array([
-            state.aX, state.aY, state.aR, state.aG, state.aB, // point A
-            state.bX, state.bY, state.bR, state.bG, state.bB, // point B
-            state.cX, state.cY, state.cR, state.cG, state.cB  // point C
-        ]);
-        //Feed the vertex data to buffer GPU
-        gl.bufferData(
-            gl.ARRAY_BUFFER, // bind point
-            vertexData,       // cpu data
-            gl.DYNAMIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
-        );
-        
-        //DRAW CALL------------------------
-        const draw_primitiveType = gl.TRIANGLES;
-        const draw_offset = 0;
-        const draw_count = 3;
-        gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
+
+         //DRAW CALL------------------------
+        // draw 50 random rectangles in random colors
+        for (var ii = 0; ii < 50; ++ii) {
+            // Put a rectangle in the position buffer
+            setRectangle(gl, randomInt(300), randomInt(300), randomInt(300), randomInt(300));
+
+            // Set a random color.
+            gl.uniform4f(locationUniformColor, Math.random(), Math.random(), Math.random(), 1);
+
+            // Draw the rectangle.
+            const draw_primitiveType = gl.TRIANGLES;
+            const draw_offset = 0;
+            const draw_count = 6;
+            gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
+        }
     }
 
     // Execute first render call

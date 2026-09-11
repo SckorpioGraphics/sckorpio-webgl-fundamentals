@@ -1,9 +1,7 @@
 /* #############################################################
-CHAPTER 3b: Dynamic Buffer
+CHAPTER 2b: Learning Topolgy LINES
 Topics:
-- Making a rectangle
-- Adding a basic UI to manipulate  
-- vertices positions
+- making Lines parallel
 ###############################################################
 */
 
@@ -15,8 +13,8 @@ Topics:
 // NEW WebGL 2.0 Way...
 // -------------------------------------------------------------
 // basic vertex shader
-// passing postion data in clip space[-1,+1] directly
-const vertexShaderSource =  `#version 300 es
+// passing position data in clip space[-1,+1] directly
+const vertexShaderSource = `#version 300 es
     in vec2 a_position;
 
     void main() {
@@ -36,105 +34,113 @@ const fragmentShaderSource = `#version 300 es
     }
 `;
 
+
 /**
  * Compiles a GLSL shader.
  */
 function createShader(gl, type, source) {
+
     // create a shader of 'type'
     const shader = gl.createShader(type);
+
     // pass the shader source string
     gl.shaderSource(shader, source);
+
     // compile the shader
     gl.compileShader(shader);
 
     // get compile status of shader
-    const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    const compileStatus = gl.getShaderParameter(
+        shader,
+        gl.COMPILE_STATUS
+    );
+
     // if status = success : return shader
     if(compileStatus) return shader;
+
     // else log it
-    console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
+    console.error(
+        "Shader Compilation Error:",
+        gl.getShaderInfoLog(shader)
+    );
+
     // and delete the shader
     gl.deleteShader(shader);
 }
+
 
 /**
  * Links vertex and fragment shaders into a GPU program.
  */
 function createProgram(gl, vertexShader, fragmentShader) {
+
     // create a program
     const program = gl.createProgram();
+
     // attach the vertex shader to program
     gl.attachShader(program, vertexShader);
+
     // attach the fragment shader to program
     gl.attachShader(program, fragmentShader);
+
     // finally link them together
     gl.linkProgram(program);
 
     // get link status of program
-    const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+    const linkStatus = gl.getProgramParameter(
+        program,
+        gl.LINK_STATUS
+    );
+
     // if link status success
     if(linkStatus) return program;
 
     // else: log it
-    console.error("Program Linking Error:", gl.getProgramInfoLog(program));
+    console.error(
+        "Program Linking Error:",
+        gl.getProgramInfoLog(program)
+    );
+
     // and delete the program
     gl.deleteProgram(program);
 }
 
+
 // =============================================================
 // 2. Helper Functions
 // =============================================================
+
 /**
  * Resizes the internal drawing buffer to match screen CSS display pixels.
  */
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-  const width = (canvas.clientWidth * multiplier) | 0;
-  const height = (canvas.clientHeight * multiplier) | 0;
 
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width;
-    canvas.height = height;
-    return true;
-  }
-  return false;
+    const width = (canvas.clientWidth * multiplier) | 0;
+    const height = (canvas.clientHeight * multiplier) | 0;
+
+    if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        return true;
+    }
+
+    return false;
 }
 
-// =============================================================
-// 0. GUI using.. lil-gui
-// =============================================================
-
-var state = {
-    centerX: 0.0,
-    centerY: 0.0,
-    length: 0.5,
-    width: 0.5
-};
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-    const rectangleFolder = gui.addFolder("Rectangle");
-
-    // Center
-    const centerFolder = rectangleFolder.addFolder("Center");
-    centerFolder.add(state, "centerX", -1, 1).name("centerX").onChange(render);
-    centerFolder.add(state, "centerY", -1, 1).name("centerY").onChange(render);
-
-    // Dimension
-    const dimFolder = rectangleFolder.addFolder("Dimensions");
-    dimFolder.add(state, "length", 0, 2).name("length").onChange(render);
-    dimFolder.add(state, "width", 0, 2).name("width").onChange(render);
-}
 
 // =============================================================
 // 3. Main Application Entry Point
 // =============================================================
 
 function main() {
+
     // -------------------------------------------------------------
     // 1. WEBGL CANVAS 
     // -------------------------------------------------------------
+
     // Get the Canvas
     const canvas = document.querySelector("#c");
+
     if(!canvas) {
         console.error("Canvas element not found");
         return;
@@ -142,13 +148,12 @@ function main() {
 
     // Get the WebGL context
     const gl = canvas.getContext("webgl2");
+
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
     }
 
-    // UI setup
-    setupGUI(render);
 
     // -------------------------------------------------------------
     // 2. SHADERS
@@ -162,35 +167,98 @@ function main() {
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
     // Future Uniform etc here..
 
+
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
 
     // OBJECT 1
+
+    // v0          v2         v4
+    //   \          \          \
+    //    \          \          \
+    //     v1         v3         v5
+
+    // -------------------------------------------------------------
     // VERTEX BUFFER
+    // -------------------------------------------------------------
+
     // create Buffer (vbo: vertex buffer object)
-    var vbo = gl.createBuffer(); 
+    var vbo = gl.createBuffer();
+
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    // Data will be taken from UI later...
+
+    const positions = new Float32Array([
+        -0.6,  0.2,   // v0
+        -0.4, -0.2,   // v1
+        -0.2,  0.2,   // v2
+        0.0, -0.2,    // v3
+        0.2,  0.2,    // v4
+        0.4, -0.2     // v5
+    ]);
+
+
+    // Feed the vertex data to buffer GPU
+    gl.bufferData(
+        gl.ARRAY_BUFFER, // bind point
+        positions,       // CPU data
+        gl.STATIC_DRAW   // how frequently we use it
+    );
+
+
+    // -------------------------------------------------------------
+    // INDEX BUFFER
+    // -------------------------------------------------------------
+
+    // Create index buffer
+    var ibo = gl.createBuffer();
+
+    // Bind index buffer
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+
+
+    // Index data CPU side
+    const indices = new Uint16Array([
+        0, 1, 2, 3, 4, 5
+    ]);
+
+
+    // Feed index data to buffer GPU
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,  // bind point
+        indices,                  // CPU index data
+        gl.STATIC_DRAW            // how frequently we use it
+    );
+
 
     // -------------------------------------------------------------
     // 4. VERTEX ARRAY
     // -------------------------------------------------------------
+
     // vao: vertex array object
     var vao = gl.createVertexArray();
+
     // bind the vertex array
     gl.bindVertexArray(vao);
+
     // enable that attrib
-    gl.enableVertexAttribArray(locationAttributePosition);
+    gl.enableVertexAttribArray(
+        locationAttributePosition
+    );
+
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+
+
     // Buffer data format
     const size = 2;          // 2 components (X, Y) per vertex
     const type = gl.FLOAT;   // 32-bit float values
     const normalize = false; // Do not normalize
     const stride = 0;        // Auto stride
     const offset = 0;        // Start reading from index 0
+
+
     gl.vertexAttribPointer(
         locationAttributePosition,
         size,
@@ -201,60 +269,77 @@ function main() {
     );
 
 
+    // IMPORTANT:
+    // Index buffer binding is stored inside the VAO.
+    gl.bindBuffer(
+        gl.ELEMENT_ARRAY_BUFFER,
+        ibo
+    );
+
+
     // -------------------------------------------------------------
     // 5. RENDER (this will happen every frame)
     // -------------------------------------------------------------
+
     function render() {
+
         // CANVAS------------------------
+
         // update canvas resolution when window resize
         resizeCanvasToDisplaySize(gl.canvas);
+
         // set view port
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
         // BACKGROUND------------------------
-        // Clear Background Pick clear color
-        gl.clearColor(0.0, 1.0, 1.0, 1.0);
-        // Clear BG (here we can also clear depth etc)
+        // Clear Background
+        gl.clearColor(0.0,1.0,1.0,1.0);
+
+        // Clear BG
         gl.clear(gl.COLOR_BUFFER_BIT);
+
 
         // SHADER------------------------
         gl.useProgram(program);
 
         // BUFFER/DATA--------------------
-        // bY simply using Vertex Array
+
+        // Simply using Vertex Array
         gl.bindVertexArray(vao);
 
-        // Vertex data CPU side
-        const positions = new Float32Array([
-            state.centerX - state.length/2.0 , state.centerY + state.width/2.0 , // point 0
-            state.centerX + state.length/2.0 , state.centerY + state.width/2.0 , // point 1
-            state.centerX - state.length/2.0 , state.centerY - state.width/2.0 , // point 2
-            state.centerX + state.length/2.0 , state.centerY - state.width/2.0 , // point 3
-        ]);
-        //Feed the vertex data to buffer GPU
-        gl.bufferData(
-            gl.ARRAY_BUFFER, // bind point
-            positions,       // cpu data
-            gl.DYNAMIC_DRAW  // how frequent we gonna use it (STATIC/DYNAMIC)
-        );
+        // DRAW CALL------------------------
 
-        //DRAW CALL------------------------
-        const draw_primitiveType = gl.TRIANGLE_STRIP;
+        const draw_primitiveType = gl.LINES;
+        const draw_count = indices.length;
+        const draw_type = gl.UNSIGNED_SHORT;
         const draw_offset = 0;
-        const draw_count = 4;
-        gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
+
+        gl.drawElements(
+            draw_primitiveType,
+            draw_count,
+            draw_type,
+            draw_offset
+        );
     }
 
     // Execute first render call
     render();
 
     // Listen for Window resize
-    // when window get resized ... we render again
-    window.addEventListener("resize", render);
+    // when window gets resized ... render again
+    window.addEventListener(
+        "resize",
+        render
+    );
 }
 
+
 // Start app once DOM content is ready
-window.addEventListener("DOMContentLoaded", main);
+window.addEventListener(
+    "DOMContentLoaded",
+    main
+);
+
 
 export {
     main

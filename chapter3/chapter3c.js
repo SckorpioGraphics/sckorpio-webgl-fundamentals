@@ -1,9 +1,10 @@
 /* #############################################################
-CHAPTER 3c: Learning Topolgy LINE_LOOP
+CHAPTER 2c: Learning Topolgy LINES
 Topics:
-- making a Polygon to Circle
+- making Line zig-zag connected
 ###############################################################
 */
+
 
 // =============================================================
 // 1. GLSL Shader Sources 
@@ -126,32 +127,6 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     return false;
 }
 
-// =============================================================
-// 0. GUI using.. lil-gui
-// =============================================================
-
-var state = {
-    centerX: 0.0,
-    centerY: 0.0,
-    radius: 0.5,
-    points: 5
-};
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-    const rectangleFolder = gui.addFolder("Rectangle");
-
-    // Center
-    const centerFolder = rectangleFolder.addFolder("Center");
-    centerFolder.add(state, "centerX", -1, 1).name("centerX").onChange(render);
-    centerFolder.add(state, "centerY", -1, 1).name("centerY").onChange(render);
-
-    // Dimension
-    const dimFolder = rectangleFolder.addFolder("Dimensions");
-    dimFolder.add(state, "radius", 0, 1).name("radius").onChange(render);
-    dimFolder.add(state, "points", 3, 20, 1).name("points").onChange(render);
-}
-
 
 // =============================================================
 // 3. Main Application Entry Point
@@ -179,8 +154,6 @@ function main() {
         return;
     }
 
-    // UI setup
-    setupGUI(render);
 
     // -------------------------------------------------------------
     // 2. SHADERS
@@ -200,22 +173,39 @@ function main() {
     // -------------------------------------------------------------
 
     // OBJECT 1
-    // CIRCLE
 
-    //          #5---#4  
-    //         /       \
-    //       #0         #3
-    //         \       /     
-    //          #1---#2
+    // v0          v2         v4
+    //   \          \          \
+    //    \          \          \
+    //     v1         v3         v5
 
     // -------------------------------------------------------------
     // VERTEX BUFFER
     // -------------------------------------------------------------
+
     // create Buffer (vbo: vertex buffer object)
     var vbo = gl.createBuffer();
 
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+
+    const positions = new Float32Array([
+        -0.6,  0.2,   // v0
+        -0.4, -0.2,   // v1
+        -0.2,  0.2,   // v2
+        0.0, -0.2,    // v3
+        0.2,  0.2,    // v4
+        0.4, -0.2     // v5
+    ]);
+
+
+    // Feed the vertex data to buffer GPU
+    gl.bufferData(
+        gl.ARRAY_BUFFER, // bind point
+        positions,       // CPU data
+        gl.STATIC_DRAW   // how frequently we use it
+    );
+
 
     // -------------------------------------------------------------
     // INDEX BUFFER
@@ -226,7 +216,22 @@ function main() {
 
     // Bind index buffer
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-    
+
+
+    // Index data CPU side
+    const indices = new Uint16Array([
+        0, 1, 2, 3, 4, 5
+    ]);
+
+
+    // Feed index data to buffer GPU
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,  // bind point
+        indices,                  // CPU index data
+        gl.STATIC_DRAW            // how frequently we use it
+    );
+
+
     // -------------------------------------------------------------
     // 4. VERTEX ARRAY
     // -------------------------------------------------------------
@@ -245,12 +250,14 @@ function main() {
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 
+
     // Buffer data format
     const size = 2;          // 2 components (X, Y) per vertex
     const type = gl.FLOAT;   // 32-bit float values
     const normalize = false; // Do not normalize
     const stride = 0;        // Auto stride
     const offset = 0;        // Start reading from index 0
+
 
     gl.vertexAttribPointer(
         locationAttributePosition,
@@ -261,12 +268,14 @@ function main() {
         offset
     );
 
+
     // IMPORTANT:
     // Index buffer binding is stored inside the VAO.
     gl.bindBuffer(
         gl.ELEMENT_ARRAY_BUFFER,
         ibo
     );
+
 
     // -------------------------------------------------------------
     // 5. RENDER (this will happen every frame)
@@ -275,6 +284,7 @@ function main() {
     function render() {
 
         // CANVAS------------------------
+
         // update canvas resolution when window resize
         resizeCanvasToDisplaySize(gl.canvas);
 
@@ -297,35 +307,8 @@ function main() {
         // Simply using Vertex Array
         gl.bindVertexArray(vao);
 
-        var positionsData = [];
-        var indicesData = [];
-        for(let i=0; i< state.points; i++){
-            const angle = (i/state.points) * (2 * Math.PI);
-            const x = state.centerX + Math.sin(angle) * state.radius;
-            const y = state.centerY + Math.cos(angle) * state.radius;
-            positionsData.push(x);
-            positionsData.push(y);
-            indicesData.push(i);
-        }
-        const positions = new Float32Array(positionsData);
-        const indices = new Uint16Array(indicesData);
-
-        // Feed the vertex data to buffer GPU
-        gl.bufferData(
-            gl.ARRAY_BUFFER, // bind point
-            positions,       // CPU data
-            gl.DYNAMIC_DRAW   // how frequently we use it
-        );
-
-        // Feed index data to buffer GPU
-        gl.bufferData(
-            gl.ELEMENT_ARRAY_BUFFER,  // bind point
-            indices,                  // CPU index data
-            gl.DYNAMIC_DRAW            // how frequently we use it
-        );
-
         // DRAW CALL------------------------
-        const draw_primitiveType = gl.LINE_LOOP;
+        const draw_primitiveType = gl.LINE_STRIP;
         const draw_count = indices.length;
         const draw_type = gl.UNSIGNED_SHORT;
         const draw_offset = 0;
