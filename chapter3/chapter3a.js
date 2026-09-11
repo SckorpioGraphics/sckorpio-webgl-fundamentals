@@ -240,7 +240,7 @@ function main() {
         gl.bufferData(
             gl.ARRAY_BUFFER, // bind point
             positions,       // cpu data
-            gl.DYNAMIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
+            gl.DYNAMIC_DRAW  // how frequent we gonna use it (STATIC/DYNAMIC)
         );
 
         //DRAW CALL------------------------
