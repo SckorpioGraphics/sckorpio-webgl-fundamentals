@@ -138,6 +138,11 @@ function main() {
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
 
+    /*
+         /\       /\       /\
+        /__\     /__\     /__\
+    */
+
     // OBJECT 1
     // VERTEX BUFFER
     // create Buffer (vbo: vertex buffer object)

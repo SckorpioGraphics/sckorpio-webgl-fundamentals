@@ -138,6 +138,16 @@ function main() {
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
 
+    /*
+        1-------------3
+        | \           |
+        |    \        |
+        |       \     |
+        |          \  |
+        0____________\2
+
+    */
+
     // OBJECT 1
     // VERTEX BUFFER
     // create Buffer (vbo: vertex buffer object)
@@ -146,13 +156,13 @@ function main() {
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     // Vertex data CPU side
     const positions = new Float32Array([
-        -0.5, 0.0,  // point 1
-        -0.5, 0.5,  // point 2
-        0.5, 0.0,   // point 3
+        -0.5, 0.0,  // point 0
+        -0.5, 0.5,  // point 1
+        0.5, 0.0,   // point 2
 
-        0.5, 0.0,  // point 1
-        0.5, 0.5,  // point 2
-        -0.5, 0.5, // point 3
+        0.5, 0.0,  // point 2
+        0.5, 0.5,  // point 3
+        -0.5, 0.5, // point 1
     ]);
 
     //Feed the vertex data to buffer GPU

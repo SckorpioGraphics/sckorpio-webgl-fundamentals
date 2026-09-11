@@ -174,17 +174,7 @@ function main() {
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
-
     // OBJECT 1
-    // -------------------------------------------------------------
-    // VERTEX BUFFER
-    // -------------------------------------------------------------
-
-    // create Buffer (vbo: vertex buffer object)
-    var vbo = gl.createBuffer();
-
-    // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 
     /*
         2--------3----------4
@@ -205,6 +195,16 @@ function main() {
 
 
     */
+   
+    // -------------------------------------------------------------
+    // VERTEX BUFFER
+    // -------------------------------------------------------------
+
+    // create Buffer (vbo: vertex buffer object)
+    var vbo = gl.createBuffer();
+
+    // bind the buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 
 
     const positions = new Float32Array([
