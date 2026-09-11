@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 2f: Varying & Uniform together
+CHAPTER 3f: Varying & Uniform together
 
 Topics:
 - Using Combined Buffer for Vertex Color

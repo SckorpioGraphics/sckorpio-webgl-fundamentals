@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 3: 2D Transformations
+CHAPTER4e3: 2D Transformations
 
 Topics:
 - Making a colored triangle

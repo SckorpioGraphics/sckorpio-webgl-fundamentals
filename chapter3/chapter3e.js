@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 2e: Combined Buffer
+CHAPTER 3e: Combined Buffer
 
 Topics:
 - Adding a basic UI to manipulate 

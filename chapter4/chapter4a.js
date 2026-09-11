@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 1b: 
+CHAPTER 4a: 
 - Creating a Basic Rectangle
 - Vertex Data In Pixel space
 
