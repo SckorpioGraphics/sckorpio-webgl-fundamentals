@@ -222,7 +222,7 @@ function main() {
 
         // BACKGROUND------------------------
         // Clear Background Pick clear color
-        gl.clearColor(0.0, 1.0, 1.0, 1.0);
+        gl.clearColor(0.32, 0.63, 0.67, 1.0);  //Sckorpio-Cyan
         // Clear BG (here we can also clear depth etc)
         gl.clear(gl.COLOR_BUFFER_BIT);
 

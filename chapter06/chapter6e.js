@@ -201,7 +201,7 @@ function main() {
 
         // BACKGROUND
         //gl.clearColor(0.39, 0.33, 0.58, 1.0); // Purple
-        gl.clearColor(0.0, 1.0, 1.0, 1.0);    // Cyan
+        gl.clearColor(0.32, 0.63, 0.67, 1.0);  //Sckorpio-Cyan    // Cyan
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         // SHADER
