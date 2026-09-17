@@ -8,109 +8,140 @@ This index reflects the files and folders currently present in the repository.
 ROOT
 ----
 chapter0.js
-- standalone setup and reference code
-- basic WebGL boilerplate
+- standalone setup and reference boilerplate
+- WebGL initialization pattern
 - starting point for the project
 
-CHAPTER 1
----------
-Folder: chapter1/
+CHAPTER 01
+----------
+Folder: chapter01/
 
 chapter1a.js - Creating a Basic Triangle
 - WebGL canvas setup
 - shader creation
-- vertex buffer and VAO
+- vertex buffer setup
 - first draw call
 
-CHAPTER 2
----------
-Folder: chapter2/
+CHAPTER 02
+----------
+Folder: chapter02/
 
 chapter2a.js - Multiple Triangles
 chapter2b.js - Rectangle using Triangles
-chapter2c.js - Index Buffer
-chapter2d.js - Letter F geometry
+chapter2c.js - Introducing Index Buffer
+chapter2d.js - Making a Geometry using Triangles (F letter)
 
 Focus:
-- geometry creation
+- geometry construction
 - triangle composition
 - indexed rendering
-- reuse of vertices
+- reuse of vertex data
 
-CHAPTER 3
----------
-Folder: chapter3/
+CHAPTER 03
+----------
+Folder: chapter03/
 
-chapter3a.js - POINTS
-chapter3b.js - LINES
-chapter3c.js - additional line pattern
-chapter3d.js - LINE_LOOP
-chapter3e.js - LINE_LOOP / polygon-style drawing
-chapter3f.js - TRIANGLES
-chapter3g.js - TRIANGLE_STRIP
-chapter3h.js - TRIANGLE_FAN
+chapter3a.js - Learning Topology POINTS
+chapter3b.js - Learning Topology LINES
+chapter3c.js - Learning Topology LINES
+chapter3d.js - Learning Topology LINES_LOOP
+chapter3e.js - Learning Topology LINE_LOOP
+chapter3f.js - Learning Topology TRIANGLES
+chapter3g.js - Learning Topology TRIANGLES_STRIP
+chapter3h.js - Learning Topology TRIANGLE_FAN
 
 Focus:
 - primitive topologies
 - different drawing modes
 - connected line and triangle structures
 
-CHAPTER 4
----------
-Folder: chapter4/
+CHAPTER 04
+----------
+Folder: chapter04/
 
 chapter4a.js - Dynamic Buffer
 chapter4b.js - Dynamic Buffer
-chapter4c.js - topology/data experiment
-chapter4d.js - interactive drawing experiment
+chapter4c.js - Learning Topology LINE_LOOP
+chapter4d.js - Learning Topology LINE_LOOP
 
 Focus:
 - live data updates
 - vertex manipulation
+- interactive drawing experiments
 - exploring buffer behavior
 
-CHAPTER 5
----------
-Folder: chapter5/
+CHAPTER 05
+----------
+Folder: chapter05/
 
-chapter5a.js - Uniform color
-chapter5b.js - Varying color
+chapter5a.js - Uniform
+chapter5b.js - Varying
 chapter5c.js - Multiple Buffers
 chapter5d.js - Combined Buffer
-chapter5e.js - Varying + Uniform together
+chapter5e.js - Varying & Uniform together
 
 Focus:
 - uniforms
 - varying values
-- buffer organization
+- multi-buffer setup
 - shader data flow
 
-CHAPTER 6
----------
-Folder: chapter6/
+CHAPTER 06
+----------
+Folder: chapter06/
 
-chapter6a.js - render loop work
-chapter6b.js - render loop continuation
-chapter6c.js - render loop exercise
-chapter6d.js - transformation setup
+chapter6a.js - Basic Rectangle in Pixel Space
+chapter6b.js - Screen Space Rectangle + Inverted Y
+chapter6c.js - Many Random Rectangles
+chapter6d.js - Random Rectangles + Render Loop Practice
 chapter6e.js - 2D Transformations
 
 Focus:
-- render loop
-- matrix and transform math
+- screen-space conversion
+- repeated draw calls and buffer reuse
+- render loop development
+- matrix math and 2D transforms
 - animation fundamentals
+
+CHAPTER 07
+----------
+Folder: chapter07/
+- reserved for future lessons
+- currently empty
+
+CHAPTER 11
+-----------
+Folder: chapter11/
+- placeholder folder
+- currently empty
+
+CHAPTER 12
+-----------
+Folder: chapter12/
+- placeholder folder
+- currently empty
+
+CHAPTER 21
+-----------
+Folder: chapter21/
+- placeholder folder
+- currently empty
 
 CHAPTER EXTRA
 -------------
 Folder: chapterExtra/
 
-chapterExtra1.js - extra experiments / bonus work
+chapterExtra1.js - Render Loop / Projection Experiment
 
-CHAPTER 7
----------
-Folder: chapter7/
-- empty placeholder for future lessons
+Focus:
+- pixel-space geometry
+- projection matrix usage
+- uniform matrix data
+- dynamic render loop work
 
 PROJECT SUMMARY
 ---------------
 This repository is structured as a practical learning progression in WebGL fundamentals, starting from the first triangle and progressing through geometry, topology, shader data flow, and transforms.
+
+Notable repository fact:
+- Some later chapter folders are present as placeholders and do not yet contain lesson files.

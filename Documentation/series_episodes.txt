@@ -1,40 +1,56 @@
-🦂 SCKORPIO WEBGL TUTORIAL
-│
-├── CHAPTER 1
-│    └─ 1A — Basic Setup + First Triangle
-│
-├── CHAPTER 2
-│    ├─ 2A — Multiple Triangles
-│    ├─ 2B — Rectangle
-│    ├─ 2C — Index Buffer
-│    └─ 2D — Letter F
-│
-├── CHAPTER 3
-│    ├─ 3A — POINTS
-│    ├─ 3B — LINES
-│    ├─ 3C — LINE_STRIP
-│    ├─ 3D — LINE_LOOP
-│    ├─ 3E — TRIANGLES
-│    ├─ 3F — TRIANGLE_STRIP
-│    └─ 3G — TRIANGLE_FAN
-│
-├── CHAPTER 4
-│    ├─ 4A — Dynamic Buffer
-│    ├─ 4B — Vertex Manipulation
-│    ├─ 4C — Interactive Editing
-│    └─ ...
-│
-├── CHAPTER 5
-│    ├─ 5A — Uniforms
-│    ├─ 5B — Varyings
-│    ├─ 5C — Multiple Buffers
-│    ├─ 5D — Combined Buffer
-│    └─ 5E — Uniform + Varying
-│
-└── CHAPTER 6
-     ├─ 6A — Render Loop
-     ├─ 6B — Translation
-     ├─ 6C — Rotation
-     ├─ 6D — Scaling
-     ├─ 6E — Matrix Multiplication
-     └─ 6F — 2D Transformations
+SCKORPIO WEBGL TUTORIAL
+=======================
+
+CHAPTER 01
+- 1A — Basic Triangle / WebGL setup
+
+CHAPTER 02
+- 2A — Multiple Triangles
+- 2B — Rectangle using Triangles
+- 2C — Index Buffer
+- 2D — Letter F geometry
+
+CHAPTER 03
+- 3A — POINTS
+- 3B — LINES
+- 3C — Additional line pattern
+- 3D — LINE_LOOP
+- 3E — LINE_LOOP / polygon-style drawing
+- 3F — TRIANGLES
+- 3G — TRIANGLE_STRIP
+- 3H — TRIANGLE_FAN
+
+CHAPTER 04
+- 4A — Dynamic Buffer
+- 4B — Dynamic rectangle / vertex editing
+- 4C — Topology or polygon experiment
+- 4D — Interactive drawing experiment
+
+CHAPTER 05
+- 5A — Uniform
+- 5B — Varying
+- 5C — Multiple Buffers
+- 5D — Combined Buffer
+- 5E — Varying and Uniform together
+
+CHAPTER 06
+- 6A — Basic rectangle in pixel space using u_resolution
+- 6B — Screen-space rectangle with inverted Y handling
+- 6C — Many random rectangles with one buffer and uniform colors
+- 6D — Continued random-rectangle work with render-loop practice
+- 6E — 2D transformations with matrices, translation, rotation, and scaling
+
+CHAPTER 07
+- Reserved for future lessons
+
+CHAPTER 11
+- Placeholder folder, currently empty
+
+CHAPTER 12
+- Placeholder folder, currently empty
+
+CHAPTER 21
+- Placeholder folder, currently empty
+
+CHAPTER EXTRA
+- Extra1 — Render loop / projection experiment

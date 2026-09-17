@@ -1,63 +1,65 @@
 # WebGL Fundamentals
 
-A practical WebGL learning repo focused on the fundamentals of drawing, shaders, geometry, and real-time graphics programming.
+A practical WebGL learning repo focused on shaders, geometry, primitive rendering, dynamic buffers, and basic transform math.
 
 ## Current project structure
 
-<img width="2100" height="1532" alt="All" src="https://github.com/user-attachments/assets/cf642e37-a1b9-4e4c-a16f-0b16333fd7ac" />
-
-
 This repository currently contains the following chapter groups:
 
-- Root: `chapter0.js` — starter WebGL boilerplate / reference setup
-- `chapter1/` — first triangle and basic WebGL setup
-- `chapter2/` — geometry basics and index buffer work
-- `chapter3/` — primitive topology experiments
-- `chapter4/` — dynamic buffer and editing examples
-- `chapter5/` — shader data flow and uniforms/varying examples
-- `chapter6/` — render loop and transformation work
-- `chapterExtra/` — extra experiments / bonus examples
-- `chapter7/` — empty placeholder for future work
+- Root: `chapter0.js` — standalone WebGL setup / reference boilerplate
+- `chapter01/` — `chapter1a.js` — first triangle and basic WebGL setup
+- `chapter02/` — `chapter2a.js` to `chapter2d.js` — multiple triangles, rectangle, index buffer, and letter F geometry
+- `chapter03/` — `chapter3a.js` to `chapter3h.js` — primitive topology experiments
+- `chapter04/` — `chapter4a.js` to `chapter4d.js` — dynamic buffer and interactive geometry examples
+- `chapter05/` — `chapter5a.js` to `chapter5e.js` — uniforms, varying values, and buffer organization
+- `chapter06/` — `chapter6a.js` to `chapter6e.js` — render loop and 2D transformation work
+- `chapter07/` — reserved folder for future lessons
+- `chapter11/`, `chapter12/`, `chapter21/` — folders present but currently empty placeholders
+- `chapterExtra/` — `chapterExtra1.js` — extra render-loop / projection experiment
 
 ## Chapter overview
 
-### chapter1
+### chapter01
 - `chapter1a.js` — Creating a Basic Triangle
 
-### chapter2
+### chapter02
 - `chapter2a.js` — Multiple Triangles
 - `chapter2b.js` — Rectangle using Triangles
 - `chapter2c.js` — Index Buffer
 - `chapter2d.js` — Letter F geometry
 
-### chapter3
+### chapter03
 - `chapter3a.js` — POINTS
 - `chapter3b.js` — LINES
-- `chapter3c.js` — LINES (alternate pattern)
+- `chapter3c.js` — additional line pattern
 - `chapter3d.js` — LINE_LOOP
 - `chapter3e.js` — LINE_LOOP / polygon-style drawing
 - `chapter3f.js` — TRIANGLES
 - `chapter3g.js` — TRIANGLE_STRIP
 - `chapter3h.js` — TRIANGLE_FAN
 
-### chapter4
+### chapter04
 - `chapter4a.js` — Dynamic Buffer
-- `chapter4b.js` — Dynamic Buffer
-- `chapter4c.js` — Topology experiments
-- `chapter4d.js` — More topology/data-driven experiments
+- `chapter4b.js` — Dynamic Buffer / rectangle editing
+- `chapter4c.js` — topology or polygon experiment
+- `chapter4d.js` — interactive drawing experiment
 
-### chapter5
+### chapter05
 - `chapter5a.js` — Uniform color
 - `chapter5b.js` — Varying color
 - `chapter5c.js` — Multiple buffers
 - `chapter5d.js` — Combined buffer
 - `chapter5e.js` — Varying + Uniform together
 
-### chapter6
-- `chapter6a.js` to `chapter6e.js` — render loop and 2D transformation work
+### chapter06
+- `chapter6a.js` — basic rectangle in pixel space using `u_resolution`
+- `chapter6b.js` — same screen-space rectangle with inverted Y handling
+- `chapter6c.js` — many random rectangles using a single buffer and uniform colors
+- `chapter6d.js` — same random-rectangle idea with render-loop style progression
+- `chapter6e.js` — 2D transforms using 3x3 matrices for translation, rotation, and scaling
 
 ### chapterExtra
-- `chapterExtra1.js` — extra rendering experiments
+- `chapterExtra1.js` — extra render-loop / projection experiments
 
 ## Learning flow
 
@@ -69,7 +71,7 @@ This project is organized as a step-by-step path:
 4. Make data dynamic and interactive
 5. Pass data through shaders using uniforms and varying values
 6. Add render loops and transforms
-7. Extend toward more advanced graphics concepts
+7. Extend toward more advanced graphics ideas
 
 ## Tech focus
 

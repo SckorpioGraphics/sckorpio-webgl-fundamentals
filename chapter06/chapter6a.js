@@ -4,7 +4,7 @@ CHAPTER 6a:
 - Vertex Data In Pixel space
 
 Topics:
-- Uniforms ( for scrren space data)
+- Uniforms (for screen space data)
 - Pixel space to Clip space math 
 ###############################################################
 */
