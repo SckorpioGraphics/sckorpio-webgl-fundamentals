@@ -16,42 +16,6 @@ Topics:
 // 1. GLSL Shader Sources 
 // =============================================================
 
-// OLD WebGL 1.0 Way...
-// -------------------------------------------------------------
-// basic vertex shader
-// passing postion data in clip space[-1,+1] directly
-const vertexShaderSourceOld =  `
-    attribute vec2 a_position;
-    uniform vec2 u_resolution;
-
-    void main() {
-        // pixel to [0,1]
-        vec2 zeroToOne = a_position / u_resolution;
-
-        // [-1,1] to [0,2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
-
-        // [0,2] to [-1,1]
-        vec2 clipSpace = zeroToTwo - 1.0;
-
-        // Inver vertical (TopLeft corner= (0,0))
-        vec2 clipSpaceInverted = clipSpace * vec2(1.0,-1.0);
-
-        gl_Position = vec4(clipSpaceInverted, 0.0, 1.0);
-    }
-`;
-
-// basic fragment shader
-// using cyan/purple color for the pixel (sckorpio branding)
-const fragmentShaderSourceOld = `
-    precision mediump float;
-
-    void main() {
-        //gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
-        gl_FragColor = vec4(0.39, 0.33, 0.58, 1.0); //Sckorpio-Purple
-    }
-`;
-
 // NEW WebGL 2.0 Way...
 // -------------------------------------------------------------
 // basic vertex shader
@@ -85,8 +49,6 @@ const fragmentShaderSource = `#version 300 es
     uniform vec4 u_color; 
 
     void main() {
-        //out_Color = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
-        //out_Color = vec4(0.39, 0.33, 0.58, 1.0); //Sckorpio-Purple
         out_color = u_color;
     }
 `;

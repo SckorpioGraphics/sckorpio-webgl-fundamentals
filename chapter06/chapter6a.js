@@ -13,42 +13,6 @@ Topics:
 // 1. GLSL Shader Sources 
 // =============================================================
 
-// OLD WebGL 1.0 Way...
-// -------------------------------------------------------------
-// basic vertex shader
-// passing postion data in clip space[-1,+1] directly
-const vertexShaderSourceOld =  `
-    attribute vec2 a_position;
-    uniform vec2 u_resolution;
-
-    void main() {
-        // pixel to [0,1]
-        vec2 zeroToOne = a_position / u_resolution;
-
-        // [-1,1] to [0,2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
-
-        // [0,2] to [-1,1]
-        vec2 clipSpace = zeroToTwo - 1.0;
-
-        // Inver vertical (TopLeft corner= (0,0))
-        vec2 clipSpaceInverted = clipSpace * vec2(1.0,-1.0);
-
-        gl_Position = vec4(clipSpaceInverted, 0.0, 1.0);
-    }
-`;
-
-// basic fragment shader
-// using cyan/purple color for the pixel (sckorpio branding)
-const fragmentShaderSourceOld = `
-    precision mediump float;
-
-    void main() {
-        //gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
-        gl_FragColor = vec4(0.39, 0.33, 0.58, 1.0); //Sckorpio-Purple
-    }
-`;
-
 // NEW WebGL 2.0 Way...
 // -------------------------------------------------------------
 // basic vertex shader
@@ -78,7 +42,6 @@ const fragmentShaderSource = `#version 300 es
     out vec4 out_Color;
 
     void main() {
-        //out_Color = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
         out_Color = vec4(0.39, 0.33, 0.58, 1.0); //Sckorpio-Purple
     }
 `;
@@ -193,13 +156,13 @@ function main() {
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     // Vertex data CPU side
     const positions = new Float32Array([
-        10, 20,     // Left Bottom
-        80, 20,     // Right Bottom
-        10, 30,     // Left Top
+        20, 20,     // Left Bottom
+        200, 20,     // Right Bottom
+        20, 100,     // Left Top
 
-        10, 30,     // Left Top
-        80, 20,     // Right Bottom
-        80, 30,     // Right Top
+        20, 100,     // Left Top
+        200, 20,     // Right Bottom
+        200, 100,     // Right Top
     ]);
     //Feed the vertex data to buffer GPU
     gl.bufferData(
