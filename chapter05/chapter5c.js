@@ -1,8 +1,7 @@
 /* #############################################################
-CHAPTER 5c: Multiple Buffers
+CHAPTER 5c: Combined Interleaved Buffer
 
 Topics:
-- Using Separate Buffer for Vertex Color
 - Adding a basic UI to manipulate 
 - vertices positions
 - vertices color
@@ -200,26 +199,20 @@ function main() {
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
     const locationAttributeColor = gl.getAttribLocation(program, "a_color");
     // Future Uniform etc here..
-    const uniformColorPosition = gl.getUniformLocation(program, "u_color");
+    const locationUniformColor = gl.getUniformLocation(program, "u_color");
 
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
 
     // OBJECT 1
-    // VERTEX POSITION BUFFER
+    // VERTEX BUFFER (COMBINED FOR x,y & r,g,b)
     // create Buffer (vbo: vertex buffer object)
-    var vbo_position = gl.createBuffer(); 
+    var vbo = gl.createBuffer(); 
     // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo_position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     // Data will be taken from UI later...
 
-    // VERTEX COLOR BUFFER
-    // create Buffer (vbo: vertex buffer object)
-    var vbo_color = gl.createBuffer(); 
-    // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo_color);
-    // Data will be taken from UI later...
 
     // -------------------------------------------------------------
     // 4. VERTEX ARRAY
@@ -228,17 +221,17 @@ function main() {
     var vao = gl.createVertexArray();
     // bind the vertex array
     gl.bindVertexArray(vao);
+    // bind the buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     //------vertex positions-----
     // enable that attrib
     gl.enableVertexAttribArray(locationAttributePosition);
-    // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo_position);
     // Buffer data format
     const size1 = 2;          // 2 components (X, Y) per vertex
     const type1 = gl.FLOAT;   // 32-bit float values
     const normalize1 = false; // Do not normalize
-    const stride1 = 0;        // Auto stride
-    const offset1 = 0;        // Start reading from index 0
+    const stride1 = 5 * Float32Array.BYTES_PER_ELEMENT;        // Total stride (2(x,y) + 3(r,g,b))
+    const offset1 = 0 * Float32Array.BYTES_PER_ELEMENT;        // Start reading from index 0
     gl.vertexAttribPointer(
         locationAttributePosition,
         size1,
@@ -251,13 +244,13 @@ function main() {
     // enable that attrib
     gl.enableVertexAttribArray(locationAttributeColor);
     // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo_color);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     // Buffer data format
     const size2 = 3;          // 3 components (R, G, B) per vertex
     const type2 = gl.FLOAT;   // 32-bit float values
     const normalize2 = false; // Do not normalize
-    const stride2 = 0;        // Auto stride
-    const offset2 = 0;        // Start reading from index 0
+    const stride2 = 5 * Float32Array.BYTES_PER_ELEMENT;        // Total stride (2(x,y) + 3(r,g,b))
+    const offset2 = 2 * Float32Array.BYTES_PER_ELEMENT;        // Start reading from index 2
     gl.vertexAttribPointer(
         locationAttributeColor,
         size2,
@@ -266,7 +259,6 @@ function main() {
         stride2,
         offset2
     );
-
 
     // -------------------------------------------------------------
     // 5. RENDER (this will happen every frame)
@@ -287,7 +279,7 @@ function main() {
         // SHADER------------------------
         gl.useProgram(program);
         // Set the color from UI values
-        gl.uniform4f(uniformColorPosition, state.R, state.G, state.B, 1);
+        gl.uniform4f(locationUniformColor, state.R, state.G, state.B, 1);
 
 
         // BUFFER/DATA--------------------
@@ -295,34 +287,17 @@ function main() {
         gl.bindVertexArray(vao);
 
         // Update Positions----
-        gl.bindBuffer(gl.ARRAY_BUFFER, vbo_position);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
         // Vertex data CPU side
-        const positions = new Float32Array([
-            // Vertices
-            state.aX, state.aY, // point A
-            state.bX, state.bY, // point B
-            state.cX, state.cY  // point C
+        const vertexData = new Float32Array([
+            state.aX, state.aY, state.aR, state.aG, state.aB, // point A
+            state.bX, state.bY, state.bR, state.bG, state.bB, // point B
+            state.cX, state.cY, state.cR, state.cG, state.cB  // point C
         ]);
         //Feed the vertex data to buffer GPU
         gl.bufferData(
             gl.ARRAY_BUFFER, // bind point
-            positions,       // cpu data
-            gl.DYNAMIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
-        );
-
-        // Update Positions----
-        gl.bindBuffer(gl.ARRAY_BUFFER, vbo_color);
-        // Vertex data CPU side
-        const colors = new Float32Array([
-            // Vertices Colors
-            state.aR, state.aG, state.aB, // point P
-            state.bR, state.bG, state.bB, // point Q
-            state.cR, state.cG, state.cB  // point R
-        ]);
-        //Feed the vertex data to buffer GPU
-        gl.bufferData(
-            gl.ARRAY_BUFFER, // bind point
-            colors,       // cpu data
+            vertexData,       // cpu data
             gl.DYNAMIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
         );
 

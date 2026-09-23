@@ -1,10 +1,10 @@
 /* #############################################################
-CHAPTER 5a: Uniform 
+CHAPTER 5a: Varying
 
 Topics:
+- Using Vertex data itself for Vertex Color
 - Adding a basic UI to manipulate 
-- vertices position
-- uniform color
+- vertices positions
 ###############################################################
 */
 
@@ -19,23 +19,23 @@ Topics:
 // passing postion data in clip space[-1,+1] directly
 const vertexShaderSource =  `#version 300 es
     in vec2 a_position;
+    out vec4 v_color;
 
     void main() {
         gl_Position = vec4(a_position, 0.0, 1.0);
+        v_color = gl_Position * 0.5 + 0.5; // To make them non negative [-1,+1] -> [0,1]
     }
 `;
 
 // basic fragment shader
 // using cyan/purple color for the pixel (sckorpio branding)
 const fragmentShaderSource = `#version 300 es
-    precision mediump float;
-    out vec4 out_Color;
-    uniform vec4 u_color;
+    precision highp float;
+    in vec4 v_color;
+    out vec4 out_color;
 
     void main() {
-        //out_Color = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
-        //out_Color = vec4(0.39, 0.33, 0.58, 1.0); //Sckorpio-Purple
-        out_Color = u_color;
+        out_color = v_color;
     }
 `;
 
@@ -109,37 +109,28 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 var state = {
     // Vertices
     aX: -0.5, aY: 0.0,
-    bX: 0.5, bY: 0.0,
-    cX: 0.0, cY: 0.5,
-    // Color
-    R: 0.39 , G: 0.33, B: 0.58
+    bX: 0.5,  bY: 0.0,
+    cX: 0.0,  cY: 0.5,
 };
 
 function setupGUI(render) {
-
     const gui = new lil.GUI();
-
-    const verticesFolder = gui.addFolder("Vertices");
+    const vertexFolder = gui.addFolder("Vertex Positions");
 
     // Point A
-    const pointAFolder = verticesFolder.addFolder("Point A");
+    const pointAFolder = vertexFolder.addFolder("Point A");
     pointAFolder.add(state, "aX", -1, 1).name("X").onChange(render);
     pointAFolder.add(state, "aY", -1, 1).name("Y").onChange(render);
 
     // Point B
-    const pointBFolder = verticesFolder.addFolder("Point B");
+    const pointBFolder = vertexFolder.addFolder("Point B");
     pointBFolder.add(state, "bX", -1, 1).name("X").onChange(render);
     pointBFolder.add(state, "bY", -1, 1).name("Y").onChange(render);
 
     // Point C
-    const pointCFolder = verticesFolder.addFolder("Point C");
+    const pointCFolder = vertexFolder.addFolder("Point C");
     pointCFolder.add(state, "cX", -1, 1).name("X").onChange(render);
     pointCFolder.add(state, "cY", -1, 1).name("Y").onChange(render);
-
-    const colorFolder = gui.addFolder("Color");
-    colorFolder.add(state, "R", 0, 1).name("R").onChange(render);
-    colorFolder.add(state, "G", 0, 1).name("G").onChange(render);
-    colorFolder.add(state, "B", 0, 1).name("B").onChange(render);
 }
 
 // =============================================================
@@ -178,7 +169,7 @@ function main() {
     // Save Attribute locations
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
     // Future Uniform etc here..
-    const uniformColorPosition = gl.getUniformLocation(program, "u_color");
+    const locationUniformColor = gl.getUniformLocation(program, "u_color");
 
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
@@ -238,7 +229,7 @@ function main() {
         // SHADER------------------------
         gl.useProgram(program);
         // Set the color from UI values
-        gl.uniform4f(uniformColorPosition, state.R, state.G, state.B, 1);
+        gl.uniform4f(locationUniformColor, state.R, state.G, state.B, 1);
 
 
         // BUFFER/DATA--------------------

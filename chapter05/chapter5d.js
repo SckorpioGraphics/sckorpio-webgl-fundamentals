@@ -1,11 +1,10 @@
 /* #############################################################
-CHAPTER 5d: Combined Buffer
+CHAPTER 5e: Rectangle with 2 triangles & Vertex colors
 
 Topics:
-- Adding a basic UI to manipulate 
-- vertices positions
-- vertices color
-- uniform color
+- Making a rectangle with 2 different triangles
+- Observe how interpolation works between these trinagles
+- And create the gradient effect
 ###############################################################
 */
 
@@ -110,15 +109,15 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 
 var state = {
     // Vertices Positions
-    aX: -0.5, aY: 0.0,
-    bX: 0.5,  bY: 0.0,
-    cX: 0.0,  cY: 0.5,
+    aX: -0.5, aY: -0.5,
+    bX: 0.5,  bY: -0.5,
+    cX: 0.5,  cY: 0.5,
+    dX: -0.5,  dY: 0.5,
     // Vertices Color 
     aR: 1.0 , aG: 0.0, aB: 0.0,
     bR: 0.0 , bG: 1.0, bB: 0.0,
     cR: 0.0 , cG: 0.0, cB: 1.0,
-    //Uniform Color
-    R: 0, G: 0, B: 0,
+    dR: 1.0 , dG: 1.0, dB: 0.0
 };
 
 function setupGUI(render) {
@@ -141,6 +140,11 @@ function setupGUI(render) {
     pointCFolder.add(state, "cX", -1, 1).name("X").onChange(render);
     pointCFolder.add(state, "cY", -1, 1).name("Y").onChange(render);
 
+    // Point D
+    const pointDFolder = verticesFolder.addFolder("Point D");
+    pointDFolder.add(state, "dX", -1, 1).name("X").onChange(render);
+    pointDFolder.add(state, "dY", -1, 1).name("Y").onChange(render);
+
 
     const colorFolder = gui.addFolder("Color");
 
@@ -161,6 +165,13 @@ function setupGUI(render) {
     pointCColorFolder.add(state, "cR", 0, 1).name("R").onChange(render);
     pointCColorFolder.add(state, "cG", 0, 1).name("G").onChange(render);
     pointCColorFolder.add(state, "cB", 0, 1).name("B").onChange(render);
+
+    // Point D
+    const pointDColorFolder = colorFolder.addFolder("Point D");
+    pointDColorFolder.add(state, "dR", 0, 1).name("R").onChange(render);
+    pointDColorFolder.add(state, "dG", 0, 1).name("G").onChange(render);
+    pointDColorFolder.add(state, "dB", 0, 1).name("B").onChange(render);
+
 }
 
 // =============================================================
@@ -200,20 +211,18 @@ function main() {
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
     const locationAttributeColor = gl.getAttribLocation(program, "a_color");
     // Future Uniform etc here..
-    const uniformColorPosition = gl.getUniformLocation(program, "u_color");
 
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
 
     // OBJECT 1
-    // VERTEX BUFFER (COMBINED FOR x,y & r,g,b)
+    // VERTEX POSITION BUFFER
     // create Buffer (vbo: vertex buffer object)
     var vbo = gl.createBuffer(); 
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     // Data will be taken from UI later...
-
 
     // -------------------------------------------------------------
     // 4. VERTEX ARRAY
@@ -261,6 +270,7 @@ function main() {
         offset2
     );
 
+
     // -------------------------------------------------------------
     // 5. RENDER (this will happen every frame)
     // -------------------------------------------------------------
@@ -279,9 +289,6 @@ function main() {
 
         // SHADER------------------------
         gl.useProgram(program);
-        // Set the color from UI values
-        gl.uniform4f(uniformColorPosition, state.R, state.G, state.B, 1);
-
 
         // BUFFER/DATA--------------------
         // bY simply using Vertex Array
@@ -293,7 +300,11 @@ function main() {
         const vertexData = new Float32Array([
             state.aX, state.aY, state.aR, state.aG, state.aB, // point A
             state.bX, state.bY, state.bR, state.bG, state.bB, // point B
-            state.cX, state.cY, state.cR, state.cG, state.cB  // point C
+            state.cX, state.cY, state.cR, state.cG, state.cB, // point C
+
+            state.aX, state.aY, state.aR, state.aG, state.aB, // point A
+            state.cX, state.cY, state.cR, state.cG, state.cB, // point C
+            state.dX, state.dY, state.dR, state.dG, state.dB  // point D
         ]);
         //Feed the vertex data to buffer GPU
         gl.bufferData(
@@ -301,11 +312,11 @@ function main() {
             vertexData,       // cpu data
             gl.DYNAMIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
         );
-
+        
         //DRAW CALL------------------------
         const draw_primitiveType = gl.TRIANGLES;
         const draw_offset = 0;
-        const draw_count = 3;
+        const draw_count = 6;
         gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
     }
 
