@@ -1,13 +1,12 @@
 /* #############################################################
-CHAPTER 6a: 
-- Creating a Basic Rectangle
-- Vertex Data In Pixel space
+CHAPTER 6a: Uniform 
 
 Topics:
-- Uniforms (for screen space data)
-- Pixel space to Clip space math 
+- Adding a basic UI to manipulate 
+- brightness of the triangle(as a single float)
 ###############################################################
 */
+
 
 // =============================================================
 // 1. GLSL Shader Sources 
@@ -19,19 +18,9 @@ Topics:
 // passing postion data in clip space[-1,+1] directly
 const vertexShaderSource =  `#version 300 es
     in vec2 a_position;
-    uniform vec2 u_resolution;
 
     void main() {
-        // pixel to [0,1]
-        vec2 zeroToOne = a_position / u_resolution;
-
-        // [-1,1] to [0,2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
-
-        // [0,2] to [-1,1]
-        vec2 clipSpace = zeroToTwo - 1.0;
-
-        gl_Position = vec4(clipSpace, 0.0, 1.0);
+        gl_Position = vec4(a_position, 0.0, 1.0);
     }
 `;
 
@@ -40,9 +29,10 @@ const vertexShaderSource =  `#version 300 es
 const fragmentShaderSource = `#version 300 es
     precision mediump float;
     out vec4 out_Color;
+    uniform float u_intensity;
 
     void main() {
-        out_Color = vec4(0.39, 0.33, 0.58, 1.0); //Sckorpio-Purple
+        out_Color = vec4(0.39, 0.33, 0.58, 1.0) * u_intensity; //Sckorpio-Purple
     }
 `;
 
@@ -109,6 +99,25 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
   return false;
 }
 
+// =============================================================
+// 0. GUI using.. lil-gui
+// =============================================================
+
+var state = {
+    // Intensity
+    intensity: 1.0
+};
+
+function setupGUI(render) {
+
+    const gui = new lil.GUI();
+
+    const uniformFolder = gui.addFolder("Uniforms");
+
+    // intensity
+    const intensityFolder = uniformFolder.addFolder("intensity");
+    intensityFolder.add(state, "intensity", 0, 1).name("intensity").onChange(render);
+}
 
 // =============================================================
 // 3. Main Application Entry Point
@@ -132,6 +141,9 @@ function main() {
         return;
     }
 
+    // UI setup
+    setupGUI(render);
+
     // -------------------------------------------------------------
     // 2. SHADERS
     // -------------------------------------------------------------
@@ -143,32 +155,29 @@ function main() {
     // Save Attribute locations
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
     // Future Uniform etc here..
-    const locationUniformResolution = gl.getUniformLocation(program, "u_resolution");
+    const locationUniformIntensity = gl.getUniformLocation(program, "u_intensity");
 
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
+
     // OBJECT 1
     // VERTEX BUFFER
-    // create Buffer
-    var vbo = gl.createBuffer();
+    // create Buffer (vbo: vertex buffer object)
+    var vbo = gl.createBuffer(); 
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     // Vertex data CPU side
     const positions = new Float32Array([
-        20, 20,     // Left Bottom
-        200, 20,     // Right Bottom
-        20, 100,     // Left Top
-
-        20, 100,     // Left Top
-        200, 20,     // Right Bottom
-        200, 100,     // Right Top
+        -0.5, 0.0, // point 1
+        0.0, 0.5,  // point 2
+        0.5, 0.0   // point 3
     ]);
     //Feed the vertex data to buffer GPU
     gl.bufferData(
         gl.ARRAY_BUFFER, // bind point
         positions,       // cpu data
-        gl.STATIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
+        gl.DYNAMIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
     );
 
     // -------------------------------------------------------------
@@ -197,6 +206,7 @@ function main() {
         offset
     );
 
+
     // -------------------------------------------------------------
     // 5. RENDER (this will happen every frame)
     // -------------------------------------------------------------
@@ -215,17 +225,18 @@ function main() {
 
         // SHADER------------------------
         gl.useProgram(program);
-        // Pass dynamic canvas resolution to vertex shader uniform
-        gl.uniform2f(locationUniformResolution, gl.canvas.width, gl.canvas.height);
+        // Set the color from UI values
+        gl.uniform1f(locationUniformIntensity, state.intensity);
 
         // BUFFER/DATA--------------------
         // bY simply using Vertex Array
         gl.bindVertexArray(vao);
 
+
         //DRAW CALL------------------------
         const draw_primitiveType = gl.TRIANGLES;
         const draw_offset = 0;
-        const draw_count = 6;
+        const draw_count = 3;
         gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
     }
 
