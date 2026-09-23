@@ -74,58 +74,80 @@ CHAPTER 05
 ----------
 Folder: chapter05/
 
-chapter5a.js - Uniform
-chapter5b.js - Varying
-chapter5c.js - Multiple Buffers
-chapter5d.js - Combined Buffer
-chapter5e.js - Varying & Uniform together
+chapter5a.js - Varying: vertex colors from position
+chapter5b.js - Separate buffers for positions and colors
+chapter5c.js - Interleaved buffer with color + position
+chapter5d.js - Gradient rectangle through varying interpolation
+chapter5e.js - Two-triangle rectangle with different vertex colors
 
 Focus:
-- uniforms
-- varying values
-- multi-buffer setup
-- shader data flow
+- varying variables
+- interpolated fragment colors
+- data flow from vertex shader to fragment shader
+- multiple-buffer / interleaved-buffer patterns
 
 CHAPTER 06
 ----------
 Folder: chapter06/
 
-chapter6a.js - Basic Rectangle in Pixel Space
-chapter6b.js - Screen Space Rectangle + Inverted Y
-chapter6c.js - Many Random Rectangles
-chapter6d.js - Random Rectangles + Render Loop Practice
-chapter6e.js - 2D Transformations
+chapter6a.js - Uniform float intensity
+chapter6b.js - Uniform RGB color and intensity
+chapter6c.js - Many random rectangles under uniform control
+chapter6d.js - Repeated drawing with uniform-based styling
+chapter6e.js - Full uniform examples and shader parameter control
 
 Focus:
-- screen-space conversion
-- repeated draw calls and buffer reuse
-- render loop development
-- matrix math and 2D transforms
-- animation fundamentals
+- uniforms
+- globally shared shader values
+- color and intensity control from JavaScript
+- shader parameterization and dynamic style updates
 
 CHAPTER 07
 ----------
 Folder: chapter07/
-- reserved for future lessons
-- currently empty
+
+chapter7a.js - Basic Rectangle in Pixel Space
+chapter7b.js - Pixel Space with Inverted Y
+chapter7c.js - Pixel-to-Clip Matrix Conversion
+chapter7d.js - Random Rectangles with Uniform Colors
+chapter7e.js - Follow-up random-rectangle variation
+
+Focus:
+- pixel-space drawing
+- screen-space conversion
+- matrix-based clip-space conversion
+- repeated geometry reuse and random rectangle patterns
+
+CHAPTER 08
+----------
+Folder: chapter08/
+
+chapter8a.js - 2D Transformations
+chapter8b.js - 2D View & Translation Matrix
+
+Focus:
+- translation, rotation, and scale
+- matrix pipelines for transforms
+- model/view/projection-style thinking
+- animation foundations
 
 CHAPTER 11
 -----------
 Folder: chapter11/
-- placeholder folder
-- currently empty
+
+chapter11a.js - Placeholder file, currently empty
 
 CHAPTER 12
 -----------
 Folder: chapter12/
-- placeholder folder
-- currently empty
+
+chapter12a.js - Placeholder file, currently empty
 
 CHAPTER 21
 -----------
 Folder: chapter21/
-- placeholder folder
-- currently empty
+
+chapter21a.js - Placeholder file, currently empty
 
 CHAPTER EXTRA
 -------------
@@ -141,7 +163,7 @@ Focus:
 
 PROJECT SUMMARY
 ---------------
-This repository is structured as a practical learning progression in WebGL fundamentals, starting from the first triangle and progressing through geometry, topology, shader data flow, and transforms.
+This repository is structured as a practical learning progression in WebGL fundamentals, starting from the first triangle and progressing through geometry, topology, shader data flow, screen-space math, and matrix transforms.
 
 Notable repository fact:
-- Some later chapter folders are present as placeholders and do not yet contain lesson files.
+- The project has expanded beyond the original chapter sequence, with active lesson files in chapter07 and chapter08, while chapter11, chapter12, and chapter21 remain placeholders for future work.
