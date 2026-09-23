@@ -1,11 +1,14 @@
 /* #############################################################
-CHAPTER 7a: 
-- Creating a Basic Rectangle
+CHAPTER 7d: 
+- Creating a a lot of Random Basic Rectangle
 - Vertex Data In Pixel space
+- Inverted Y coordinate
 
 Topics:
-- Uniforms (for screen space data)
+- Uniforms ( for scrren space data)
 - Pixel space to Clip space math 
+- Inverted Y coordinates
+- Reusing the same buffer for creating mutlipe rectangles
 ###############################################################
 */
 
@@ -17,21 +20,19 @@ Topics:
 // -------------------------------------------------------------
 // basic vertex shader
 // passing postion data in clip space[-1,+1] directly
-const vertexShaderSource =  `#version 300 es
+const vertexShaderSource = `#version 300 es
     in vec2 a_position;
-    uniform vec2 u_resolution;
+    uniform mat3 u_pixelMatrix;
 
     void main() {
-        // pixel to [0,1]
-        vec2 zeroToOne = a_position / u_resolution;
+        // Convert vec2 position to homogeneous vec3
+        vec3 position = vec3(a_position, 1.0);
 
-        // [-1,1] to [0,2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
+        // Apply pixel -> clip space matrix
+        vec3 transformedPosition = u_pixelMatrix * position;
 
-        // [0,2] to [-1,1]
-        vec2 clipSpace = zeroToTwo - 1.0;
-
-        gl_Position = vec4(clipSpace, 0.0, 1.0);
+        // Convert to clip-space position
+        gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
     }
 `;
 
@@ -39,12 +40,15 @@ const vertexShaderSource =  `#version 300 es
 // using cyan/purple color for the pixel (sckorpio branding)
 const fragmentShaderSource = `#version 300 es
     precision mediump float;
-    out vec4 out_Color;
+    out vec4 out_color;
+    uniform vec4 u_color; 
 
     void main() {
-        out_Color = vec4(0.39, 0.33, 0.58, 1.0); //Sckorpio-Purple
+        out_color = u_color;
     }
 `;
+
+
 
 /**
  * Compiles a GLSL shader.
@@ -109,6 +113,29 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
   return false;
 }
 
+// Returns a random integer from 0 to range - 1.
+function randomInt(range) {
+  return Math.floor(Math.random() * range);
+}
+
+// Fill the buffer with the values that define a rectangle.
+function setRectangle(gl, x, y, width, height) {
+  var x1 = x;
+  var x2 = x + width;
+  var y1 = y;
+  var y2 = y + height;
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+     x1, y1,
+     x2, y1,
+     x1, y2,
+     x1, y2,
+     x2, y1,
+     x2, y2,
+  ]), gl.STATIC_DRAW);
+}
+
+
+
 
 // =============================================================
 // 3. Main Application Entry Point
@@ -142,8 +169,9 @@ function main() {
 
     // Save Attribute locations
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
-    // Future Uniform etc here..
-    const locationUniformResolution = gl.getUniformLocation(program, "u_resolution");
+    // Save Uniform locations
+    const locationUniformPixelMatrix = gl.getUniformLocation(program, "u_pixelMatrix");
+    const locationUniformColor = gl.getUniformLocation(program, "u_color");
 
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
@@ -154,22 +182,7 @@ function main() {
     var vbo = gl.createBuffer();
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    // Vertex data CPU side
-    const positions = new Float32Array([
-        20, 20,     // Left Bottom
-        200, 20,     // Right Bottom
-        20, 100,     // Left Top
-
-        20, 100,     // Left Top
-        200, 20,     // Right Bottom
-        200, 100,     // Right Top
-    ]);
-    //Feed the vertex data to buffer GPU
-    gl.bufferData(
-        gl.ARRAY_BUFFER, // bind point
-        positions,       // cpu data
-        gl.STATIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
-    );
+    // PASS NO DATA FOR NOW
 
     // -------------------------------------------------------------
     // 4. VERTEX ARRAY
@@ -198,7 +211,14 @@ function main() {
     );
 
     // -------------------------------------------------------------
-    // 5. RENDER (this will happen every frame)
+    // 5. MATRIX
+    // -------------------------------------------------------------
+
+    // Matrix used to convert pixel space -> clip space
+    let pixelMatrix = mat3.create();
+
+    // -------------------------------------------------------------
+    // 6. RENDER (this will happen every frame)
     // -------------------------------------------------------------
     function render() {
         // CANVAS------------------------
@@ -215,19 +235,62 @@ function main() {
 
         // SHADER------------------------
         gl.useProgram(program);
-        // Pass dynamic canvas resolution to vertex shader uniform
-        gl.uniform2f(locationUniformResolution, gl.canvas.width, gl.canvas.height);
+        // ------------------------
+        // pixel space matrix
+        
+        const width = gl.canvas.width;
+        const height = gl.canvas.height;
+
+        /*
+            Pixel -> Clip:
+
+            x' = (2 * x / width) - 1
+            y' = 1 - (2 * y / height)
+
+            Matrix:
+
+            |  2/w    0     -1 |
+            |   0    -2/h    1 |
+            |   0     0      1 |
+        */
+
+        pixelMatrix = mat3.fromValues(
+            2 / width,  0,           0,
+            0,         -2 / height,  0,
+            -1,         1,           1
+        );
+
+        // Pass matrix to vertex shader
+        gl.uniformMatrix3fv(locationUniformPixelMatrix,false,pixelMatrix);
 
         // BUFFER/DATA--------------------
         // bY simply using Vertex Array
         gl.bindVertexArray(vao);
+        // bind the buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 
-        //DRAW CALL------------------------
-        const draw_primitiveType = gl.TRIANGLES;
-        const draw_offset = 0;
-        const draw_count = 6;
-        gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
+         //DRAW CALL------------------------
+        // draw 50 random rectangles in random colors
+        for (var ii = 0; ii < 50; ++ii) {
+            // Put a rectangle in the position buffer
+            setRectangle(gl, randomInt(width), randomInt(height), randomInt(200), randomInt(200));
+
+            // Set a random color.
+            gl.uniform4f(locationUniformColor, Math.random(), Math.random(), Math.random(), 1);
+
+            // Draw the rectangle.
+            const draw_primitiveType = gl.TRIANGLES;
+            const draw_offset = 0;
+            const draw_count = 6;
+            gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
+        }
+
+        // Request next animation frame
+        requestAnimationFrame(render);
     }
+
+    // Request next animation frame
+    requestAnimationFrame(render);
 
     // Execute first render call
     render();

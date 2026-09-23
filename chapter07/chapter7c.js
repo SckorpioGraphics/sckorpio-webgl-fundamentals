@@ -1,37 +1,38 @@
 /* #############################################################
-CHAPTER 7a: 
+CHAPTER 7C:
 - Creating a Basic Rectangle
-- Vertex Data In Pixel space
+- Vertex Data in Pixel Space
+- Pixel Space -> Clip Space using a Matrix
 
 Topics:
-- Uniforms (for screen space data)
-- Pixel space to Clip space math 
+- Matrix as a Uniform
+- mat3
+- Pixel Space -> Clip Space
+- Inverted Y
 ###############################################################
 */
 
 // =============================================================
-// 1. GLSL Shader Sources 
+// 1. GLSL SHADER SOURCES
 // =============================================================
 
 // NEW WebGL 2.0 Way...
 // -------------------------------------------------------------
 // basic vertex shader
-// passing postion data in clip space[-1,+1] directly
-const vertexShaderSource =  `#version 300 es
+// using a matrix to convert pixel space to clip space
+const vertexShaderSource = `#version 300 es
     in vec2 a_position;
-    uniform vec2 u_resolution;
+    uniform mat3 u_pixelMatrix;
 
     void main() {
-        // pixel to [0,1]
-        vec2 zeroToOne = a_position / u_resolution;
+        // Convert vec2 position to homogeneous vec3
+        vec3 position = vec3(a_position, 1.0);
 
-        // [-1,1] to [0,2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
+        // Apply pixel -> clip space matrix
+        vec3 transformedPosition = u_pixelMatrix * position;
 
-        // [0,2] to [-1,1]
-        vec2 clipSpace = zeroToTwo - 1.0;
-
-        gl_Position = vec4(clipSpace, 0.0, 1.0);
+        // Convert to clip-space position
+        gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
     }
 `;
 
@@ -42,7 +43,7 @@ const fragmentShaderSource = `#version 300 es
     out vec4 out_Color;
 
     void main() {
-        out_Color = vec4(0.39, 0.33, 0.58, 1.0); //Sckorpio-Purple
+        out_Color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio-Purple
     }
 `;
 
@@ -52,18 +53,23 @@ const fragmentShaderSource = `#version 300 es
 function createShader(gl, type, source) {
     // create a shader of 'type'
     const shader = gl.createShader(type);
+
     // pass the shader source string
     gl.shaderSource(shader, source);
+
     // compile the shader
     gl.compileShader(shader);
 
     // get compile status of shader
     const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+
     // if status = success : return shader
-    if(compileStatus) return shader;
+    if (compileStatus) return shader;
+
     // else log it
     console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
-    // and delete the shader
+
+    // delete the shader
     gl.deleteShader(shader);
 }
 
@@ -73,61 +79,70 @@ function createShader(gl, type, source) {
 function createProgram(gl, vertexShader, fragmentShader) {
     // create a program
     const program = gl.createProgram();
-    // attach the vertex shader to program
+
+    // attach the vertex shader
     gl.attachShader(program, vertexShader);
-    // attach the fragment shader to program
+
+    // attach the fragment shader
     gl.attachShader(program, fragmentShader);
+
     // finally link them together
     gl.linkProgram(program);
 
     // get link status of program
     const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
-    // if link status success
-    if(linkStatus) return program;
 
-    // else: log it
+    // if link status success
+    if (linkStatus) return program;
+
+    // else log it
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
-    // and delete the program
+
+    // delete the program
     gl.deleteProgram(program);
 }
 
 // =============================================================
-// 2. Helper Functions
+// 2. HELPER FUNCTIONS
 // =============================================================
+
 /**
  * Resizes the internal drawing buffer to match screen CSS display pixels.
  */
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-  const width = (canvas.clientWidth * multiplier) | 0;
-  const height = (canvas.clientHeight * multiplier) | 0;
+    const width = (canvas.clientWidth * multiplier) | 0;
+    const height = (canvas.clientHeight * multiplier) | 0;
 
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width;
-    canvas.height = height;
-    return true;
-  }
-  return false;
+    if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        return true;
+    }
+
+    return false;
 }
 
-
 // =============================================================
-// 3. Main Application Entry Point
+// 3. MAIN APPLICATION ENTRY POINT
 // =============================================================
 
 function main() {
     // -------------------------------------------------------------
-    // 1. WEBGL CANVAS 
+    // 1. WEBGL CANVAS
     // -------------------------------------------------------------
+
     // Get the Canvas
     const canvas = document.querySelector("#c");
-    if(!canvas) {
+
+    if (!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
     // Get the WebGL context
     const gl = canvas.getContext("webgl2");
-    if(!gl) {
+
+    if (!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
     }
@@ -135,6 +150,7 @@ function main() {
     // -------------------------------------------------------------
     // 2. SHADERS
     // -------------------------------------------------------------
+
     // Compile Shader & Create Program
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
@@ -142,52 +158,62 @@ function main() {
 
     // Save Attribute locations
     const locationAttributePosition = gl.getAttribLocation(program, "a_position");
-    // Future Uniform etc here..
-    const locationUniformResolution = gl.getUniformLocation(program, "u_resolution");
+
+    // Save Uniform locations
+    const locationUniformPixelMatrix = gl.getUniformLocation(program, "u_pixelMatrix");
 
     // -------------------------------------------------------------
     // 3. DATA & BUFFERS
     // -------------------------------------------------------------
+
     // OBJECT 1
     // VERTEX BUFFER
-    // create Buffer
-    var vbo = gl.createBuffer();
+    const vbo = gl.createBuffer();
+
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+
     // Vertex data CPU side
     const positions = new Float32Array([
         20, 20,     // Left Bottom
-        200, 20,     // Right Bottom
-        20, 100,     // Left Top
+        200, 20,    // Right Bottom
+        20, 100,    // Left Top
 
-        20, 100,     // Left Top
-        200, 20,     // Right Bottom
-        200, 100,     // Right Top
+        20, 100,    // Left Top
+        200, 20,    // Right Bottom
+        200, 100    // Right Top
     ]);
-    //Feed the vertex data to buffer GPU
+
+    // Feed the vertex data to buffer GPU
     gl.bufferData(
-        gl.ARRAY_BUFFER, // bind point
-        positions,       // cpu data
-        gl.STATIC_DRAW   // how frequent we gonna use it (STATIC/DYNAMIC)
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.STATIC_DRAW
     );
 
     // -------------------------------------------------------------
     // 4. VERTEX ARRAY
     // -------------------------------------------------------------
+
     // vao: vertex array object
-    var vao = gl.createVertexArray();
+    const vao = gl.createVertexArray();
+
     // bind the vertex array
     gl.bindVertexArray(vao);
+
     // enable that attrib
     gl.enableVertexAttribArray(locationAttributePosition);
+
     // bind the buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+
     // Buffer data format
     const size = 2;          // 2 components (X, Y) per vertex
     const type = gl.FLOAT;   // 32-bit float values
     const normalize = false; // Do not normalize
     const stride = 0;        // Auto stride
     const offset = 0;        // Start reading from index 0
+
     gl.vertexAttribPointer(
         locationAttributePosition,
         size,
@@ -198,42 +224,80 @@ function main() {
     );
 
     // -------------------------------------------------------------
-    // 5. RENDER (this will happen every frame)
+    // 5. MATRIX
     // -------------------------------------------------------------
+
+    // Matrix used to convert pixel space -> clip space
+    let pixelMatrix = mat3.create();
+
+    // -------------------------------------------------------------
+    // 6. RENDER
+    // -------------------------------------------------------------
+
     function render() {
-        // CANVAS------------------------
+        // CANVAS ------------------------
         // update canvas resolution when window resize
         resizeCanvasToDisplaySize(gl.canvas);
-        // set view port
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        // BACKGROUND------------------------
-        // Clear Background Pick clear color
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);  //Sckorpio-Cyan
-        // Clear BG (here we can also clear depth etc)
+        // set viewport
+        gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+
+        // BACKGROUND ------------------------
+        // Clear Background
+        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio-Cyan
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        // SHADER------------------------
+        // SHADER ------------------------
         gl.useProgram(program);
-        // Pass dynamic canvas resolution to vertex shader uniform
-        gl.uniform2f(locationUniformResolution, gl.canvas.width, gl.canvas.height);
 
-        // BUFFER/DATA--------------------
-        // bY simply using Vertex Array
+        // ---------------------------------------------------------
+        // PIXEL SPACE -> CLIP SPACE MATRIX
+        // ---------------------------------------------------------
+        const width = gl.canvas.width;
+        const height = gl.canvas.height;
+
+        /*
+            Pixel -> Clip:
+
+            x' = (2 * x / width) - 1
+            y' = 1 - (2 * y / height)
+
+            Matrix:
+
+            |  2/w    0     -1 |
+            |   0    -2/h    1 |
+            |   0     0      1 |
+        */
+
+        pixelMatrix = mat3.fromValues(
+            2 / width,  0,           0,
+            0,         -2 / height,  0,
+            -1,         1,           1
+        );
+
+
+        // Pass matrix to vertex shader
+        gl.uniformMatrix3fv(locationUniformPixelMatrix,false,pixelMatrix);
+
+        // BUFFER/DATA --------------------
         gl.bindVertexArray(vao);
 
-        //DRAW CALL------------------------
-        const draw_primitiveType = gl.TRIANGLES;
-        const draw_offset = 0;
-        const draw_count = 6;
-        gl.drawArrays(draw_primitiveType, draw_offset, draw_count);
+        // DRAW CALL ------------------------
+        const drawPrimitiveType = gl.TRIANGLES;
+        const drawOffset = 0;
+        const drawCount = 6;
+
+        gl.drawArrays(
+            drawPrimitiveType,
+            drawOffset,
+            drawCount
+        );
     }
 
     // Execute first render call
     render();
 
     // Listen for Window resize
-    // when window get resized ... we render again
     window.addEventListener("resize", render);
 }
 
