@@ -1,9 +1,9 @@
 /* #############################################################
-CHAPTER 11a: 2D Transformations
+CHAPTER 11b: 2D View & Translation Matrix
 
 Topics:
-- Translations basics
-- using Uniforms floats
+- Making triangle in pixel space
+- but keeping shader clean by translation matrix
 ###############################################################
 */
 
@@ -13,18 +13,12 @@ Topics:
 
 const vertexShaderSource = `#version 300 es
     in vec2 a_position;
-
-    uniform vec2 u_translation;
-    uniform mat3 u_pixelMatrix;
+    uniform mat3 u_projection;
+    uniform mat3 u_view;
+    uniform mat3 u_model;
 
     void main() {
-        // Apply translation
-        vec2 position = a_position + u_translation;
-
-        // Convert pixel -> clip space
-        vec3 transformedPosition = u_pixelMatrix * vec3(position, 1.0);
-
-        gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
+        gl_Position = vec4((u_projection * u_view * u_model * vec3(a_position, 1.0)).xy, 0.0, 1.0);
     }
 `;
 
@@ -84,9 +78,15 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 
 var state = {
     // Vertices
-    aX: 100, aY: 0,
-    bX: 50, bY: 50,
-    cX: 50, cY: 150
+    aX: 0, aY: 0,
+    bX: 100, bY: 0,
+    cX: 0, cY: 200,
+    // Transfoms
+    translateX: 0,
+    translateY: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1
 };
 
 function setupGUI(canvas, render) {
@@ -104,6 +104,13 @@ function setupGUI(canvas, render) {
     const pointCFolder = verticesFolder.addFolder("Point C");
     pointCFolder.add(state, "cX", 0, canvas.width).name("X").onChange(render);
     pointCFolder.add(state, "cY", 0, canvas.height).name("Y").onChange(render);
+
+    const transformFolder = gui.addFolder("Transform");
+    transformFolder.add(state, "translateX", 0, canvas.width).name("Translation X").onChange(render);
+    transformFolder.add(state, "translateY", 0, canvas.height).name("Translation Y").onChange(render);
+    transformFolder.add(state, "rotation", 0, 360).name("Rotation").onChange(render);
+    transformFolder.add(state, "scaleX", -5, 5, 0.01).name("Scale X").onChange(render);
+    transformFolder.add(state, "scaleY", -5, 5, 0.01).name("Scale Y").onChange(render);
 }
 
 
@@ -234,6 +241,13 @@ function main() {
         );
         // model matrix
         const model = mat3.create();
+        // Translation
+        mat3.translate(model, model, [state.translateX, state.translateY]);
+        // Rotation
+        const angleInRadians = state.rotation * Math.PI / 180;
+        mat3.rotate(model, model, angleInRadians);
+        // Scaling
+        mat3.scale(model, model, [state.scaleX, state.scaleY]);
 
         // Upload transformation matrix
         gl.uniformMatrix3fv(locationUniformProjection,false,projection);
