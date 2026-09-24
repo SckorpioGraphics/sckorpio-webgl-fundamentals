@@ -8,16 +8,15 @@ Topics:
 ###############################################################
 */
 
-
 // =============================================================
-// 1. GLSL Shader Sources 
+// 1. GLSL SHADER SOURCES
 // =============================================================
 
 // NEW WebGL 2.0 Way...
 // -------------------------------------------------------------
-// basic vertex shader
-// passing postion data in clip space[-1,+1] directly
-const vertexShaderSource =  `#version 300 es
+// Basic vertex shader
+// Passing position data directly in clip space [-1, +1]
+const vertexShaderSource = `#version 300 es
     in vec2 a_position;
 
     void main() {
@@ -25,258 +24,241 @@ const vertexShaderSource =  `#version 300 es
     }
 `;
 
-// basic fragment shader
-// using cyan/purple color for the pixel (sckorpio branding)
 const fragmentShaderSource = `#version 300 es
     precision mediump float;
     out vec4 out_Color;
 
     void main() {
-        //out_Color = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
-        out_Color = vec4(0.39, 0.33, 0.58, 1.0); //Sckorpio-Purple
+        // out_Color = vec4(0.0, 1.0, 1.0, 1.0); // Cyan
+        out_Color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio Purple
     }
 `;
 
-/**
- * Compiles a GLSL shader.
- */
+// =============================================================
+// 2. WEBGL UTILITY FUNCTIONS
+// =============================================================
+
 function createShader(gl, type, source) {
-    // create a shader of 'type'
     const shader = gl.createShader(type);
-    // pass the shader source string
     gl.shaderSource(shader, source);
-    // compile the shader
     gl.compileShader(shader);
 
-    // get compile status of shader
     const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    // if status = success : return shader
     if(compileStatus) return shader;
-    // else log it
+
     console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
-    // and delete the shader
     gl.deleteShader(shader);
 }
 
-/**
- * Links vertex and fragment shaders into a GPU program.
- */
 function createProgram(gl, vertexShader, fragmentShader) {
-    // create a program
     const program = gl.createProgram();
-    // attach the vertex shader to program
     gl.attachShader(program, vertexShader);
-    // attach the fragment shader to program
     gl.attachShader(program, fragmentShader);
-    // finally link them together
     gl.linkProgram(program);
 
-    // get link status of program
     const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
-    // if link status success
     if(linkStatus) return program;
 
-    // else: log it
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
-    // and delete the program
     gl.deleteProgram(program);
 }
 
 // =============================================================
-// 2. Helper Functions
+// 3. HELPER FUNCTIONS
 // =============================================================
-/**
- * Resizes the internal drawing buffer to match screen CSS display pixels.
- */
-function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-  const width = (canvas.clientWidth * multiplier) | 0;
-  const height = (canvas.clientHeight * multiplier) | 0;
 
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width;
-    canvas.height = height;
-    return true;
-  }
-  return false;
+function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
+    const width = (canvas.clientWidth * multiplier) | 0;
+    const height = (canvas.clientHeight * multiplier) | 0;
+
+    if(canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        return true;
+    }
+
+    return false;
 }
 
+// =============================================================
+// 4. SHADER DATA
+// =============================================================
+
+const shader = {
+    program: null,
+
+    attributes: {
+        position: null
+    },
+
+    uniforms: {}
+};
 
 // =============================================================
-// 3. Main Application Entry Point
+// 5. OBJECT DATA
 // =============================================================
 
-function main() {
-    // -------------------------------------------------------------
-    // 1. WEBGL CANVAS 
-    // -------------------------------------------------------------
-    // Get the Canvas
-    const canvas = document.querySelector("#c");
-    if(!canvas) {
-        console.error("Canvas element not found");
-        return;
-    }
+const rectangle = {
+    shader: null,
 
-    // Get the WebGL context
-    const gl = canvas.getContext("webgl2");
-    if(!gl) {
-        console.error("WebGL2 is not supported by this browser");
-        return;
-    }
+    vao: null,
+    vbo: null,
+    ibo: null,
 
-    // -------------------------------------------------------------
-    // 2. SHADERS
-    // -------------------------------------------------------------
-    // Compile Shader & Create Program
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+    drawType: null
+};
+
+// =============================================================
+// 6. SHADER SETUP
+// =============================================================
+
+function setupShader(gl) {
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    const program = createProgram(gl, vertexShader, fragmentShader);
 
-    // Save Attribute locations
-    const locationAttributePosition = gl.getAttribLocation(program, "a_position");
-    // Future Uniform etc here..
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
 
-    // -------------------------------------------------------------
-    // 3. DATA & BUFFERS
-    // -------------------------------------------------------------
+    shader.attributes.position =
+        gl.getAttribLocation(shader.program, "a_position");
 
-    // OBJECT 1
+    // Future uniforms will be stored here.
+}
+
+// =============================================================
+// 7. OBJECT SETUP
+// =============================================================
+
+function setupRectangle(gl, shader) {
+    rectangle.shader = shader;
 
     /*
         v1-----------v3
         | \           |
-        |    \        |
+        |   \         |
+        |     \       |
         |       \     |
-        |          \  |
-        v0___________v2
-
+        v0__________\v2
     */
-   
-    // -------------------------------------------------------------
+
+    // ---------------------------------------------------------
     // VERTEX BUFFER
-    // -------------------------------------------------------------
+    // ---------------------------------------------------------
 
-    // create Buffer (vbo: vertex buffer object)
-    var vbo = gl.createBuffer();
-
-    // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-
-    // Vertex data CPU side
     // Only store each vertex ONCE
     const positions = new Float32Array([
-        -0.5, 0.0,  // point 0
-        -0.5, 0.5,  // point 1
-        0.5, 0.0,  // point 2
-        0.5, 0.5   // point 3
+        -0.5, 0.0,  // v0
+        -0.5, 0.5,  // v1
+         0.5, 0.0,  // v2
+         0.5, 0.5   // v3
     ]);
 
-    // Feed the vertex data to buffer GPU
+    rectangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
     gl.bufferData(
-        gl.ARRAY_BUFFER, // bind point
-        positions,       // CPU data
-        gl.STATIC_DRAW   // how frequently we use it
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.STATIC_DRAW
     );
 
-
-    // -------------------------------------------------------------
+    // ---------------------------------------------------------
     // INDEX BUFFER
-    // -------------------------------------------------------------
+    // ---------------------------------------------------------
 
-    // Create index buffer
-    var ibo = gl.createBuffer();
-
-    // Bind index buffer
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-
-    // Index data CPU side
     // Each number refers to a vertex in the vertex buffer
     const indices = new Uint16Array([
         0, 2, 1,    // Triangle 1
         2, 3, 1     // Triangle 2
     ]);
 
-    // Feed index data to buffer GPU
+    rectangle.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, rectangle.ibo);
     gl.bufferData(
-        gl.ELEMENT_ARRAY_BUFFER, // bind point
-        indices,                  // CPU index data
-        gl.STATIC_DRAW             // how frequently we use it
+        gl.ELEMENT_ARRAY_BUFFER,
+        indices,
+        gl.STATIC_DRAW
     );
 
-    // -------------------------------------------------------------
-    // 4. VERTEX ARRAY
-    // -------------------------------------------------------------
-    // vao: vertex array object
-    var vao = gl.createVertexArray();
-    // bind the vertex array
-    gl.bindVertexArray(vao);
-    // enable that attrib
-    gl.enableVertexAttribArray(locationAttributePosition);
-    // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    // Buffer data format
-    const size = 2;          // 2 components (X, Y) per vertex
-    const type = gl.FLOAT;   // 32-bit float values
-    const normalize = false; // Do not normalize
-    const stride = 0;        // Auto stride
-    const offset = 0;        // Start reading from index 0
+    // ---------------------------------------------------------
+    // VERTEX ARRAY
+    // ---------------------------------------------------------
+
+    rectangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(rectangle.vao);
+
+    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+
     gl.vertexAttribPointer(
-        locationAttributePosition,
-        size,
-        type,
-        normalize,
-        stride,
-        offset
+        rectangle.shader.attributes.position,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0
     );
+
     // Index buffer — IMPORTANT
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, rectangle.ibo);
 
+    // Draw data
+    rectangle.drawMode = gl.TRIANGLES;
+    rectangle.drawOffset = 0;
+    rectangle.drawCount = indices.length;
+    rectangle.drawType = gl.UNSIGNED_SHORT;
+}
 
-    // -------------------------------------------------------------
-    // 5. RENDER (this will happen every frame)
-    // -------------------------------------------------------------
+// =============================================================
+// 8. MAIN APPLICATION
+// =============================================================
+
+function main() {
+    // WEBGL CANVAS
+    const canvas = document.querySelector("#c");
+    if(!canvas) {
+        console.error("Canvas element not found");
+        return;
+    }
+
+    const gl = canvas.getContext("webgl2");
+    if(!gl) {
+        console.error("WebGL2 is not supported by this browser");
+        return;
+    }
+
+    // SETUP
+    setupShader(gl);
+    setupRectangle(gl, shader);
+
+    // RENDER
     function render() {
-        // CANVAS------------------------
-        // update canvas resolution when window resize
         resizeCanvasToDisplaySize(gl.canvas);
-        // set view port
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        // BACKGROUND------------------------
-        // Clear Background Pick clear color
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);  //Sckorpio-Cyan
-        // Clear BG (here we can also clear depth etc)
+        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        // SHADER------------------------
-        gl.useProgram(program);
-
-        // BUFFER/DATA--------------------
-        // bY simply using Vertex Array
-        gl.bindVertexArray(vao);
-
-        //DRAW CALL------------------------
-        const draw_primitiveType = gl.TRIANGLES;
-        const draw_count = indices.length;
-        const draw_type = gl.UNSIGNED_SHORT;
-        const draw_offset = 0;
+        gl.useProgram(rectangle.shader.program);
+        gl.bindVertexArray(rectangle.vao);
 
         gl.drawElements(
-            draw_primitiveType,
-            draw_count,
-            draw_type,
-            draw_offset
+            rectangle.drawMode,
+            rectangle.drawCount,
+            rectangle.drawType,
+            rectangle.drawOffset
         );
     }
 
-    // Execute first render call
     render();
-
-    // Listen for Window resize
-    // when window get resized ... we render again
     window.addEventListener("resize", render);
 }
 
-// Start app once DOM content is ready
+// =============================================================
+// 9. START
+// =============================================================
+
 window.addEventListener("DOMContentLoaded", main);
 
 export {
