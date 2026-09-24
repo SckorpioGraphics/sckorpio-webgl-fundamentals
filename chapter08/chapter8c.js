@@ -1,11 +1,13 @@
 /* #############################################################
-CHAPTER 8a: Pixel Space
+CHAPTER 8c: Pixel Space
 
 Topics:
 - Creating a basic rectangle
 - Vertex data in pixel space
-- Uniforms for screen-space data
-- Pixel space to clip space conversion
+- Matrix as a uniform
+- mat3
+- Pixel space -> clip space
+- Inverted Y
 ###############################################################
 */
 
@@ -16,19 +18,17 @@ Topics:
 const vertexShaderSource = `#version 300 es
     in vec2 a_position;
 
-    uniform vec2 u_resolution;
+    uniform mat3 u_pixelMatrix;
 
     void main() {
-        // Pixel space to [0, 1]
-        vec2 zeroToOne = a_position / u_resolution;
+        // Convert vec2 position to homogeneous vec3
+        vec3 position = vec3(a_position, 1.0);
 
-        // [0, 1] to [0, 2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
+        // Apply pixel -> clip space matrix
+        vec3 transformedPosition = u_pixelMatrix * position;
 
-        // [0, 2] to [-1, 1]
-        vec2 clipSpace = zeroToTwo - 1.0;
-
-        gl_Position = vec4(clipSpace, 0.0, 1.0);
+        // Convert to clip-space position
+        gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
     }
 `;
 
@@ -94,8 +94,8 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 
 /*
     No UI in this chapter yet.
-    The focus here is on pixel-space coordinates
-    and their conversion to clip space.
+    The focus here is on using a matrix
+    to convert pixel space to clip space.
 */
 
 // =============================================================
@@ -108,7 +108,7 @@ const shader = {
         position: null
     },
     uniforms: {
-        resolution: null
+        pixelMatrix: null
     }
 };
 
@@ -138,7 +138,7 @@ function setupShader(gl) {
     // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
     // uniforms
-    shader.uniforms.resolution = gl.getUniformLocation(shader.program, "u_resolution");
+    shader.uniforms.pixelMatrix = gl.getUniformLocation(shader.program, "u_pixelMatrix");
 }
 
 // =============================================================
@@ -219,11 +219,36 @@ function main() {
 
         gl.useProgram(rectangle.shader.program);
 
-        // Pass canvas resolution to shader
-        gl.uniform2f(
-            rectangle.shader.uniforms.resolution,
-            gl.canvas.width,
-            gl.canvas.height
+        // ---------------------------------------------------------
+        // PIXEL SPACE -> CLIP SPACE MATRIX
+        // ---------------------------------------------------------
+
+        const width = gl.canvas.width;
+        const height = gl.canvas.height;
+
+        /*
+            Pixel -> Clip:
+
+            x' = (2 * x / width) - 1
+            y' = 1 - (2 * y / height)
+
+            Matrix:
+
+            |  2/w    0     -1 |
+            |   0    -2/h    1 |
+            |   0     0      1 |
+        */
+
+        const pixelMatrix = mat3.fromValues(
+            2 / width,  0,           0,
+            0,         -2 / height,  0,
+            -1,         1,           1
+        );
+
+        gl.uniformMatrix3fv(
+            rectangle.shader.uniforms.pixelMatrix,
+            false,
+            pixelMatrix
         );
 
         gl.bindVertexArray(rectangle.vao);

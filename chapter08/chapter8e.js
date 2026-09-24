@@ -1,11 +1,13 @@
 /* #############################################################
-CHAPTER 8a: Pixel Space
+CHAPTER 8d: Pixel Space
 
 Topics:
-- Creating a basic rectangle
+- Creating multiple random rectangles
 - Vertex data in pixel space
-- Uniforms for screen-space data
-- Pixel space to clip space conversion
+- Inverted Y coordinates
+- Pixel space -> clip space using a matrix
+- Reusing the same buffer for multiple rectangles
+- Updating buffer data between draw calls
 ###############################################################
 */
 
@@ -16,29 +18,29 @@ Topics:
 const vertexShaderSource = `#version 300 es
     in vec2 a_position;
 
-    uniform vec2 u_resolution;
+    uniform mat3 u_pixelMatrix;
 
     void main() {
-        // Pixel space to [0, 1]
-        vec2 zeroToOne = a_position / u_resolution;
+        // Convert vec2 position to homogeneous vec3
+        vec3 position = vec3(a_position, 1.0);
 
-        // [0, 1] to [0, 2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
+        // Apply pixel -> clip space matrix
+        vec3 transformedPosition = u_pixelMatrix * position;
 
-        // [0, 2] to [-1, 1]
-        vec2 clipSpace = zeroToTwo - 1.0;
-
-        gl_Position = vec4(clipSpace, 0.0, 1.0);
+        // Convert to clip-space position
+        gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
     }
 `;
 
 const fragmentShaderSource = `#version 300 es
     precision mediump float;
 
+    uniform vec4 u_color;
+
     out vec4 out_color;
 
     void main() {
-        out_color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio Purple
+        out_color = u_color;
     }
 `;
 
@@ -88,14 +90,40 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     return false;
 }
 
+function randomInt(range) {
+    return Math.floor(Math.random() * range);
+}
+
+function setRectangle(gl, x, y, width, height) {
+    const x1 = x;
+    const x2 = x + width;
+    const y1 = y;
+    const y2 = y + height;
+
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([
+            x1, y1,
+            x2, y1,
+            x1, y2,
+
+            x1, y2,
+            x2, y1,
+            x2, y2
+        ]),
+        gl.STATIC_DRAW
+    );
+}
+
 // =============================================================
 // UI
 // =============================================================
 
 /*
     No UI in this chapter yet.
-    The focus here is on pixel-space coordinates
-    and their conversion to clip space.
+
+    The focus here is on generating and rendering
+    multiple pixel-space rectangles using one buffer.
 */
 
 // =============================================================
@@ -108,7 +136,8 @@ const shader = {
         position: null
     },
     uniforms: {
-        resolution: null
+        pixelMatrix: null,
+        color: null
     }
 };
 
@@ -138,7 +167,9 @@ function setupShader(gl) {
     // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
     // uniforms
-    shader.uniforms.resolution = gl.getUniformLocation(shader.program, "u_resolution");
+    shader.uniforms.pixelMatrix = gl.getUniformLocation(shader.program, "u_pixelMatrix");
+    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
+
 }
 
 // =============================================================
@@ -148,24 +179,8 @@ function setupShader(gl) {
 function setupRectangle(gl, shader) {
     rectangle.shader = shader;
 
-    const positions = new Float32Array([
-        20, 20,       // Left Bottom
-        200, 20,      // Right Bottom
-        20, 100,      // Left Top
-
-        20, 100,      // Left Top
-        200, 20,      // Right Bottom
-        200, 100      // Right Top
-    ]);
-
     rectangle.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
 
     rectangle.vao = gl.createVertexArray();
     gl.bindVertexArray(rectangle.vao);
@@ -219,21 +234,81 @@ function main() {
 
         gl.useProgram(rectangle.shader.program);
 
-        // Pass canvas resolution to shader
-        gl.uniform2f(
-            rectangle.shader.uniforms.resolution,
-            gl.canvas.width,
-            gl.canvas.height
+        // ---------------------------------------------------------
+        // PIXEL SPACE -> CLIP SPACE MATRIX
+        // ---------------------------------------------------------
+
+        const width = gl.canvas.width;
+        const height = gl.canvas.height;
+
+        /*
+            Pixel -> Clip:
+
+            x' = (2 * x / width) - 1
+            y' = 1 - (2 * y / height)
+
+            Matrix:
+
+            |  2/w    0     -1 |
+            |   0    -2/h    1 |
+            |   0     0      1 |
+        */
+
+        const pixelMatrix = mat3.fromValues(
+            2 / width,  0,           0,
+            0,         -2 / height,  0,
+            -1,         1,           1
         );
+
+        gl.uniformMatrix3fv(
+            rectangle.shader.uniforms.pixelMatrix,
+            false,
+            pixelMatrix
+        );
+
+        // ---------------------------------------------------------
+        // RECTANGLES
+        // ---------------------------------------------------------
 
         gl.bindVertexArray(rectangle.vao);
+        gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
 
-        gl.drawArrays(
-            rectangle.drawMode,
-            rectangle.drawOffset,
-            rectangle.drawCount
-        );
+        // Draw 50 random rectangles
+        for(let i = 0; i < 50; i++) {
+
+            // Generate rectangle in pixel space
+            setRectangle(
+                gl,
+                randomInt(width),
+                randomInt(height),
+                randomInt(200),
+                randomInt(200)
+            );
+
+            // Set random color
+            gl.uniform4f(
+                rectangle.shader.uniforms.color,
+                Math.random(),
+                Math.random(),
+                Math.random(),
+                1.0
+            );
+
+            gl.drawArrays(
+                rectangle.drawMode,
+                rectangle.drawOffset,
+                rectangle.drawCount
+            );
+        }
+        // Request next animation frame
+        requestAnimationFrame(render);
     }
+
+    // Request next animation frame
+    requestAnimationFrame(render);
+
+    // Execute first render call
+    render();
 
     render();
     window.addEventListener("resize", render);
