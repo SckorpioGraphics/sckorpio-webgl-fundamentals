@@ -1,14 +1,14 @@
 /* #############################################################
-CHAPTER 7C:
-- Creating a Basic Rectangle
-- Vertex Data in Pixel Space
-- Pixel Space -> Clip Space using a Matrix
+CHAPTER 7c: Multiple Objects
 
 Topics:
-- Matrix as a Uniform
-- mat3
-- Pixel Space -> Clip Space
-- Inverted Y
+- Rendering multiple objects
+- A Triangle and a Rectangle
+- Separate VAO/VBO for each object
+- Different shaders
+- Different colors
+- Multiple draw calls
+- Using vertex colors and uniform colors
 ###############################################################
 */
 
@@ -16,104 +16,96 @@ Topics:
 // 1. GLSL SHADER SOURCES
 // =============================================================
 
-// NEW WebGL 2.0 Way...
 // -------------------------------------------------------------
-// basic vertex shader
-// using a matrix to convert pixel space to clip space
-const vertexShaderSource = `#version 300 es
+// BASIC SHADER
+// -------------------------------------------------------------
+
+const basicVertexShaderSource = `#version 300 es
     in vec2 a_position;
-    uniform mat3 u_pixelMatrix;
 
     void main() {
-        // Convert vec2 position to homogeneous vec3
-        vec3 position = vec3(a_position, 1.0);
-
-        // Apply pixel -> clip space matrix
-        vec3 transformedPosition = u_pixelMatrix * position;
-
-        // Convert to clip-space position
-        gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
+        gl_Position = vec4(a_position, 0.0, 1.0);
     }
 `;
 
-// basic fragment shader
-// using cyan/purple color for the pixel (sckorpio branding)
-const fragmentShaderSource = `#version 300 es
+const basicFragmentShaderSource = `#version 300 es
     precision mediump float;
-    out vec4 out_Color;
+
+    uniform vec3 u_color;
+
+    out vec4 out_color;
 
     void main() {
-        out_Color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio-Purple
+        out_color = vec4(u_color, 1.0);
     }
 `;
 
-/**
- * Compiles a GLSL shader.
- */
+// -------------------------------------------------------------
+// VERTEX COLOR SHADER
+// -------------------------------------------------------------
+
+const colorVertexShaderSource = `#version 300 es
+    in vec2 a_position;
+    in vec3 a_color;
+
+    out vec4 v_color;
+
+    void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+        v_color = vec4(a_color, 1.0);
+    }
+`;
+
+const colorFragmentShaderSource = `#version 300 es
+    precision highp float;
+
+    in vec4 v_color;
+
+    out vec4 out_color;
+
+    void main() {
+        out_color = v_color;
+    }
+`;
+
+// =============================================================
+// 2. WEBGL UTILITY FUNCTIONS
+// =============================================================
+
 function createShader(gl, type, source) {
-    // create a shader of 'type'
     const shader = gl.createShader(type);
-
-    // pass the shader source string
     gl.shaderSource(shader, source);
-
-    // compile the shader
     gl.compileShader(shader);
 
-    // get compile status of shader
     const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if(compileStatus) return shader;
 
-    // if status = success : return shader
-    if (compileStatus) return shader;
-
-    // else log it
     console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
-
-    // delete the shader
     gl.deleteShader(shader);
 }
 
-/**
- * Links vertex and fragment shaders into a GPU program.
- */
 function createProgram(gl, vertexShader, fragmentShader) {
-    // create a program
     const program = gl.createProgram();
-
-    // attach the vertex shader
     gl.attachShader(program, vertexShader);
-
-    // attach the fragment shader
     gl.attachShader(program, fragmentShader);
-
-    // finally link them together
     gl.linkProgram(program);
 
-    // get link status of program
     const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if(linkStatus) return program;
 
-    // if link status success
-    if (linkStatus) return program;
-
-    // else log it
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
-
-    // delete the program
     gl.deleteProgram(program);
 }
 
 // =============================================================
-// 2. HELPER FUNCTIONS
+// 3. HELPER FUNCTIONS
 // =============================================================
 
-/**
- * Resizes the internal drawing buffer to match screen CSS display pixels.
- */
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     const width = (canvas.clientWidth * multiplier) | 0;
     const height = (canvas.clientHeight * multiplier) | 0;
 
-    if (canvas.width !== width || canvas.height !== height) {
+    if(canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
         canvas.height = height;
         return true;
@@ -123,185 +115,258 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// 3. MAIN APPLICATION ENTRY POINT
+// UI
 // =============================================================
 
-function main() {
-    // -------------------------------------------------------------
-    // 1. WEBGL CANVAS
-    // -------------------------------------------------------------
+/*
+    No UI in this chapter yet.
+    The focus here is on rendering multiple
+    independent objects with different shaders.
+*/
 
-    // Get the Canvas
-    const canvas = document.querySelector("#c");
+// =============================================================
+// 4. SHADER DATA
+// =============================================================
 
-    if (!canvas) {
-        console.error("Canvas element not found");
-        return;
+const basicShader = {
+    program: null,
+    attributes: {
+        position: null
+    },
+    uniforms: {
+        color: null
     }
+};
 
-    // Get the WebGL context
-    const gl = canvas.getContext("webgl2");
+const colorVertexShader = {
+    program: null,
+    attributes: {
+        position: null,
+        color: null
+    },
+    uniforms: {}
+};
 
-    if (!gl) {
-        console.error("WebGL2 is not supported by this browser");
-        return;
-    }
+// =============================================================
+// 5. OBJECT DATA
+// =============================================================
 
-    // -------------------------------------------------------------
-    // 2. SHADERS
-    // -------------------------------------------------------------
+const triangle = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
 
-    // Compile Shader & Create Program
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    const program = createProgram(gl, vertexShader, fragmentShader);
+const rectangle = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
 
-    // Save Attribute locations
-    const locationAttributePosition = gl.getAttribLocation(program, "a_position");
+// =============================================================
+// 6. SHADER SETUP
+// =============================================================
 
-    // Save Uniform locations
-    const locationUniformPixelMatrix = gl.getUniformLocation(program, "u_pixelMatrix");
+function setupBasicShader(gl) {
+    const vertexShader = createShader(gl,gl.VERTEX_SHADER,basicVertexShaderSource);
+    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,basicFragmentShaderSource);
+    basicShader.program = createProgram(gl,vertexShader,fragmentShader);
+    basicShader.attributes.position = gl.getAttribLocation(basicShader.program,"a_position");
+    basicShader.uniforms.color = gl.getUniformLocation(basicShader.program,"u_color");
+}
 
-    // -------------------------------------------------------------
-    // 3. DATA & BUFFERS
-    // -------------------------------------------------------------
+function setupcolorVertexShader(gl) {
+    const vertexShader = createShader(gl,gl.VERTEX_SHADER,colorVertexShaderSource);
+    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,colorFragmentShaderSource);
+    colorVertexShader.program = createProgram(gl,vertexShader,fragmentShader);
+    colorVertexShader.attributes.position = gl.getAttribLocation(colorVertexShader.program,"a_position");
+    colorVertexShader.attributes.color = gl.getAttribLocation(colorVertexShader.program,"a_color");
+}
 
-    // OBJECT 1
-    // VERTEX BUFFER
-    const vbo = gl.createBuffer();
+// =============================================================
+// 7. OBJECT SETUP
+// =============================================================
 
-    // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+function setupTriangle(gl, shader) {
+    triangle.shader = shader;
 
-    // Vertex data CPU side
     const positions = new Float32Array([
-        20, 20,     // Left Bottom
-        200, 20,    // Right Bottom
-        20, 100,    // Left Top
-
-        20, 100,    // Left Top
-        200, 20,    // Right Bottom
-        200, 100    // Right Top
+        -0.7, 0.0,
+        -0.5, 0.5,
+        -0.3, 0.0
     ]);
 
-    // Feed the vertex data to buffer GPU
+    triangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+
     gl.bufferData(
         gl.ARRAY_BUFFER,
         positions,
         gl.STATIC_DRAW
     );
 
-    // -------------------------------------------------------------
-    // 4. VERTEX ARRAY
-    // -------------------------------------------------------------
+    triangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(triangle.vao);
 
-    // vao: vertex array object
-    const vao = gl.createVertexArray();
-
-    // bind the vertex array
-    gl.bindVertexArray(vao);
-
-    // enable that attrib
-    gl.enableVertexAttribArray(locationAttributePosition);
-
-    // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-
-    // Buffer data format
-    const size = 2;          // 2 components (X, Y) per vertex
-    const type = gl.FLOAT;   // 32-bit float values
-    const normalize = false; // Do not normalize
-    const stride = 0;        // Auto stride
-    const offset = 0;        // Start reading from index 0
-
-    gl.vertexAttribPointer(
-        locationAttributePosition,
-        size,
-        type,
-        normalize,
-        stride,
-        offset
+    gl.enableVertexAttribArray(
+        triangle.shader.attributes.position
     );
 
-    // -------------------------------------------------------------
-    // 5. MATRIX
-    // -------------------------------------------------------------
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
 
-    // Matrix used to convert pixel space -> clip space
-    let pixelMatrix = mat3.create();
+    gl.vertexAttribPointer(
+        triangle.shader.attributes.position,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0
+    );
 
-    // -------------------------------------------------------------
-    // 6. RENDER
-    // -------------------------------------------------------------
+    triangle.drawMode = gl.TRIANGLES;
+    triangle.drawOffset = 0;
+    triangle.drawCount = 3;
+}
+
+function setupRectangle(gl, shader) {
+    rectangle.shader = shader;
+
+    // X, Y, R, G, B
+    const vertexData = new Float32Array([
+        0.2, -0.2,  1.0, 0.0, 0.0,
+        0.2,  0.2,  0.0, 1.0, 0.0,
+        0.6, -0.2,  0.0, 0.0, 1.0,
+
+        0.6, -0.2,  0.0, 0.0, 1.0,
+        0.6,  0.2,  1.0, 1.0, 0.0,
+        0.2,  0.2,  0.0, 1.0, 0.0
+    ]);
+
+    rectangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        vertexData,
+        gl.STATIC_DRAW
+    );
+
+    rectangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(rectangle.vao);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+
+    // Vertex positions
+    gl.enableVertexAttribArray(
+        rectangle.shader.attributes.position
+    );
+
+    gl.vertexAttribPointer(
+        rectangle.shader.attributes.position,
+        2,
+        gl.FLOAT,
+        false,
+        5 * Float32Array.BYTES_PER_ELEMENT,
+        0
+    );
+
+    // Vertex colors
+    gl.enableVertexAttribArray(
+        rectangle.shader.attributes.color
+    );
+
+    gl.vertexAttribPointer(
+        rectangle.shader.attributes.color,
+        3,
+        gl.FLOAT,
+        false,
+        5 * Float32Array.BYTES_PER_ELEMENT,
+        2 * Float32Array.BYTES_PER_ELEMENT
+    );
+
+    rectangle.drawMode = gl.TRIANGLES;
+    rectangle.drawOffset = 0;
+    rectangle.drawCount = 6;
+}
+
+// =============================================================
+// 8. MAIN APPLICATION
+// =============================================================
+
+function main() {
+    const canvas = document.querySelector("#c");
+    if(!canvas) {
+        console.error("Canvas element not found");
+        return;
+    }
+
+    const gl = canvas.getContext("webgl2");
+    if(!gl) {
+        console.error("WebGL2 is not supported by this browser");
+        return;
+    }
+
+    setupBasicShader(gl);
+    setupcolorVertexShader(gl);
+
+    setupTriangle(gl, basicShader);
+    setupRectangle(gl, colorVertexShader);
 
     function render() {
-        // CANVAS ------------------------
-        // update canvas resolution when window resize
         resizeCanvasToDisplaySize(gl.canvas);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        // set viewport
-        gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
-
-        // BACKGROUND ------------------------
-        // Clear Background
-        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio-Cyan
+        gl.clearColor(0.32, 0.63, 0.67, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        // SHADER ------------------------
-        gl.useProgram(program);
-
         // ---------------------------------------------------------
-        // PIXEL SPACE -> CLIP SPACE MATRIX
+        // TRIANGLE
         // ---------------------------------------------------------
-        const width = gl.canvas.width;
-        const height = gl.canvas.height;
 
-        /*
-            Pixel -> Clip:
+        gl.useProgram(triangle.shader.program);
 
-            x' = (2 * x / width) - 1
-            y' = 1 - (2 * y / height)
-
-            Matrix:
-
-            |  2/w    0     -1 |
-            |   0    -2/h    1 |
-            |   0     0      1 |
-        */
-
-        pixelMatrix = mat3.fromValues(
-            2 / width,  0,           0,
-            0,         -2 / height,  0,
-            -1,         1,           1
+        gl.uniform3f(
+            triangle.shader.uniforms.color,
+            1.0, 0.0, 0.0   // Red
         );
 
-
-        // Pass matrix to vertex shader
-        gl.uniformMatrix3fv(locationUniformPixelMatrix,false,pixelMatrix);
-
-        // BUFFER/DATA --------------------
-        gl.bindVertexArray(vao);
-
-        // DRAW CALL ------------------------
-        const drawPrimitiveType = gl.TRIANGLES;
-        const drawOffset = 0;
-        const drawCount = 6;
+        gl.bindVertexArray(triangle.vao);
 
         gl.drawArrays(
-            drawPrimitiveType,
-            drawOffset,
-            drawCount
+            triangle.drawMode,
+            triangle.drawOffset,
+            triangle.drawCount
+        );
+
+        // ---------------------------------------------------------
+        // RECTANGLE
+        // ---------------------------------------------------------
+
+        gl.useProgram(rectangle.shader.program);
+
+        gl.bindVertexArray(rectangle.vao);
+
+        gl.drawArrays(
+            rectangle.drawMode,
+            rectangle.drawOffset,
+            rectangle.drawCount
         );
     }
 
-    // Execute first render call
     render();
-
-    // Listen for Window resize
     window.addEventListener("resize", render);
 }
 
-// Start app once DOM content is ready
+// =============================================================
+// 9. START
+// =============================================================
+
 window.addEventListener("DOMContentLoaded", main);
 
 export {
