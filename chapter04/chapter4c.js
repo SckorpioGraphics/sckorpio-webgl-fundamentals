@@ -1,18 +1,15 @@
 /* #############################################################
-CHAPTER 4c: Learning Topolgy LINE_LOOP
+CHAPTER 4c: Learning Topology LINE_LOOP
+
 Topics:
-- making a Polygon to Circle
+- Making a Polygon to Circle
 ###############################################################
 */
 
 // =============================================================
-// 1. GLSL Shader Sources 
+// 1. GLSL SHADER SOURCES
 // =============================================================
 
-// NEW WebGL 2.0 Way...
-// -------------------------------------------------------------
-// basic vertex shader
-// passing position data in clip space[-1,+1] directly
 const vertexShaderSource = `#version 300 es
     in vec2 a_position;
 
@@ -21,103 +18,54 @@ const vertexShaderSource = `#version 300 es
     }
 `;
 
-// basic fragment shader
-// using cyan/purple color for the pixel (sckorpio branding)
 const fragmentShaderSource = `#version 300 es
     precision mediump float;
     out vec4 out_Color;
 
     void main() {
-        //out_Color = vec4(0.0, 1.0, 1.0, 1.0); //CYAN
-        out_Color = vec4(0.39, 0.33, 0.58, 1.0); //Sckorpio-Purple
+        // out_Color = vec4(0.0, 1.0, 1.0, 1.0); // Cyan
+        out_Color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio Purple
     }
 `;
 
+// =============================================================
+// 2. WEBGL UTILITY FUNCTIONS
+// =============================================================
 
-/**
- * Compiles a GLSL shader.
- */
 function createShader(gl, type, source) {
-
-    // create a shader of 'type'
     const shader = gl.createShader(type);
-
-    // pass the shader source string
     gl.shaderSource(shader, source);
-
-    // compile the shader
     gl.compileShader(shader);
 
-    // get compile status of shader
-    const compileStatus = gl.getShaderParameter(
-        shader,
-        gl.COMPILE_STATUS
-    );
-
-    // if status = success : return shader
+    const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
     if(compileStatus) return shader;
 
-    // else log it
-    console.error(
-        "Shader Compilation Error:",
-        gl.getShaderInfoLog(shader)
-    );
-
-    // and delete the shader
+    console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
 }
 
-
-/**
- * Links vertex and fragment shaders into a GPU program.
- */
 function createProgram(gl, vertexShader, fragmentShader) {
-
-    // create a program
     const program = gl.createProgram();
-
-    // attach the vertex shader to program
     gl.attachShader(program, vertexShader);
-
-    // attach the fragment shader to program
     gl.attachShader(program, fragmentShader);
-
-    // finally link them together
     gl.linkProgram(program);
 
-    // get link status of program
-    const linkStatus = gl.getProgramParameter(
-        program,
-        gl.LINK_STATUS
-    );
-
-    // if link status success
+    const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
     if(linkStatus) return program;
 
-    // else: log it
-    console.error(
-        "Program Linking Error:",
-        gl.getProgramInfoLog(program)
-    );
-
-    // and delete the program
+    console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
 }
 
-
 // =============================================================
-// 2. Helper Functions
+// 3. HELPER FUNCTIONS
 // =============================================================
 
-/**
- * Resizes the internal drawing buffer to match screen CSS display pixels.
- */
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-
     const width = (canvas.clientWidth * multiplier) | 0;
     const height = (canvas.clientHeight * multiplier) | 0;
 
-    if (canvas.width !== width || canvas.height !== height) {
+    if(canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
         canvas.height = height;
         return true;
@@ -127,10 +75,10 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// 0. GUI using.. lil-gui
+// UI
 // =============================================================
 
-var state = {
+const uiState = {
     centerX: 0.0,
     centerY: 0.0,
     radius: 0.5,
@@ -139,223 +87,212 @@ var state = {
 
 function setupGUI(render) {
     const gui = new lil.GUI();
-    const rectangleFolder = gui.addFolder("Rectangle");
+    const polygonFolder = gui.addFolder("Polygon");
 
     // Center
-    const centerFolder = rectangleFolder.addFolder("Center");
-    centerFolder.add(state, "centerX", -1, 1).name("centerX").onChange(render);
-    centerFolder.add(state, "centerY", -1, 1).name("centerY").onChange(render);
+    const centerFolder = polygonFolder.addFolder("Center");
+    centerFolder.add(uiState, "centerX", -1, 1).name("centerX").onChange(render);
+    centerFolder.add(uiState, "centerY", -1, 1).name("centerY").onChange(render);
 
     // Dimension
-    const dimFolder = rectangleFolder.addFolder("Dimensions");
-    dimFolder.add(state, "radius", 0, 1).name("radius").onChange(render);
-    dimFolder.add(state, "points", 3, 20, 1).name("points").onChange(render);
+    const dimFolder = polygonFolder.addFolder("Dimensions");
+    dimFolder.add(uiState, "radius", 0, 1).name("radius").onChange(render);
+    dimFolder.add(uiState, "points", 3, 20, 1).name("points").onChange(render);
 }
 
+// =============================================================
+// 4. SHADER DATA
+// =============================================================
+
+const shader = {
+    program: null,
+
+    attributes: {
+        position: null
+    },
+
+    uniforms: {}
+};
 
 // =============================================================
-// 3. Main Application Entry Point
+// 5. OBJECT DATA
+// =============================================================
+
+const polygon = {
+    shader: null,
+
+    vao: null,
+    vbo: null,
+    ibo: null,
+
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+    drawType: null
+};
+
+// =============================================================
+// 6. SHADER SETUP
+// =============================================================
+
+function setupShader(gl) {
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
+
+    shader.attributes.position =
+        gl.getAttribLocation(shader.program, "a_position");
+
+    // Future uniforms will be stored here.
+}
+
+// =============================================================
+// 7. OBJECT SETUP
+// =============================================================
+
+function setupPolygon(gl, shader) {
+    polygon.shader = shader;
+
+    // ---------------------------------------------------------
+    // VERTEX BUFFER
+    // ---------------------------------------------------------
+
+    polygon.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
+
+    // Vertex data will be generated from the UI during rendering.
+
+    // ---------------------------------------------------------
+    // INDEX BUFFER
+    // ---------------------------------------------------------
+
+    polygon.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
+
+    // ---------------------------------------------------------
+    // VERTEX ARRAY
+    // ---------------------------------------------------------
+
+    polygon.vao = gl.createVertexArray();
+    gl.bindVertexArray(polygon.vao);
+
+    gl.enableVertexAttribArray(polygon.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
+
+    gl.vertexAttribPointer(
+        polygon.shader.attributes.position,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0
+    );
+
+    // Index buffer binding is stored inside the VAO.
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
+
+    // Draw data
+    polygon.drawMode = gl.LINE_LOOP;
+    polygon.drawOffset = 0;
+    polygon.drawCount = 0;
+    polygon.drawType = gl.UNSIGNED_SHORT;
+}
+
+// =============================================================
+// 8. MAIN APPLICATION
 // =============================================================
 
 function main() {
-
-    // -------------------------------------------------------------
-    // 1. WEBGL CANVAS 
-    // -------------------------------------------------------------
-
-    // Get the Canvas
+    // WEBGL CANVAS
     const canvas = document.querySelector("#c");
-
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    // Get the WebGL context
     const gl = canvas.getContext("webgl2");
-
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
     }
 
-    // UI setup
-    setupGUI(render);
+    // SETUP
+    setupShader(gl);
+    setupPolygon(gl, shader);
 
-    // -------------------------------------------------------------
-    // 2. SHADERS
-    // -------------------------------------------------------------
-    // Compile Shader & Create Program
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    const program = createProgram(gl, vertexShader, fragmentShader);
-
-    // Save Attribute locations
-    const locationAttributePosition = gl.getAttribLocation(program, "a_position");
-    // Future Uniform etc here..
-
-
-    // -------------------------------------------------------------
-    // 3. DATA & BUFFERS
-    // -------------------------------------------------------------
-
-    // OBJECT 1
-    // CIRCLE
-
-    //          #5---#4  
-    //         /       \
-    //       #0         #3
-    //         \       /     
-    //          #1---#2
-
-    // -------------------------------------------------------------
-    // VERTEX BUFFER
-    // -------------------------------------------------------------
-    // create Buffer (vbo: vertex buffer object)
-    var vbo = gl.createBuffer();
-
-    // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-
-    // -------------------------------------------------------------
-    // INDEX BUFFER
-    // -------------------------------------------------------------
-
-    // Create index buffer
-    var ibo = gl.createBuffer();
-
-    // Bind index buffer
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-    
-    // -------------------------------------------------------------
-    // 4. VERTEX ARRAY
-    // -------------------------------------------------------------
-
-    // vao: vertex array object
-    var vao = gl.createVertexArray();
-
-    // bind the vertex array
-    gl.bindVertexArray(vao);
-
-    // enable that attrib
-    gl.enableVertexAttribArray(
-        locationAttributePosition
-    );
-
-    // bind the buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-
-    // Buffer data format
-    const size = 2;          // 2 components (X, Y) per vertex
-    const type = gl.FLOAT;   // 32-bit float values
-    const normalize = false; // Do not normalize
-    const stride = 0;        // Auto stride
-    const offset = 0;        // Start reading from index 0
-
-    gl.vertexAttribPointer(
-        locationAttributePosition,
-        size,
-        type,
-        normalize,
-        stride,
-        offset
-    );
-
-    // IMPORTANT:
-    // Index buffer binding is stored inside the VAO.
-    gl.bindBuffer(
-        gl.ELEMENT_ARRAY_BUFFER,
-        ibo
-    );
-
-    // -------------------------------------------------------------
-    // 5. RENDER (this will happen every frame)
-    // -------------------------------------------------------------
-
+    // RENDER
     function render() {
-
-        // CANVAS------------------------
-        // update canvas resolution when window resize
         resizeCanvasToDisplaySize(gl.canvas);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        // set view port
-        gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
-
-        // BACKGROUND------------------------
-        // Clear Background
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);  //Sckorpio-Cyan
-
-        // Clear BG
+        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
         gl.clear(gl.COLOR_BUFFER_BIT);
 
+        gl.useProgram(polygon.shader.program);
+        gl.bindVertexArray(polygon.vao);
 
-        // SHADER------------------------
-        gl.useProgram(program);
+        // Vertex and index data CPU side
+        const positionsData = [];
+        const indicesData = [];
 
-        // BUFFER/DATA--------------------
+        for(let i = 0; i < uiState.points; i++) {
+            const angle = (i / uiState.points) * (2 * Math.PI);
 
-        // Simply using Vertex Array
-        gl.bindVertexArray(vao);
+            const x = uiState.centerX +
+                      Math.sin(angle) * uiState.radius;
 
-        var positionsData = [];
-        var indicesData = [];
-        for(let i=0; i< state.points; i++){
-            const angle = (i/state.points) * (2 * Math.PI);
-            const x = state.centerX + Math.sin(angle) * state.radius;
-            const y = state.centerY + Math.cos(angle) * state.radius;
+            const y = uiState.centerY +
+                      Math.cos(angle) * uiState.radius;
+
             positionsData.push(x);
             positionsData.push(y);
+
             indicesData.push(i);
         }
+
         const positions = new Float32Array(positionsData);
         const indices = new Uint16Array(indicesData);
 
-        // Feed the vertex data to buffer GPU
+        // Update vertex data on the GPU
+        gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
         gl.bufferData(
-            gl.ARRAY_BUFFER, // bind point
-            positions,       // CPU data
-            gl.DYNAMIC_DRAW   // how frequently we use it
+            gl.ARRAY_BUFFER,
+            positions,
+            gl.DYNAMIC_DRAW
         );
 
-        // Feed index data to buffer GPU
+        // Update index data on the GPU
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
         gl.bufferData(
-            gl.ELEMENT_ARRAY_BUFFER,  // bind point
-            indices,                  // CPU index data
-            gl.DYNAMIC_DRAW            // how frequently we use it
+            gl.ELEMENT_ARRAY_BUFFER,
+            indices,
+            gl.DYNAMIC_DRAW
         );
 
-        // DRAW CALL------------------------
-        const draw_primitiveType = gl.LINE_LOOP;
-        const draw_count = indices.length;
-        const draw_type = gl.UNSIGNED_SHORT;
-        const draw_offset = 0;
+        // Update draw data
+        polygon.drawCount = indices.length;
 
         gl.drawElements(
-            draw_primitiveType,
-            draw_count,
-            draw_type,
-            draw_offset
+            polygon.drawMode,
+            polygon.drawCount,
+            polygon.drawType,
+            polygon.drawOffset
         );
     }
 
-    // Execute first render call
-    render();
+    // UI
+    setupGUI(render);
 
-    // Listen for Window resize
-    // when window gets resized ... render again
-    window.addEventListener(
-        "resize",
-        render
-    );
+    render();
+    window.addEventListener("resize", render);
 }
 
+// =============================================================
+// 9. START
+// =============================================================
 
-// Start app once DOM content is ready
-window.addEventListener(
-    "DOMContentLoaded",
-    main
-);
-
+window.addEventListener("DOMContentLoaded", main);
 
 export {
     main
