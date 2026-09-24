@@ -1,125 +1,226 @@
-SCKORPIO WEBGL FUNDAMENTALS
-==========================
+SCKORPIO GRAPHICS — WEBGL FUNDAMENTALS
+=====================================
 
-CURRENT CHAPTER INDEX
+CURRICULUM ROADMAP
+------------------
+This index follows the updated course flow from the series episode file.
+
+CORE PRINCIPLE
+--------------
+Build the conceptual CG foundation first, then implement those concepts through WebGL.
+The same visual resources can be reused across both the CG Fundamentals and WebGL Fundamentals series.
+
+CHAPTER 01 — WEBGL BASICS
+------------------------
+1a. First Triangle
+1b. Vertex Data
+1c. Primitive Basics
+1d. WebGL Lesson Template
+
+CHAPTER 02 — GEOMETRY
 ---------------------
-This index reflects the files and folders currently present in the repository.
+2a. Multiple Triangles
+2b. Rectangle
+2c. Index Buffer
+2d. Letter F
 
-ROOT FILES
-----------
-index.html
-- active browser entry point
-- currently loads chapters/chapter10/chapter10a.js
+CHAPTER 03 — PRIMITIVE TOPOLOGIES
+---------------------------------
+3a. POINTS
+3b. LINES
+3c. LINE_STRIP
+3d. LINE_LOOP
+3e. Hexagon Outline
+3f. TRIANGLES
+3g. TRIANGLE_STRIP
+3h. TRIANGLE_FAN
 
-css/style.css
-- shared styling for the examples
+CHAPTER 04 — DYNAMIC BUFFERS
+---------------------------
+4a. Dynamic Triangle
+4b. Dynamic Rectangle
+4c. Dynamic Polygon / Circle Outline
+4d. Dynamic Filled Polygon / Circle
 
-Documentation/
-- notes and chapter reference material
+CHAPTER 05 — SHADER DATA FLOW
+-----------------------------
+5a. Varying / Vertex Color
+5b. Multiple Buffers
+5c. Interleaved Buffer
+5d. Gradient Rectangle
+5e. Two-Triangle Rectangle with Different Vertex Colors
 
-CHAPTER 01
-----------
-Folder: chapters/chapter01/
+CHAPTER 06 — UNIFORMS
+---------------------
+6a. Uniform Float / Intensity
+6b. RGB Uniforms + Intensity
+6c. vec3 Color Uniform
+6d. Varying + Uniform Together
+6e. Uniform Types and WebGL APIs
 
-chapter1a.js - first triangle / initial WebGL setup
-chapter1b.js - follow-up setup and rendering variation
+CHAPTER 07 — MULTIPLE OBJECTS
+----------------------------
+7a. Same Topology / Same Shader — Triangle + Rectangle
+7b. Different Topologies / Same Shader — Triangle + Hexagon
+7c. Different Shaders — Uniform-Color Triangle + Vertex-Color Rectangle
+7d. Grid + Triangle in Clip Space
 
-CHAPTER 02
-----------
-Folder: chapters/chapter02/
+CHAPTER 08 — PIXEL SPACE
+------------------------
+8a. Basic Rectangle in Pixel Coordinates
+8b. Position and Size
+8c. Matrix Version — mat3 / Pixel → Clip / Inverted Y
+8d. Random Rectangles / Reused VBO
 
-chapter2a.js - multiple triangles
-chapter2b.js - rectangle built from triangle data
-chapter2c.js - index buffer example
-chapter2d.js - geometric letter F built from triangles
+CHAPTER 09 — 2D WORLD
+---------------------
+9a. Building a 2D World
+9b. Static World
+9c. Multiple World Objects
 
-CHAPTER 03
-----------
-Folder: chapters/chapter03/
+CHAPTER 10 — 2D CAMERA
+----------------------
+10a. View Matrix
+10b. Camera Position
+10c. Camera Movement
+10d. Keyboard Controls
+10e. Exploring the World
 
-chapter3a.js - POINTS
-chapter3b.js - LINES
-chapter3c.js - additional line-pattern experiment
-chapter3d.js - LINE_LOOP
-chapter3e.js - polygon-style line drawing
-chapter3f.js - TRIANGLES
-chapter3g.js - TRIANGLE_STRIP
-chapter3h.js - TRIANGLE_FAN
+CHAPTER 11 — 2D TRANSFORMATIONS
+------------------------------
+11a. Translation
+11b. Rotation
+11c. Scale
+11d. Transformation Composition
+11e. Model Matrix
+11f. Animation
 
-CHAPTER 04
-----------
-Folder: chapters/chapter04/
+CHAPTER 12 — 2D TEXTURES
+------------------------
+12a. Texture Creation
+12b. Texture Upload
+12c. UV Coordinates
+12d. Texture Sampling
+12e. Textured Rectangle
+12f. Textured Transformations
+12g. Multiple Textured Objects
 
-chapter4a.js - dynamic buffer example
-chapter4b.js - dynamic rectangle / live vertex editing
-chapter4c.js - topology or polygon experiment
-chapter4d.js - interactive drawing exercise
+CHAPTER 13 — 2D RENDERING / SCENE
+----------------------------------
+13a. Sprites
+13b. Sprite Sheets
+13c. UV Sub-Rectangles
+13d. Sprite Animation
+13e. Sprite Flipping
+13f. Multiple Sprites
+13g. Small 2D Scene
 
-CHAPTER 05
-----------
-Folder: chapters/chapter05/
+CHAPTER 14 — 3D WORLD
+----------------------
+14a. 3D Coordinates — X / Y / Z
+14b. Basic 3D Geometry
+14c. 3D Triangle / Cube
+14d. Multiple 3D Objects
+14e. Depth
+14f. Depth Buffer
+14g. Building a 3D World
 
-chapter5a.js - varying-driven vertex colors
-chapter5b.js - separate position and color buffers
-chapter5c.js - interleaved position + color buffer
-chapter5d.js - gradient rectangle with interpolated colors
-chapter5e.js - colored two-triangle rectangle
+CHAPTER 15 — 3D CAMERA
+----------------------
+15a. Camera Position
+15b. Camera Orientation
+15c. View Matrix
+15d. Look-At Concept
+15e. Camera Movement
+15f. First-Person Camera
+15g. Mouse + Keyboard Camera
 
-CHAPTER 06
-----------
-Folder: chapters/chapter06/
+CHAPTER 16 — 3D PROJECTION
+--------------------------
+16a. Orthographic Projection
+16b. Perspective Projection
+16c. Field of View
+16d. Aspect Ratio
+16e. Near / Far Planes
+16f. Perspective Depth
 
-chapter6a.js - uniform float control
-chapter6b.js - uniform RGB color work
-chapter6c.js - random rectangles with uniform styling
-chapter6d.js - uniform-based repeated draw work
-chapter6e.js - broader shader parameter examples
+CHAPTER 17 — 3D TRANSFORMATIONS
+--------------------------------
+17a. mat4
+17b. Translation
+17c. Scale
+17d. Rotation X
+17e. Rotation Y
+17f. Rotation Z
+17g. Transformation Composition
+17h. Model Matrix
 
-CHAPTER 07
-----------
-Folder: chapters/chapter07/
+CHAPTER 18 — 3D TEXTURES
+------------------------
+18a. Textured Cube
+18b. 3D UV Coordinates
+18c. Texture Filtering
+18d. Texture Wrapping
+18e. Multiple Textured Objects
 
-chapter7a.js - basic pixel-space rectangle
-chapter7b.js - pixel-space rectangle with inverted Y
-chapter7c.js - matrix-based pixel-to-clip conversion
-chapter7d.js - random rectangles with uniform colors
+CHAPTER 19 — LIGHTING FUNDAMENTALS
+-----------------------------------
+19a. Surface Normals
+19b. Normal Attribute
+19c. Diffuse Lighting
+19d. Light Position
+19e. Ambient + Diffuse
+19f. Specular Lighting
+19g. Phong-Style Lighting
 
-CHAPTER 08
-----------
-Folder: chapters/chapter08/
+CHAPTER 20 — MATERIALS & MULTIPLE LIGHTS
+------------------------------------------
+20a. Material Color
+20b. Material Properties
+20c. One Light + Material
+20d. Multiple Lights
+20e. Different Materials
+20f. Textured + Lit Objects
+20g. Multiple Objects
+20h. Small Lit Scene
 
-chapter8a.js - 2D transformation basics
-chapter8b.js - view and translation matrix work
-chapter8c.js - continued transform experiments
-chapter8d.js - transformation practice
-chapter8e.js - additional matrix-driven motion example
+CHAPTER 21 — COMPLETE WEBGL PIPELINE
+-------------------------------------
+21a. Multiple Meshes
+21b. Model / View / Projection
+21c. Textures
+21d. Normals
+21e. Materials
+21f. Lighting
+21g. Depth
+21h. Camera
+21i. Multiple Draw Calls
+21j. Complete Scene
 
-CHAPTER 09
-----------
-Folder: chapters/chapter09/
+CURRENT REPO STATUS
+--------------------
+The workspace contains a practical subset of this roadmap, with the implementation files currently active through chapter 11 and a chapterExtra experiment. The full curriculum continues beyond the repo content as the intended long-term course sequence.
 
-chapter9a.js - additional geometry / rendering practice
-chapter9b.js - follow-up rendering experiment
-
-CHAPTER 10
------------
-Folder: chapters/chapter10/
-
-chapter10a.js - active browser example entry point
-
-CHAPTER 11
------------
-Folder: chapters/chapter11/
-
-chapter11a.js - active lesson scaffold
-chapter11b.js - continuation file
-
-CHAPTER EXTRA
--------------
-Folder: chapters/chapterExtra/
-
-chapterExtra1.js - render-loop / projection experiment
-
-PROJECT SUMMARY
----------------
-This repository is a practical WebGL learning path covering canvas setup, geometry, primitive modes, shader data flow, dynamic buffers, screen-space math, and 2D transforms. The current project structure contains active examples through chapter 11 and a chapter 10 entry point used by the web demo.
+OVERALL FLOW
+------------
+WebGL Basics
+→ Geometry
+→ Primitive Topologies
+→ Dynamic Buffers
+→ Shader Data Flow
+→ Uniforms
+→ Multiple Objects
+→ Pixel Space
+→ 2D World
+→ 2D Camera
+→ 2D Transformations
+→ 2D Textures
+→ 2D Rendering / Scene
+→ 3D World
+→ 3D Camera
+→ 3D Projection
+→ 3D Transformations
+→ 3D Textures
+→ Lighting
+→ Materials + Multiple Lights
+→ Complete WebGL Pipeline

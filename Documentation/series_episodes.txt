@@ -1,73 +1,308 @@
-SCKORPIO WEBGL TUTORIAL
-=======================
+SCKORPIO GRAPHICS — WEBGL FUNDAMENTALS
+FULL CURRICULUM ROADMAP
 
-THIS DOCUMENT REFLECTS THE CURRENT PROJECT STATE
--------------------------------------------------
-The repository contains active lesson files across the first 11 chapters, plus additional work in the chapterExtra folder.
+Core principle:
+Build the conceptual CG foundation first, then implement those concepts through WebGL.
+The same visual resources can be reused across CG Fundamentals and WebGL Fundamentals.
 
-CHAPTER 01
-- 1A — initial triangle / WebGL setup
-- 1B — follow-up setup and rendering variation
+============================================================
+CHAPTER 01 — WEBGL BASICS
+============================================================
+1a. First Triangle
+1b. Vertex Data
+1c. Primitive Basics
+1d. WebGL Lesson Template
 
-CHAPTER 02
-- 2A — multiple triangles
-- 2B — rectangle built from triangle geometry
-- 2C — index buffer example
-- 2D — letter F geometry built from triangles
+============================================================
+CHAPTER 02 — GEOMETRY
+============================================================
+2a. Multiple Triangles
+2b. Rectangle
+2c. Index Buffer
+2d. Letter F
 
-CHAPTER 03
-- 3A — POINTS topology
-- 3B — LINES topology
-- 3C — additional line-pattern experiment
-- 3D — LINE_LOOP
-- 3E — polygon-style line drawing
-- 3F — TRIANGLES drawing
-- 3G — TRIANGLE_STRIP
-- 3H — TRIANGLE_FAN
+============================================================
+CHAPTER 03 — PRIMITIVE TOPOLOGIES
+============================================================
+3a. POINTS
+3b. LINES
+3c. LINE_STRIP
+3d. LINE_LOOP
+3e. Hexagon Outline
+3f. TRIANGLES
+3g. TRIANGLE_STRIP
+3h. TRIANGLE_FAN
 
-CHAPTER 04
-- 4A — dynamic buffer example
-- 4B — dynamic rectangle / live vertex editing
-- 4C — topology or polygon experiment
-- 4D — interactive drawing exercise
+============================================================
+CHAPTER 04 — DYNAMIC BUFFERS
+============================================================
+4a. Dynamic Triangle
+4b. Dynamic Rectangle
+4c. Dynamic Polygon / Circle Outline
+4d. Dynamic Filled Polygon / Circle
 
-CHAPTER 05
-- 5A — varying-driven vertex colors
-- 5B — separate position and color buffers
-- 5C — interleaved position + color buffer
-- 5D — gradient rectangle with interpolated colors
-- 5E — colored two-triangle rectangle
+============================================================
+CHAPTER 05 — SHADER DATA FLOW
+============================================================
+5a. Varying / Vertex Color
+5b. Multiple Buffers
+5c. Interleaved Buffer
+5d. Gradient Rectangle
+5e. Two-Triangle Rectangle with Different Vertex Colors
 
-CHAPTER 06
-- 6A — uniform float control
-- 6B — uniform RGB color control
-- 6C — random rectangles with uniform styling
-- 6D — uniform-based repeated draw work
-- 6E — broader shader parameter examples
+============================================================
+CHAPTER 06 — UNIFORMS
+============================================================
+6a. Uniform Float / Intensity
+6b. RGB Uniforms + Intensity
+6c. vec3 Color Uniform
+6d. Varying + Uniform Together
+6e. Uniform Types and WebGL APIs
 
-CHAPTER 07
-- 7A — basic pixel-space rectangle
-- 7B — pixel-space rectangle with inverted Y
-- 7C — matrix-based pixel-to-clip conversion
-- 7D — random rectangles with uniform colors
+============================================================
+CHAPTER 07 — MULTIPLE OBJECTS
+============================================================
+7a. Same Topology / Same Shader — Triangle + Rectangle
+7b. Different Topologies / Same Shader — Triangle + Hexagon
+7c. Different Shaders — Uniform-Color Triangle + Vertex-Color Rectangle
+7d. Grid + Triangle in Clip Space
 
-CHAPTER 08
-- 8A — 2D transformation basics
-- 8B — view and translation matrix work
-- 8C — continued transform experiments
-- 8D — transformation practice
-- 8E — additional matrix-driven motion example
+============================================================
+CHAPTER 08 — PIXEL SPACE
+============================================================
+8a. Basic Rectangle in Pixel Coordinates
+8b. Position and Size
+8c. Matrix Version — mat3 / Pixel → Clip / Inverted Y
+8d. Random Rectangles / Reused VBO
 
-CHAPTER 09
-- 9A — additional geometry / rendering practice
-- 9B — follow-up rendering experiment
+Question answered:
+"Where are my pixels on the screen?"
 
-CHAPTER 10
-- 10A — active browser example entry point
+Pipeline:
+Pixel Space → Projection → Clip Space
 
-CHAPTER 11
-- 11A — active lesson scaffold
-- 11B — continuation file
+============================================================
+CHAPTER 09 — 2D WORLD
+============================================================
+9a. Building a 2D World
+- Large world coordinate system
+- World grid
+- X/Y axes
+- Objects in world space
 
-CHAPTER EXTRA
-- Extra1 — render-loop / projection experiment
+9b. Static World
+- World larger than viewport
+- Fixed world geometry
+
+9c. Multiple World Objects
+- Different world positions
+- World-scale thinking
+
+Question answered:
+"What if my scene is much larger than the screen?"
+
+Camera remains effectively fixed in this chapter.
+
+============================================================
+CHAPTER 10 — 2D CAMERA
+============================================================
+10a. View Matrix
+10b. Camera Position
+10c. Camera Movement
+10d. Keyboard Controls
+10e. Exploring the World
+
+Core concept:
+World Space → View Matrix → Camera Space → Projection → Clip Space
+
+============================================================
+CHAPTER 11 — 2D TRANSFORMATIONS
+============================================================
+11a. Translation
+11b. Rotation
+11c. Scale
+11d. Transformation Composition
+11e. Model Matrix
+11f. Animation
+
+Pipeline:
+Local/Object → Model → World → View → Projection → Clip
+
+============================================================
+CHAPTER 12 — 2D TEXTURES
+============================================================
+12a. Texture Creation
+12b. Texture Upload
+12c. UV Coordinates
+12d. Texture Sampling
+12e. Textured Rectangle
+12f. Textured Transformations
+12g. Multiple Textured Objects
+
+============================================================
+CHAPTER 13 — 2D RENDERING / SCENE
+============================================================
+13a. Sprites
+13b. Sprite Sheets
+13c. UV Sub-Rectangles
+13d. Sprite Animation
+13e. Sprite Flipping
+13f. Multiple Sprites
+13g. Small 2D Scene
+
+============================================================
+CHAPTER 14 — 3D WORLD
+============================================================
+14a. 3D Coordinates — X / Y / Z
+14b. Basic 3D Geometry
+14c. 3D Triangle / Cube
+14d. Multiple 3D Objects
+14e. Depth
+14f. Depth Buffer
+14g. Building a 3D World
+
+============================================================
+CHAPTER 15 — 3D CAMERA
+============================================================
+15a. Camera Position
+15b. Camera Orientation
+15c. View Matrix
+15d. Look-At Concept
+15e. Camera Movement
+15f. First-Person Camera
+15g. Mouse + Keyboard Camera
+
+============================================================
+CHAPTER 16 — 3D PROJECTION
+============================================================
+16a. Orthographic Projection
+16b. Perspective Projection
+16c. Field of View
+16d. Aspect Ratio
+16e. Near / Far Planes
+16f. Perspective Depth
+
+============================================================
+CHAPTER 17 — 3D TRANSFORMATIONS
+============================================================
+17a. mat4
+17b. Translation
+17c. Scale
+17d. Rotation X
+17e. Rotation Y
+17f. Rotation Z
+17g. Transformation Composition
+17h. Model Matrix
+
+============================================================
+CHAPTER 18 — 3D TEXTURES
+============================================================
+18a. Textured Cube
+18b. 3D UV Coordinates
+18c. Texture Filtering
+18d. Texture Wrapping
+18e. Multiple Textured Objects
+
+============================================================
+CHAPTER 19 — LIGHTING FUNDAMENTALS
+============================================================
+19a. Surface Normals
+19b. Normal Attribute
+19c. Diffuse Lighting
+19d. Light Position
+19e. Ambient + Diffuse
+19f. Specular Lighting
+19g. Phong-Style Lighting
+
+============================================================
+CHAPTER 20 — MATERIALS & MULTIPLE LIGHTS
+============================================================
+20a. Material Color
+20b. Material Properties
+20c. One Light + Material
+20d. Multiple Lights
+20e. Different Materials
+20f. Textured + Lit Objects
+20g. Multiple Objects
+20h. Small Lit Scene
+
+============================================================
+CHAPTER 21 — COMPLETE WEBGL PIPELINE
+============================================================
+21a. Multiple Meshes
+21b. Model / View / Projection
+21c. Textures
+21d. Normals
+21e. Materials
+21f. Lighting
+21g. Depth
+21h. Camera
+21i. Multiple Draw Calls
+21j. Complete Scene
+
+============================================================
+OVERALL FLOW
+============================================================
+
+WebGL Basics
+→ Geometry
+→ Primitive Topologies
+→ Dynamic Buffers
+→ Shader Data Flow
+→ Uniforms
+→ Multiple Objects
+→ Pixel Space
+→ 2D World
+→ 2D Camera
+→ 2D Transformations
+→ 2D Textures
+→ 2D Rendering / Scene
+→ 3D World
+→ 3D Camera
+→ 3D Projection
+→ 3D Transformations
+→ 3D Textures
+→ Lighting
+→ Materials + Multiple Lights
+→ Complete WebGL Pipeline
+
+
+============================================================
+CG FUNDAMENTALS — CONCEPTUAL SERIES
+============================================================
+
+Separate non-coding series.
+
+Potential core concepts:
+- What is Computer Graphics?
+- GPU
+- Shaders
+- Rasterization
+- Vertices and Geometry
+- Vectors
+- Matrices
+- Coordinate Spaces
+- Transformations
+- Camera
+- Projection
+- Textures
+- UV Coordinates
+- Depth
+- Normals
+- Lighting
+- Materials
+- Rendering Pipeline
+
+No WebGL API or coding.
+
+RESOURCE STRATEGY
+-----------------
+Create the conceptual visual/resource first.
+
+CG Concept
+→ Master Visual Resource
+→ CG Fundamentals Episode
+→ WebGL Fundamentals Implementation
+
+The same diagrams, animations, explanations, and visual assets
+should be reusable across both series.

@@ -1,109 +1,135 @@
 # WebGL Fundamentals Index
 
-This documentation reflects the current repository layout as it exists in the workspace today.
+This documentation reflects the updated roadmap in the curriculum file and the actual code currently present in the workspace.
 
 ## Repository overview
 
-The project is a practical WebGL study path covering the rendering pipeline, geometry construction, shader input/output, dynamic buffers, screen-space math, and 2D transforms.
+The project is structured around a full WebGL curriculum that starts with the basics and extends through 3D, textures, lighting, and the complete rendering pipeline. The code currently present in the repo is a working subset of that wider roadmap.
 
-## Current project structure
+## Updated series roadmap
 
-### Root-level files
-- `index.html` — browser launch file; currently imports `chapters/chapter10/chapter10a.js`
-- `css/style.css` — styling for the demo page
-- `README.md` — project overview
-- `Documentation/` — notes and chapter documentation
-- `screenshots/` — visual examples and captures
+### Chapter 01 — WebGL Basics
+- 1a. First Triangle
+- 1b. Vertex Data
+- 1c. Primitive Basics
+- 1d. WebGL Lesson Template
 
-### chapter01
-- `chapter1a.js` — first triangle / initial WebGL setup
-- `chapter1b.js` — follow-up setup / rendering variation
+### Chapter 02 — Geometry
+- 2a. Multiple Triangles
+- 2b. Rectangle
+- 2c. Index Buffer
+- 2d. Letter F
 
-### chapter02
-- `chapter2a.js` — multiple triangles
-- `chapter2b.js` — rectangle from triangle composition
-- `chapter2c.js` — index buffer example
-- `chapter2d.js` — letter F geometry using triangles
+### Chapter 03 — Primitive Topologies
+- 3a. POINTS
+- 3b. LINES
+- 3c. LINE_STRIP
+- 3d. LINE_LOOP
+- 3e. Hexagon Outline
+- 3f. TRIANGLES
+- 3g. TRIANGLE_STRIP
+- 3h. TRIANGLE_FAN
 
-### chapter03
-- `chapter3a.js` — POINTS topology
-- `chapter3b.js` — LINES topology
-- `chapter3c.js` — line pattern experiment
-- `chapter3d.js` — LINE_LOOP demo
-- `chapter3e.js` — polygon-style line drawing
-- `chapter3f.js` — TRIANGLES drawing
-- `chapter3g.js` — TRIANGLE_STRIP example
-- `chapter3h.js` — TRIANGLE_FAN example
+### Chapter 04 — Dynamic Buffers
+- 4a. Dynamic Triangle
+- 4b. Dynamic Rectangle
+- 4c. Dynamic Polygon / Circle Outline
+- 4d. Dynamic Filled Polygon / Circle
 
-### chapter04
-- `chapter4a.js` — dynamic buffer example
-- `chapter4b.js` — dynamic rectangle / live vertex editing
-- `chapter4c.js` — topology / polygon experiment
-- `chapter4d.js` — interactive drawing study
+### Chapter 05 — Shader Data Flow
+- 5a. Varying / Vertex Color
+- 5b. Multiple Buffers
+- 5c. Interleaved Buffer
+- 5d. Gradient Rectangle
+- 5e. Two-Triangle Rectangle with Different Vertex Colors
 
-### chapter05
-- `chapter5a.js` — `varying` color data from positions
-- `chapter5b.js` — multiple buffers for position and color
-- `chapter5c.js` — interleaved attribute buffer
-- `chapter5d.js` — gradient rectangle using interpolation
-- `chapter5e.js` — multi-color two-triangle rectangle
+### Chapter 06 — Uniforms
+- 6a. Uniform Float / Intensity
+- 6b. RGB Uniforms + Intensity
+- 6c. vec3 Color Uniform
+- 6d. Varying + Uniform Together
+- 6e. Uniform Types and WebGL APIs
 
-### chapter06
-- `chapter6a.js` — uniform float control
-- `chapter6b.js` — uniform color control
-- `chapter6c.js` — many colored rectangles under uniform control
-- `chapter6d.js` — repeated draw experiments with uniforms
-- `chapter6e.js` — broader shader parameter control
+### Chapter 07 — Multiple Objects
+- 7a. Same Topology / Same Shader — Triangle + Rectangle
+- 7b. Different Topologies / Same Shader — Triangle + Hexagon
+- 7c. Different Shaders — Uniform-Color Triangle + Vertex-Color Rectangle
+- 7d. Grid + Triangle in Clip Space
 
-### chapter07
-- `chapter7a.js` — basic pixel-space rectangle
-- `chapter7b.js` — pixel-space rectangle with inverted Y handling
-- `chapter7c.js` — matrix-based pixel-to-clip conversion
-- `chapter7d.js` — random rectangles with uniform colors
+### Chapter 08 — Pixel Space
+- 8a. Basic Rectangle in Pixel Coordinates
+- 8b. Position and Size
+- 8c. Matrix Version — mat3 / Pixel → Clip / Inverted Y
+- 8d. Random Rectangles / Reused VBO
 
-### chapter08
-- `chapter8a.js` — 2D transform basics
-- `chapter8b.js` — view and translation matrix
-- `chapter8c.js` — continued transform work
-- `chapter8d.js` — transformation practice
-- `chapter8e.js` — additional matrix-based motion example
+### Chapter 09 — 2D World
+- 9a. Building a 2D World
+- 9b. Static World
+- 9c. Multiple World Objects
 
-### chapter09
-- `chapter9a.js` — additional rendering experiment
-- `chapter9b.js` — follow-up learning file
+### Chapter 10 — 2D Camera
+- 10a. View Matrix
+- 10b. Camera Position
+- 10c. Camera Movement
+- 10d. Keyboard Controls
+- 10e. Exploring the World
 
-### chapter10
-- `chapter10a.js` — current active example loaded by `index.html`
+### Chapter 11 — 2D Transformations
+- 11a. Translation
+- 11b. Rotation
+- 11c. Scale
+- 11d. Transformation Composition
+- 11e. Model Matrix
+- 11f. Animation
 
-### chapter11
-- `chapter11a.js` — active lesson scaffold
-- `chapter11b.js` — continuation file
+### Chapter 12 — 2D Textures
+- 12a. Texture Creation
+- 12b. Texture Upload
+- 12c. UV Coordinates
+- 12d. Texture Sampling
+- 12e. Textured Rectangle
+- 12f. Textured Transformations
+- 12g. Multiple Textured Objects
 
-### chapterExtra
-- `chapterExtra1.js` — projection / render-loop experiment
+### Chapter 13 — 2D Rendering / Scene
+- 13a. Sprites
+- 13b. Sprite Sheets
+- 13c. UV Sub-Rectangles
+- 13d. Sprite Animation
+- 13e. Sprite Flipping
+- 13f. Multiple Sprites
+- 13g. Small 2D Scene
 
-## Learning progression
+### Chapter 14 — 3D World
+### Chapter 15 — 3D Camera
+### Chapter 16 — 3D Projection
+### Chapter 17 — 3D Transformations
+### Chapter 18 — 3D Textures
+### Chapter 19 — Lighting Fundamentals
+### Chapter 20 — Materials & Multiple Lights
+### Chapter 21 — Complete WebGL Pipeline
 
-1. Draw the first triangle and establish a WebGL canvas setup
-2. Build geometry with triangles and indexed data
-3. Explore primitive topology and draw modes
-4. Update buffers dynamically with changing vertex data
-5. Use `varying` to pass data between shader stages
-6. Use `uniform` values to control shader output globally
-7. Work in pixel-space and convert to clip space
-8. Apply matrix transforms for 2D motion and composition
-9. Extend the pipeline with render-loop and projection experiments
+## Current repo status
 
-## Main learning goals
+The workspace currently contains the implemented lesson files for the early chapters and a live browser demo entry point. This is a subset of the full roadmap above.
 
-- WebGL 2.0 fundamentals
-- Shader setup and program linking
-- Buffers and attribute binding
-- Geometry construction and primitive modes
-- `varying` interpolation and color flow
-- `uniform` parameter control
-- Screen-space math and projective thinking
-- Matrix-based transforms and motion
-- Continued experimentation with rendering techniques
+### Active source files in the repo
+- `index.html` — current browser launch page
+- `chapters/chapter01/` through `chapters/chapter11/` — early implementation lessons
+- `chapters/chapterExtra/chapterExtra1.js` — extra render-loop / projection study
+- `Documentation/` — curriculum notes and chapter docs
 
-This project is designed as a practical learning path toward a working understanding of the graphics pipeline and WebGL fundamentals.
+## Learning flow
+
+The overall progression is:
+
+WebGL Basics → Geometry → Primitive Topologies → Dynamic Buffers → Shader Data Flow → Uniforms → Multiple Objects → Pixel Space → 2D World → 2D Camera → 2D Transformations → 2D Textures → 2D Rendering / Scene → 3D World → 3D Camera → 3D Projection → 3D Transformations → 3D Textures → Lighting → Materials + Multiple Lights → Complete WebGL Pipeline
+
+## Concept-to-code relationship
+
+The curriculum intentionally separates the conceptual side and the coding side:
+
+- CG Fundamentals — conceptual graphics learning with no Direct WebGL code
+- WebGL Fundamentals — practical shader and rendering implementation
+
+The same visual resources and explanations can be reused across both series.
