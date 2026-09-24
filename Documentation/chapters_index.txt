@@ -5,165 +5,121 @@ CURRENT CHAPTER INDEX
 ---------------------
 This index reflects the files and folders currently present in the repository.
 
-ROOT
-----
-chapter0.js
-- standalone setup and reference boilerplate
-- WebGL initialization pattern
-- starting point for the project
+ROOT FILES
+----------
+index.html
+- active browser entry point
+- currently loads chapters/chapter10/chapter10a.js
+
+css/style.css
+- shared styling for the examples
+
+Documentation/
+- notes and chapter reference material
 
 CHAPTER 01
 ----------
-Folder: chapter01/
+Folder: chapters/chapter01/
 
-chapter1a.js - Creating a Basic Triangle
-- WebGL canvas setup
-- shader creation
-- vertex buffer setup
-- first draw call
+chapter1a.js - first triangle / initial WebGL setup
+chapter1b.js - follow-up setup and rendering variation
 
 CHAPTER 02
 ----------
-Folder: chapter02/
+Folder: chapters/chapter02/
 
-chapter2a.js - Multiple Triangles
-chapter2b.js - Rectangle using Triangles
-chapter2c.js - Introducing Index Buffer
-chapter2d.js - Making a Geometry using Triangles (F letter)
-
-Focus:
-- geometry construction
-- triangle composition
-- indexed rendering
-- reuse of vertex data
+chapter2a.js - multiple triangles
+chapter2b.js - rectangle built from triangle data
+chapter2c.js - index buffer example
+chapter2d.js - geometric letter F built from triangles
 
 CHAPTER 03
 ----------
-Folder: chapter03/
+Folder: chapters/chapter03/
 
-chapter3a.js - Learning Topology POINTS
-chapter3b.js - Learning Topology LINES
-chapter3c.js - Learning Topology LINES
-chapter3d.js - Learning Topology LINES_LOOP
-chapter3e.js - Learning Topology LINE_LOOP
-chapter3f.js - Learning Topology TRIANGLES
-chapter3g.js - Learning Topology TRIANGLES_STRIP
-chapter3h.js - Learning Topology TRIANGLE_FAN
-
-Focus:
-- primitive topologies
-- different drawing modes
-- connected line and triangle structures
+chapter3a.js - POINTS
+chapter3b.js - LINES
+chapter3c.js - additional line-pattern experiment
+chapter3d.js - LINE_LOOP
+chapter3e.js - polygon-style line drawing
+chapter3f.js - TRIANGLES
+chapter3g.js - TRIANGLE_STRIP
+chapter3h.js - TRIANGLE_FAN
 
 CHAPTER 04
 ----------
-Folder: chapter04/
+Folder: chapters/chapter04/
 
-chapter4a.js - Dynamic Buffer
-chapter4b.js - Dynamic Buffer
-chapter4c.js - Learning Topology LINE_LOOP
-chapter4d.js - Learning Topology LINE_LOOP
-
-Focus:
-- live data updates
-- vertex manipulation
-- interactive drawing experiments
-- exploring buffer behavior
+chapter4a.js - dynamic buffer example
+chapter4b.js - dynamic rectangle / live vertex editing
+chapter4c.js - topology or polygon experiment
+chapter4d.js - interactive drawing exercise
 
 CHAPTER 05
 ----------
-Folder: chapter05/
+Folder: chapters/chapter05/
 
-chapter5a.js - Varying: vertex colors from position
-chapter5b.js - Separate buffers for positions and colors
-chapter5c.js - Interleaved buffer with color + position
-chapter5d.js - Gradient rectangle through varying interpolation
-chapter5e.js - Two-triangle rectangle with different vertex colors
-
-Focus:
-- varying variables
-- interpolated fragment colors
-- data flow from vertex shader to fragment shader
-- multiple-buffer / interleaved-buffer patterns
+chapter5a.js - varying-driven vertex colors
+chapter5b.js - separate position and color buffers
+chapter5c.js - interleaved position + color buffer
+chapter5d.js - gradient rectangle with interpolated colors
+chapter5e.js - colored two-triangle rectangle
 
 CHAPTER 06
 ----------
-Folder: chapter06/
+Folder: chapters/chapter06/
 
-chapter6a.js - Uniform float intensity
-chapter6b.js - Uniform RGB color and intensity
-chapter6c.js - Many random rectangles under uniform control
-chapter6d.js - Repeated drawing with uniform-based styling
-chapter6e.js - Full uniform examples and shader parameter control
-
-Focus:
-- uniforms
-- globally shared shader values
-- color and intensity control from JavaScript
-- shader parameterization and dynamic style updates
+chapter6a.js - uniform float control
+chapter6b.js - uniform RGB color work
+chapter6c.js - random rectangles with uniform styling
+chapter6d.js - uniform-based repeated draw work
+chapter6e.js - broader shader parameter examples
 
 CHAPTER 07
 ----------
-Folder: chapter07/
+Folder: chapters/chapter07/
 
-chapter7a.js - Basic Rectangle in Pixel Space
-chapter7b.js - Pixel Space with Inverted Y
-chapter7c.js - Pixel-to-Clip Matrix Conversion
-chapter7d.js - Random Rectangles with Uniform Colors
-chapter7e.js - Follow-up random-rectangle variation
-
-Focus:
-- pixel-space drawing
-- screen-space conversion
-- matrix-based clip-space conversion
-- repeated geometry reuse and random rectangle patterns
+chapter7a.js - basic pixel-space rectangle
+chapter7b.js - pixel-space rectangle with inverted Y
+chapter7c.js - matrix-based pixel-to-clip conversion
+chapter7d.js - random rectangles with uniform colors
 
 CHAPTER 08
 ----------
-Folder: chapter08/
+Folder: chapters/chapter08/
 
-chapter8a.js - 2D Transformations
-chapter8b.js - 2D View & Translation Matrix
+chapter8a.js - 2D transformation basics
+chapter8b.js - view and translation matrix work
+chapter8c.js - continued transform experiments
+chapter8d.js - transformation practice
+chapter8e.js - additional matrix-driven motion example
 
-Focus:
-- translation, rotation, and scale
-- matrix pipelines for transforms
-- model/view/projection-style thinking
-- animation foundations
+CHAPTER 09
+----------
+Folder: chapters/chapter09/
+
+chapter9a.js - additional geometry / rendering practice
+chapter9b.js - follow-up rendering experiment
+
+CHAPTER 10
+-----------
+Folder: chapters/chapter10/
+
+chapter10a.js - active browser example entry point
 
 CHAPTER 11
 -----------
-Folder: chapter11/
+Folder: chapters/chapter11/
 
-chapter11a.js - Placeholder file, currently empty
-
-CHAPTER 12
------------
-Folder: chapter12/
-
-chapter12a.js - Placeholder file, currently empty
-
-CHAPTER 21
------------
-Folder: chapter21/
-
-chapter21a.js - Placeholder file, currently empty
+chapter11a.js - active lesson scaffold
+chapter11b.js - continuation file
 
 CHAPTER EXTRA
 -------------
-Folder: chapterExtra/
+Folder: chapters/chapterExtra/
 
-chapterExtra1.js - Render Loop / Projection Experiment
-
-Focus:
-- pixel-space geometry
-- projection matrix usage
-- uniform matrix data
-- dynamic render loop work
+chapterExtra1.js - render-loop / projection experiment
 
 PROJECT SUMMARY
 ---------------
-This repository is structured as a practical learning progression in WebGL fundamentals, starting from the first triangle and progressing through geometry, topology, shader data flow, screen-space math, and matrix transforms.
-
-Notable repository fact:
-- The project has expanded beyond the original chapter sequence, with active lesson files in chapter07 and chapter08, while chapter11, chapter12, and chapter21 remain placeholders for future work.
+This repository is a practical WebGL learning path covering canvas setup, geometry, primitive modes, shader data flow, dynamic buffers, screen-space math, and 2D transforms. The current project structure contains active examples through chapter 11 and a chapter 10 entry point used by the web demo.

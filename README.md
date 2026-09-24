@@ -1,115 +1,114 @@
 # WebGL Fundamentals
 
-A practical WebGL learning repo focused on shaders, geometry, primitive rendering, dynamic buffers, pixel-space math, and matrix-based 2D transforms.
+A practical WebGL learning repo focused on shaders, geometry, dynamic buffers, screen-space math, and 2D transforms.
 
-## Current project structure
+## Current repository status
 
-This repository follows a clear WebGL learning sequence:
+This repository has expanded beyond the original chapter sequence. The current workspace contains active lesson files through chapter 11, plus a chapter 10 entry point used by the browser demo.
 
-- Root: `chapter0.js` — standalone WebGL setup / reference boilerplate
-- `chapter01/` — `chapter1a.js` — basic triangle and first WebGL draw
-- `chapter02/` — `chapter2a.js` to `chapter2d.js` — geometry and index buffer fundamentals
-- `chapter03/` — `chapter3a.js` to `chapter3h.js` — primitive topology experiments
-- `chapter04/` — `chapter4a.js` to `chapter4d.js` — dynamic buffers and interactive drawing
-- `chapter05/` — `chapter5a.js` to `chapter5e.js` — varying / interpolated shader data
-- `chapter06/` — `chapter6a.js` to `chapter6e.js` — uniforms and shader-controlled values
-- `chapter07/` — `chapter7a.js` to `chapter7e.js` — pixel-space rendering and screen-space conversion
-- `chapter08/` — `chapter8a.js` and `chapter8b.js` — 2D transformations and matrix-driven motion
-- `chapter11/`, `chapter12/`, `chapter21/` — present in the repo but still empty placeholder lesson files
-- `chapterExtra/` — `chapterExtra1.js` — extra render-loop / projection experiments
+## Root project structure
 
-## Chapter overview
+- `index.html` — active browser entry point; currently loads `chapters/chapter10/chapter10a.js`
+- `css/style.css` — shared page styling
+- `chapters/` — lesson files separated by chapter
+- `Documentation/` — project notes and chapter index
+- `screenshots/` — visual references / captures
+
+## Chapter inventory
 
 ### chapter01
-- `chapter1a.js` — Creating a Basic Triangle
+- `chapter1a.js` — first triangle / WebGL setup
+- `chapter1b.js` — additional setup and rendering variation
 
 ### chapter02
-- `chapter2a.js` — Multiple Triangles
-- `chapter2b.js` — Rectangle using Triangles
-- `chapter2c.js` — Index Buffer
-- `chapter2d.js` — Letter F geometry
+- `chapter2a.js` — multiple triangles
+- `chapter2b.js` — rectangle built from triangles
+- `chapter2c.js` — index buffer example
+- `chapter2d.js` — geometric letter F using triangle composition
 
 ### chapter03
-- `chapter3a.js` — POINTS
-- `chapter3b.js` — LINES
-- `chapter3c.js` — additional line pattern
-- `chapter3d.js` — LINE_LOOP
-- `chapter3e.js` — LINE_LOOP / polygon-style drawing
-- `chapter3f.js` — TRIANGLES
-- `chapter3g.js` — TRIANGLE_STRIP
-- `chapter3h.js` — TRIANGLE_FAN
+- `chapter3a.js` — POINTS topology
+- `chapter3b.js` — LINES topology
+- `chapter3c.js` — additional line-pattern experiment
+- `chapter3d.js` — LINE_LOOP example
+- `chapter3e.js` — polygon-style line drawing
+- `chapter3f.js` — TRIANGLES drawing
+- `chapter3g.js` — TRIANGLE_STRIP example
+- `chapter3h.js` — TRIANGLE_FAN example
 
 ### chapter04
-- `chapter4a.js` — Dynamic Buffer
-- `chapter4b.js` — Dynamic Buffer / rectangle editing
-- `chapter4c.js` — topology or polygon experiment
-- `chapter4d.js` — interactive drawing experiment
+- `chapter4a.js` — dynamic buffer example
+- `chapter4b.js` — dynamic rectangle / vertex editing
+- `chapter4c.js` — polygon or topology experiment
+- `chapter4d.js` — interactive drawing exercise
 
 ### chapter05
-- `chapter5a.js` — Varying: vertex position drives vertex colors
-- `chapter5b.js` — Multiple buffers: position and color in separate buffers
-- `chapter5c.js` — Interleaved buffer: position + color in one buffer
-- `chapter5d.js` — Gradient rectangle using interpolated vertex colors
-- `chapter5e.js` — Rectangle with two triangles and different vertex colors
-
-This chapter focuses on `varying` variables and how color data is interpolated across fragments.
+- `chapter5a.js` — vertex colors driven by varying data
+- `chapter5b.js` — separate position and color buffers
+- `chapter5c.js` — interleaved position + color buffer
+- `chapter5d.js` — gradient rectangle with interpolated colors
+- `chapter5e.js` — two-triangle colored rectangle
 
 ### chapter06
-- `chapter6a.js` — Uniform float intensity
-- `chapter6b.js` — Uniform color channels and intensity
-- `chapter6c.js` — Random rectangles using uniform-driven color updates
-- `chapter6d.js` — Repeated draw work with uniform-based control
-- `chapter6e.js` — Full uniform examples and broader shader parameter control
-
-This chapter is the formal `uniforms` chapter: values are set from JavaScript and shared across vertices/fragments without per-vertex interpolation.
+- `chapter6a.js` — uniform float control
+- `chapter6b.js` — uniform RGB color input
+- `chapter6c.js` — repeated random rectangle styling
+- `chapter6d.js` — uniform-driven repeated drawing work
+- `chapter6e.js` — broader shader parameter examples
 
 ### chapter07
-- `chapter7a.js` — Basic rectangle in pixel space
-- `chapter7b.js` — Pixel-space rectangle with inverted Y handling
-- `chapter7c.js` — Matrix-based pixel-to-clip conversion
-- `chapter7d.js` — Many random rectangles with uniform colors
-- `chapter7e.js` — Follow-up pixel-space random rectangle pattern
-
-This chapter is about `pixel-space rendering`: drawing in screen coordinates instead of clip space, and converting from pixels to clip-space math.
+- `chapter7a.js` — basic pixel-space rectangle
+- `chapter7b.js` — pixel-space drawing with inverted Y handling
+- `chapter7c.js` — matrix-based pixel-to-clip conversion
+- `chapter7d.js` — random rectangles with color control
 
 ### chapter08
-- `chapter8a.js` — 2D Transformations
-- `chapter8b.js` — 2D View & Translation Matrix
+- `chapter8a.js` — 2D transformation basics
+- `chapter8b.js` — view and translation matrix work
+- `chapter8c.js` — continued transform experiments
+- `chapter8d.js` — transformation/practice variation
+- `chapter8e.js` — further matrix-driven motion examples
 
-This chapter covers transform pipelines using matrices, translation, scale, and model/view/projection-style thinking.
+### chapter09
+- `chapter9a.js` — additional geometry / rendering practice
+- `chapter9b.js` — follow-up rendering experiment
 
-### chapter11, chapter12, chapter21
-- `chapter11a.js`, `chapter12a.js`, `chapter21a.js` — repo placeholders; currently empty
+### chapter10
+- `chapter10a.js` — current browser demo entry used by `index.html`
+
+### chapter11
+- `chapter11a.js` — chapter scaffold / practice file
+- `chapter11b.js` — follow-up lesson file
 
 ### chapterExtra
-- `chapterExtra1.js` — extra render-loop / projection experiments
+- `chapterExtra1.js` — extra render loop / projection experiment
 
-## Learning flow
+## Learning progression
 
-This project is organized as a step-by-step path:
+1. Set up a canvas and draw the first triangle
+2. Build geometry from triangles and indexed data
+3. Explore primitive topologies and draw modes
+4. Update buffers dynamically and work with live vertex data
+5. Pass data from vertex shader to fragment shader with `varying`
+6. Control shader behavior globally with `uniform`
+7. Move into pixel-space and screen-space conversion
+8. Apply transforms and matrices for 2D motion
+9. Continue into advanced render-loop and projection-oriented experiments
 
-1. Create a first triangle and understand the basic draw pipeline
-2. Build geometry with triangles and indexes
-3. Explore primitive topologies and vertex arrangement
-4. Make data dynamic and interactive with buffer updates
-5. Learn `varying` for per-vertex to per-fragment interpolation
-6. Learn `uniforms` for controlling shader behavior globally
-7. Move into pixel-space rendering and screen-space conversion
-8. Finish with transforms and matrix-based movement
-9. Extend toward advanced rendering ideas and animation patterns
+## Technical focus
 
-## Tech focus
+- WebGL 2.0 / canvas rendering pipeline
+- GLSL shader creation and compilation
+- Vertex buffers, attribute setup, and draw calls
+- Geometry assembly and primitive modes
+- Shader data flow (`attribute`, `varying`, `uniform`)
+- Dynamic render updates and per-frame animation
+- Screen-space math and pixel-to-clip conversion
+- Matrix-based 2D transforms and motion
 
-- WebGL 2.0
-- GLSL ES 3.00
-- Buffers, VAOs, and shaders
-- Geometry assembly and index drawing
-- Primitive modes and topology
-- Shader data flow
-- `varying` interpolation
-- `uniform` parameter control
-- Screen-space conversion and pixel-space math
-- Matrix-based 2D transforms and view-model pipelines
+## How to use
 
-Part of the Sckorpio Graphics learning series.
+Open `index.html` in a browser to run the current active example. If you want to study a specific lesson, open the relevant script in `chapters/` and update the entry point in the page as needed.
+
+This project is part of the Sckorpio Graphics WebGL learning path.
 

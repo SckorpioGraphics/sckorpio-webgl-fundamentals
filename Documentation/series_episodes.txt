@@ -1,56 +1,73 @@
 SCKORPIO WEBGL TUTORIAL
 =======================
 
+THIS DOCUMENT REFLECTS THE CURRENT PROJECT STATE
+-------------------------------------------------
+The repository contains active lesson files across the first 11 chapters, plus additional work in the chapterExtra folder.
+
 CHAPTER 01
-- 1A — Basic Triangle / WebGL setup
+- 1A — initial triangle / WebGL setup
+- 1B — follow-up setup and rendering variation
 
 CHAPTER 02
-- 2A — Multiple Triangles
-- 2B — Rectangle using Triangles
-- 2C — Index Buffer
-- 2D — Letter F geometry
+- 2A — multiple triangles
+- 2B — rectangle built from triangle geometry
+- 2C — index buffer example
+- 2D — letter F geometry built from triangles
 
 CHAPTER 03
-- 3A — POINTS
-- 3B — LINES
-- 3C — Additional line pattern
+- 3A — POINTS topology
+- 3B — LINES topology
+- 3C — additional line-pattern experiment
 - 3D — LINE_LOOP
-- 3E — LINE_LOOP / polygon-style drawing
-- 3F — TRIANGLES
+- 3E — polygon-style line drawing
+- 3F — TRIANGLES drawing
 - 3G — TRIANGLE_STRIP
 - 3H — TRIANGLE_FAN
 
 CHAPTER 04
-- 4A — Dynamic Buffer
-- 4B — Dynamic rectangle / vertex editing
-- 4C — Topology or polygon experiment
-- 4D — Interactive drawing experiment
+- 4A — dynamic buffer example
+- 4B — dynamic rectangle / live vertex editing
+- 4C — topology or polygon experiment
+- 4D — interactive drawing exercise
 
 CHAPTER 05
-- 5A — Uniform
-- 5B — Varying
-- 5C — Multiple Buffers
-- 5D — Combined Buffer
-- 5E — Varying and Uniform together
+- 5A — varying-driven vertex colors
+- 5B — separate position and color buffers
+- 5C — interleaved position + color buffer
+- 5D — gradient rectangle with interpolated colors
+- 5E — colored two-triangle rectangle
 
 CHAPTER 06
-- 6A — Basic rectangle in pixel space using u_resolution
-- 6B — Screen-space rectangle with inverted Y handling
-- 6C — Many random rectangles with one buffer and uniform colors
-- 6D — Continued random-rectangle work with render-loop practice
-- 6E — 2D transformations with matrices, translation, rotation, and scaling
+- 6A — uniform float control
+- 6B — uniform RGB color control
+- 6C — random rectangles with uniform styling
+- 6D — uniform-based repeated draw work
+- 6E — broader shader parameter examples
 
 CHAPTER 07
-- Reserved for future lessons
+- 7A — basic pixel-space rectangle
+- 7B — pixel-space rectangle with inverted Y
+- 7C — matrix-based pixel-to-clip conversion
+- 7D — random rectangles with uniform colors
+
+CHAPTER 08
+- 8A — 2D transformation basics
+- 8B — view and translation matrix work
+- 8C — continued transform experiments
+- 8D — transformation practice
+- 8E — additional matrix-driven motion example
+
+CHAPTER 09
+- 9A — additional geometry / rendering practice
+- 9B — follow-up rendering experiment
+
+CHAPTER 10
+- 10A — active browser example entry point
 
 CHAPTER 11
-- Placeholder folder, currently empty
-
-CHAPTER 12
-- Placeholder folder, currently empty
-
-CHAPTER 21
-- Placeholder folder, currently empty
+- 11A — active lesson scaffold
+- 11B — continuation file
 
 CHAPTER EXTRA
-- Extra1 — Render loop / projection experiment
+- Extra1 — render-loop / projection experiment
