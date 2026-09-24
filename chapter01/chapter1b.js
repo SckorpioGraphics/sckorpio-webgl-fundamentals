@@ -117,16 +117,10 @@ function setupShader(gl) {
     // Compile shaders
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-
     // Create shader program
     shader.program = createProgram(gl, vertexShader, fragmentShader);
-
     // Get attribute locations
-    shader.attributes.position = gl.getAttribLocation(
-        shader.program,
-        "a_position"
-    );
-
+    shader.attributes.position = gl.getAttribLocation(shader.program,"a_position");
     // Get uniform locations
     // Future uniforms will be stored here.
 }

@@ -147,15 +147,14 @@ const triangle = {
 // =============================================================
 
 function setupShader(gl) {
+    // Shaders
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-
+    // Program
     shader.program = createProgram(gl, vertexShader, fragmentShader);
-
-    shader.attributes.position =
-        gl.getAttribLocation(shader.program, "a_position");
-
-    // No uniforms are needed for this lesson.
+    // Attributes
+    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+    // Future uniforms
 }
 
 // =============================================================

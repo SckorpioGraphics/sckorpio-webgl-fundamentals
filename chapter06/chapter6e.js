@@ -140,32 +140,16 @@ const triangle = {
 // =============================================================
 
 function setupShader(gl) {
-    const vertexShader = createShader(
-        gl,
-        gl.VERTEX_SHADER,
-        vertexShaderSource
-    );
-
-    const fragmentShader = createShader(
-        gl,
-        gl.FRAGMENT_SHADER,
-        fragmentShaderSource
-    );
-
-    shader.program = createProgram(
-        gl,
-        vertexShader,
-        fragmentShader
-    );
-
-    shader.attributes.position =
-        gl.getAttribLocation(shader.program, "a_position");
-
-    shader.uniforms.intensity =
-        gl.getUniformLocation(shader.program, "u_intensity");
-
-    shader.uniforms.color =
-        gl.getUniformLocation(shader.program, "u_color");
+    // Shaders
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    // Program
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
+    // Attributes
+    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+    // uniforms
+    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
+    shader.uniforms.intensity = gl.getUniformLocation(shader.program, "u_intensity");
 }
 
 // =============================================================
