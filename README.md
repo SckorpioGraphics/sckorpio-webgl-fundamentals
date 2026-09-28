@@ -17,130 +17,47 @@ The updated series structure is the source of truth for the learning path:
   - 2c. Index Buffer
   - 2d. Letter F
 - Chapter 03 — Primitive Topologies
-  - 3a. POINTS
-  - 3b. LINES
-  - 3c. LINE_STRIP
-  - 3d. LINE_LOOP
-  - 3e. Hexagon Outline
-  - 3f. TRIANGLES
-  - 3g. TRIANGLE_STRIP
-  - 3h. TRIANGLE_FAN
-- Chapter 04 — Dynamic Buffers
-  - 4a. Dynamic Triangle
-  - 4b. Dynamic Rectangle
-  - 4c. Dynamic Polygon / Circle Outline
-  - 4d. Dynamic Filled Polygon / Circle
-- Chapter 05 — Shader Data Flow
-  - 5a. Varying / Vertex Color
-  - 5b. Multiple Buffers
-  - 5c. Interleaved Buffer
-  - 5d. Gradient Rectangle
-  - 5e. Two-Triangle Rectangle with Different Vertex Colors
-- Chapter 06 — Uniforms
-  - 6a. Uniform Float / Intensity
-  - 6b. RGB Uniforms + Intensity
-  - 6c. vec3 Color Uniform
-  - 6d. Varying + Uniform Together
-  - 6e. Uniform Types and WebGL APIs
-- Chapter 07 — Multiple Objects
-  - 7a. Same Topology / Same Shader — Triangle + Rectangle
-  - 7b. Different Topologies / Same Shader — Triangle + Hexagon
-  - 7c. Different Shaders — Uniform-Color Triangle + Vertex-Color Rectangle
-  - 7d. Grid + Triangle in Clip Space
-- Chapter 08 — Pixel Space
-  - 8a. Basic Rectangle in Pixel Coordinates
-  - 8b. Position and Size
-  - 8c. Matrix Version — mat3 / Pixel → Clip / Inverted Y
-  - 8d. Random Rectangles / Reused VBO
-- Chapter 09 — 2D World
-  - 9a. Building a 2D World
-  - 9b. Static World
-  - 9c. Multiple World Objects
-- Chapter 10 — 2D Camera
-  - 10a. View Matrix
+  # Sckorpio Graphics: WebGL Fundamentals
+
+  A step-by-step WebGL 2 learning repository. The implemented lessons progress from a deliberately unstructured first triangle to a reusable lesson template, indexed geometry, primitive topologies, dynamic vertex data, shader data flow, uniforms, multiple objects, pixel/world coordinates, a 2D camera, and 2D object transformations.
+
+  ## Start Here
+
+  The first three files have different purposes:
+
+  1. [Chapter 1a](chapters/chapter01/chapter1a.js) is the raw first-triangle walkthrough. It keeps canvas setup, shader compilation, buffers, vertex arrays, and drawing together in a single `main()` so the WebGL pipeline is visible end to end.
+  2. [Chapter 1b](chapters/chapter01/chapter1b.js) is a blank organizational scaffold. It names the intended sections for global state, shader strings, helper/setup functions, `main()`, and startup.
+  3. [Chapter 1c](chapters/chapter01/chapter1c.js) is the completed triangle example organized using that scaffold. Its current source header still says “Chapter 1b”; the filename and its role in the learning sequence are authoritative here.
+
+  Continue through the numbered directories in order. The complete source-grounded lesson index is in [Documentation/chapters_index.txt](Documentation/chapters_index.txt); repository setup and code-reading guidance are in [Documentation/README.md](Documentation/README.md).
+
+  ## What Is Implemented
+
+  The repository contains 50 numbered lesson files across Chapters 1–10, plus two extra experiments. Chapter 8 combines pixel-space conversion and the first grid/world examples; Chapter 9 develops the 2D camera; Chapter 10 develops translation, rotation, scale, model matrices, and multiple independently transformed objects. This file grouping is the current implementation structure, even where older curriculum notes used different chapter boundaries.
+
+  The browser entry point currently loads `chapters/chapter09/chapter9f.js`, the continuous keyboard camera-control lesson. Change the module path in [index.html](index.html) to run a different lesson. Each lesson is a standalone ES module and expects the page's canvas with id `c`.
+
+  ## Run A Lesson
+
+  Serve the repository over HTTP from its root, then open `http://localhost:8000`:
+
+  ```sh
+  python3 -m http.server 8000
+  ```
+
+  Using a local server is appropriate because the page loads lesson code as an ES module. Lessons that use the GUI or matrix helpers also load lil-gui and gl-matrix from CDNs in `index.html`, so those lessons need network access. A browser with WebGL 2 support is required.
+
+  ## Code Organization
+
+  The structured lessons generally place module-scope `canvas` and `gl` bindings and lesson state first, followed by shader sources, shader/helper/camera/scene/GUI/input functions, `main()`, and the DOM-ready startup/export. Chapter 1a is intentionally the raw exception; Chapter 1b is the empty template; Chapter 1c demonstrates the template with a rendered triangle.
+
+  ## Documentation
+
+  - [Documentation/README.md](Documentation/README.md): repository guide, lesson architecture, run instructions, and scope.
+  - [Documentation/chapters_index.txt](Documentation/chapters_index.txt): detailed index of every implemented lesson and extra.
+  - [Documentation/series_episodes.txt](Documentation/series_episodes.txt): implemented episode sequence and the planned continuation beyond the current source files.
+
+  The source is the authority for what currently runs. Some lesson block comments retain older or incorrect subchapter numbers; the documentation identifies files by their actual paths and records the known mismatches rather than silently renumbering code.
   - 10b. Camera Position
+
   - 10c. Camera Movement
-  - 10d. Keyboard Controls
-  - 10e. Exploring the World
-- Chapter 11 — 2D Transformations
-  - 11a. Translation
-  - 11b. Rotation
-  - 11c. Scale
-  - 11d. Transformation Composition
-  - 11e. Model Matrix
-  - 11f. Animation
-- Chapter 12 — 2D Textures
-  - 12a. Texture Creation
-  - 12b. Texture Upload
-  - 12c. UV Coordinates
-  - 12d. Texture Sampling
-  - 12e. Textured Rectangle
-  - 12f. Textured Transformations
-  - 12g. Multiple Textured Objects
-- Chapter 13 — 2D Rendering / Scene
-  - 13a. Sprites
-  - 13b. Sprite Sheets
-  - 13c. UV Sub-Rectangles
-  - 13d. Sprite Animation
-  - 13e. Sprite Flipping
-  - 13f. Multiple Sprites
-  - 13g. Small 2D Scene
-- Chapter 14 — 3D World
-- Chapter 15 — 3D Camera
-- Chapter 16 — 3D Projection
-- Chapter 17 — 3D Transformations
-- Chapter 18 — 3D Textures
-- Chapter 19 — Lighting Fundamentals
-- Chapter 20 — Materials & Multiple Lights
-- Chapter 21 — Complete WebGL Pipeline
-
-## Current workspace snapshot
-
-The code in this workspace is a practical subset of that curriculum. The repository currently contains active lesson files through chapter 11, with a browser entry point that loads the chapter 10 demo.
-
-### Present files in this repo
-- `index.html` — main browser entry file
-- `css/style.css` — shared styling
-- `chapters/chapter01/` through `chapters/chapter11/` — implementation files for the current lessons
-- `chapters/chapterExtra/chapterExtra1.js` — extra render-loop / projection experiment
-- `Documentation/` — notes and project reference files
-
-## Core learning flow
-
-The series follows this progression:
-
-WebGL Basics
-→ Geometry
-→ Primitive Topologies
-→ Dynamic Buffers
-→ Shader Data Flow
-→ Uniforms
-→ Multiple Objects
-→ Pixel Space
-→ 2D World
-→ 2D Camera
-→ 2D Transformations
-→ 2D Textures
-→ 2D Rendering / Scene
-→ 3D World
-→ 3D Camera
-→ 3D Projection
-→ 3D Transformations
-→ 3D Textures
-→ Lighting
-→ Materials + Multiple Lights
-→ Complete WebGL Pipeline
-
-## Concept-to-implementation strategy
-
-The roadmap explicitly separates the conceptual series and the WebGL implementation series:
-
-- CG Fundamentals: conceptual visuals and theory
-- WebGL Fundamentals: coding exercises and practical rendering work
-
-The same visual resources, diagrams, and explanations should be reusable across both series.
-
-## How to use this repo
-
-Open `index.html` in a browser to run the current demo. Study the chapter files under `chapters/` in order and use the roadmap above as the long-term curriculum target.
-
