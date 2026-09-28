@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 8a: Pixel Space
+CHAPTER 8a: 2D Space
 
 Topics:
 - Creating a basic rectangle
@@ -26,9 +26,9 @@ const vertexShaderSource = `#version 300 es
         vec2 zeroToTwo = zeroToOne * 2.0;
 
         // [0, 2] to [-1, 1]
-        vec2 clipSpace = zeroToTwo - 1.0;
+        vec2 clipPostion = zeroToTwo - 1.0;
 
-        gl_Position = vec4(clipSpace, 0.0, 1.0);
+        gl_Position = vec4(clipPostion, 0.0, 1.0);
     }
 `;
 

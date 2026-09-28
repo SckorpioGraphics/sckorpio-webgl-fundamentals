@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 8d: Pixel Space
+CHAPTER 8d: 2D Space, multiple triangles
 
 Topics:
 - Creating multiple random rectangles
@@ -7,7 +7,6 @@ Topics:
 - Inverted Y coordinates
 - Pixel space -> clip space using a matrix
 - Reusing the same buffer for multiple rectangles
-- Updating buffer data between draw calls
 ###############################################################
 */
 
@@ -18,17 +17,14 @@ Topics:
 const vertexShaderSource = `#version 300 es
     in vec2 a_position;
 
-    uniform mat3 u_pixelMatrix;
+    uniform mat3 u_projectionMatrix;
 
     void main() {
-        // Convert vec2 position to homogeneous vec3
-        vec3 position = vec3(a_position, 1.0);
-
-        // Apply pixel -> clip space matrix
-        vec3 transformedPosition = u_pixelMatrix * position;
+        // Apply pixel space -> clip space matrix
+        vec3 clipPostion = u_projectionMatrix * vec3(a_position, 1.0);
 
         // Convert to clip-space position
-        gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
+        gl_Position = vec4(clipPostion.xy, 0.0, 1.0);
     }
 `;
 
@@ -136,7 +132,7 @@ const shader = {
         position: null
     },
     uniforms: {
-        pixelMatrix: null,
+        projectionMatrix: null,
         color: null
     }
 };
@@ -167,9 +163,8 @@ function setupShader(gl) {
     // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
     // uniforms
-    shader.uniforms.pixelMatrix = gl.getUniformLocation(shader.program, "u_pixelMatrix");
+    shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
-
 }
 
 // =============================================================
@@ -254,16 +249,16 @@ function main() {
             |   0     0      1 |
         */
 
-        const pixelMatrix = mat3.fromValues(
+        const projectionMatrix = mat3.fromValues(
             2 / width,  0,           0,
             0,         -2 / height,  0,
             -1,         1,           1
         );
 
         gl.uniformMatrix3fv(
-            rectangle.shader.uniforms.pixelMatrix,
+            rectangle.shader.uniforms.projectionMatrix,
             false,
-            pixelMatrix
+            projectionMatrix
         );
 
         // ---------------------------------------------------------

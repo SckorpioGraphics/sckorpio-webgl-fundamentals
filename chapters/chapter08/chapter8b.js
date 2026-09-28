@@ -1,11 +1,12 @@
 /* #############################################################
-CHAPTER 8a: Pixel Space
+CHAPTER 8b: 2D Space(Inverted Y)
 
 Topics:
 - Creating a basic rectangle
 - Vertex data in pixel space
 - Uniforms for screen-space data
 - Pixel space to clip space conversion
+- Inverted Y
 ###############################################################
 */
 
@@ -26,12 +27,12 @@ const vertexShaderSource = `#version 300 es
         vec2 zeroToTwo = zeroToOne * 2.0;
 
         // [0, 2] to [-1, 1]
-        vec2 clipSpace = zeroToTwo - 1.0;
+        vec2 clipPostion = zeroToTwo - 1.0;
 
         // Inver vertical (TopLeft corner= (0,0))
-        vec2 clipSpaceInverted = clipSpace * vec2(1.0,-1.0);
+        vec2 clipPostionInverted = clipPostion * vec2(1.0,-1.0);
 
-        gl_Position = vec4(clipSpaceInverted, 0.0, 1.0);
+        gl_Position = vec4(clipPostionInverted, 0.0, 1.0);
     }
 `;
 

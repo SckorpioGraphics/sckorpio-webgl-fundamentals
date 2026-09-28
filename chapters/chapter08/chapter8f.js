@@ -1,13 +1,15 @@
 /* #############################################################
-CHAPTER 8c: 2D Space (using Projection Matrix)
+CHAPTER 8f: 2D World
 
 Topics:
-- Creating a basic rectangle
+- Creating a grid in pixel space
+- Also adding X-Axis and Y-Axis
+- Creating a rectangle in pixel space
 - Vertex data in pixel space
-- Matrix as a uniform
-- mat3
+- projectionMatrix as a uniform mat3
 - Pixel space -> clip space
 - Inverted Y
+- Multiple objects in pixel space
 ###############################################################
 */
 
@@ -21,21 +23,23 @@ const vertexShaderSource = `#version 300 es
     uniform mat3 u_projectionMatrix;
 
     void main() {
-        // Apply pixel space -> clip space matrix
-        vec3 clipPostion = u_projectionMatrix * vec3(a_position, 1.0);
+        // Apply pixel -> clip space matrix
+        vec3 transformedPosition = u_projectionMatrix * vec3(a_position, 1.0);
 
         // Convert to clip-space position
-        gl_Position = vec4(clipPostion.xy, 0.0, 1.0);
+        gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
     }
 `;
 
 const fragmentShaderSource = `#version 300 es
     precision mediump float;
 
+    uniform vec4 u_color;
+
     out vec4 out_color;
 
     void main() {
-        out_color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio Purple
+        out_color = u_color;
     }
 `;
 
@@ -105,13 +109,41 @@ const shader = {
         position: null
     },
     uniforms: {
-        projectionMatrix: null
+        projectionMatrix: null,
+        color: null
     }
 };
 
 // =============================================================
 // 5. OBJECT DATA
 // =============================================================
+
+const grid = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+const xAxis = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+const yAxis = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
 
 const rectangle = {
     shader: null,
@@ -136,23 +168,159 @@ function setupShader(gl) {
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
     // uniforms
     shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
+    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
 }
 
 // =============================================================
 // 7. OBJECT SETUP
 // =============================================================
 
+function setupGrid(gl, shader) {
+    grid.shader = shader;
+
+    const positions = [];
+    const spacing = 100;
+    const range = 10000;
+
+    // Vertical lines
+    for(let x = -range; x <= range; x += spacing) {
+        positions.push(
+            x, -range,
+            x, range
+        );
+    }
+
+    // Horizontal lines
+    for(let y = -range; y <= range; y += spacing) {
+        positions.push(
+            -range, y,
+            range, y
+        );
+    }
+
+    grid.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, grid.vbo);
+
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(positions),
+        gl.STATIC_DRAW
+    );
+
+    grid.vao = gl.createVertexArray();
+    gl.bindVertexArray(grid.vao);
+
+    gl.enableVertexAttribArray(
+        grid.shader.attributes.position
+    );
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, grid.vbo);
+
+    gl.vertexAttribPointer(
+        grid.shader.attributes.position,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0
+    );
+
+    grid.drawMode = gl.LINES;
+    grid.drawOffset = 0;
+    grid.drawCount = positions.length / 2;
+}
+
+function setupXAxis(gl, shader) {
+    xAxis.shader = shader;
+
+    const positions = new Float32Array([
+        -10000, 0,
+         10000, 0
+    ]);
+
+    xAxis.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, xAxis.vbo);
+
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.STATIC_DRAW
+    );
+
+    xAxis.vao = gl.createVertexArray();
+    gl.bindVertexArray(xAxis.vao);
+
+    gl.enableVertexAttribArray(
+        xAxis.shader.attributes.position
+    );
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, xAxis.vbo);
+
+    gl.vertexAttribPointer(
+        xAxis.shader.attributes.position,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0
+    );
+
+    xAxis.drawMode = gl.LINES;
+    xAxis.drawOffset = 0;
+    xAxis.drawCount = 2;
+}
+
+function setupYAxis(gl, shader) {
+    yAxis.shader = shader;
+
+    const positions = new Float32Array([
+        0, -10000,
+        0,  10000
+    ]);
+
+    yAxis.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, yAxis.vbo);
+
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.STATIC_DRAW
+    );
+
+    yAxis.vao = gl.createVertexArray();
+    gl.bindVertexArray(yAxis.vao);
+
+    gl.enableVertexAttribArray(
+        yAxis.shader.attributes.position
+    );
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, yAxis.vbo);
+
+    gl.vertexAttribPointer(
+        yAxis.shader.attributes.position,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0
+    );
+
+    yAxis.drawMode = gl.LINES;
+    yAxis.drawOffset = 0;
+    yAxis.drawCount = 2;
+}
+
 function setupRectangle(gl, shader) {
     rectangle.shader = shader;
 
     const positions = new Float32Array([
-        20, 20,       // Left Bottom
-        200, 20,      // Right Bottom
-        20, 100,      // Left Top
+        200, 150,       // Left Bottom
+        400, 150,       // Right Bottom
+        200, 300,       // Left Top
 
-        20, 100,      // Left Top
-        200, 20,      // Right Bottom
-        200, 100      // Right Top
+        200, 300,       // Left Top
+        400, 150,       // Right Bottom
+        400, 300        // Right Top
     ]);
 
     rectangle.vbo = gl.createBuffer();
@@ -205,6 +373,9 @@ function main() {
     }
 
     setupShader(gl);
+    setupGrid(gl, shader);
+    setupXAxis(gl, shader);
+    setupYAxis(gl, shader);
     setupRectangle(gl, shader);
 
     function render() {
@@ -214,7 +385,7 @@ function main() {
         gl.clearColor(0.32, 0.63, 0.67, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        gl.useProgram(rectangle.shader.program);
+        gl.useProgram(shader.program);
 
         // ---------------------------------------------------------
         // PIXEL SPACE -> CLIP SPACE MATRIX
@@ -243,12 +414,72 @@ function main() {
         );
 
         gl.uniformMatrix3fv(
-            rectangle.shader.uniforms.projectionMatrix,
+            shader.uniforms.projectionMatrix,
             false,
             projectionMatrix
         );
 
+        // ---------------------------------------------------------
+        // GRID
+        // ---------------------------------------------------------
+
+        gl.bindVertexArray(grid.vao);
+
+        gl.uniform4f(
+            shader.uniforms.color,
+            0.39, 0.33, 0.58, 1.0
+        );
+
+        gl.drawArrays(
+            grid.drawMode,
+            grid.drawOffset,
+            grid.drawCount
+        );
+
+        // ---------------------------------------------------------
+        // X AXIS
+        // ---------------------------------------------------------
+
+        gl.bindVertexArray(xAxis.vao);
+
+        gl.uniform4f(
+            shader.uniforms.color,
+            1.0, 0.0, 0.0, 1.0
+        );
+
+        gl.drawArrays(
+            xAxis.drawMode,
+            xAxis.drawOffset,
+            xAxis.drawCount
+        );
+
+        // ---------------------------------------------------------
+        // Y AXIS
+        // ---------------------------------------------------------
+
+        gl.bindVertexArray(yAxis.vao);
+
+        gl.uniform4f(
+            shader.uniforms.color,
+            0.0, 1.0, 0.0, 1.0
+        );
+
+        gl.drawArrays(
+            yAxis.drawMode,
+            yAxis.drawOffset,
+            yAxis.drawCount
+        );
+
+        // ---------------------------------------------------------
+        // RECTANGLE
+        // ---------------------------------------------------------
+
         gl.bindVertexArray(rectangle.vao);
+
+        gl.uniform4f(
+            shader.uniforms.color,
+            0.39, 0.33, 0.58, 1.0
+        );
 
         gl.drawArrays(
             rectangle.drawMode,
