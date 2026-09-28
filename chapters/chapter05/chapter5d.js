@@ -9,80 +9,13 @@ Topics:
 */
 
 // =============================================================
-// 1. GLSL SHADER SOURCES
+// GLOBAL OBJECTS
 // =============================================================
-
-const vertexShaderSource = `#version 300 es
-    in vec2 a_position;
-    in vec3 a_color;
-
-    out vec4 v_color;
-
-    void main() {
-        gl_Position = vec4(a_position, 0.0, 1.0);
-        v_color = vec4(a_color, 1.0);
-    }
-`;
-
-const fragmentShaderSource = `#version 300 es
-    precision highp float;
-
-    in vec4 v_color;
-    out vec4 out_color;
-
-    void main() {
-        out_color = v_color;
-    }
-`;
+let canvas = null;
+let gl = null;
 
 // =============================================================
-// 2. WEBGL UTILITY FUNCTIONS
-// =============================================================
-
-function createShader(gl, type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    if(compileStatus) return shader;
-
-    console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
-}
-
-function createProgram(gl, vertexShader, fragmentShader) {
-    const program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-
-    const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
-    if(linkStatus) return program;
-
-    console.error("Program Linking Error:", gl.getProgramInfoLog(program));
-    gl.deleteProgram(program);
-}
-
-// =============================================================
-// 3. HELPER FUNCTIONS
-// =============================================================
-
-function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-    const width = (canvas.clientWidth * multiplier) | 0;
-    const height = (canvas.clientHeight * multiplier) | 0;
-
-    if(canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        return true;
-    }
-
-    return false;
-}
-
-// =============================================================
-// UI
+// Scene Objects
 // =============================================================
 
 const uiState = {
@@ -110,6 +43,163 @@ const uiState = {
     dG: 1.0,
     dB: 0.0
 };
+
+const rectangle = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+// =============================================================
+// Shader Objects
+// =============================================================
+
+const shader = {
+    program: null,
+    attributes: {
+        position: null,
+        color: null
+    },
+    uniforms: {}
+};
+
+// =============================================================
+// SHADER STRINGS
+// =============================================================
+
+const vertexShaderSource = `#version 300 es
+    in vec2 a_position;
+    in vec3 a_color;
+
+    out vec4 v_color;
+
+    void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+        v_color = vec4(a_color, 1.0);
+    }
+`;
+
+const fragmentShaderSource = `#version 300 es
+    precision highp float;
+
+    in vec4 v_color;
+    out vec4 out_color;
+
+    void main() {
+        out_color = v_color;
+    }
+`;
+
+// =============================================================
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
+// =============================================================
+
+function createShader(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if(compileStatus) return shader;
+
+    console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+}
+
+function createProgram(gl, vertexShader, fragmentShader) {
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if(linkStatus) return program;
+
+    console.error("Program Linking Error:", gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+}
+
+function setupShader(gl) {
+    // Shaders
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    // Program
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
+    // Attributes
+    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+    shader.attributes.color = gl.getAttribLocation(shader.program, "a_color");
+    // Future uniforms
+}
+
+// =============================================================
+// Helper Functions
+// =============================================================
+
+function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
+    const width = (canvas.clientWidth * multiplier) | 0;
+    const height = (canvas.clientHeight * multiplier) | 0;
+
+    if(canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        return true;
+    }
+
+    return false;
+}
+
+// =============================================================
+// Scene Objects Creation Functions
+// =============================================================
+
+function setupRectangle(gl, shader) {
+    rectangle.shader = shader;
+
+    rectangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+
+    rectangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(rectangle.vao);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+
+    // Vertex positions
+    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
+    gl.vertexAttribPointer(
+        rectangle.shader.attributes.position,
+        2,
+        gl.FLOAT,
+        false,
+        5 * Float32Array.BYTES_PER_ELEMENT,
+        0 * Float32Array.BYTES_PER_ELEMENT
+    );
+
+    // Vertex colors
+    gl.enableVertexAttribArray(rectangle.shader.attributes.color);
+    gl.vertexAttribPointer(
+        rectangle.shader.attributes.color,
+        3,
+        gl.FLOAT,
+        false,
+        5 * Float32Array.BYTES_PER_ELEMENT,
+        2 * Float32Array.BYTES_PER_ELEMENT
+    );
+
+    rectangle.drawMode = gl.TRIANGLES;
+    rectangle.drawOffset = 0;
+    rectangle.drawCount = 6;
+}
+
+// =============================================================
+// GUI Setup Functions
+// =============================================================
 
 function setupGUI(render) {
     const gui = new lil.GUI();
@@ -164,101 +254,17 @@ function setupGUI(render) {
 }
 
 // =============================================================
-// 4. SHADER DATA
-// =============================================================
-
-const shader = {
-    program: null,
-    attributes: {
-        position: null,
-        color: null
-    },
-    uniforms: {}
-};
-
-// =============================================================
-// 5. OBJECT DATA
-// =============================================================
-
-const rectangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// 6. SHADER SETUP
-// =============================================================
-
-function setupShader(gl) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    shader.attributes.color = gl.getAttribLocation(shader.program, "a_color");
-    // Future uniforms
-}
-
-// =============================================================
-// 7. OBJECT SETUP
-// =============================================================
-
-function setupRectangle(gl, shader) {
-    rectangle.shader = shader;
-
-    rectangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
-    rectangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(rectangle.vao);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
-    // Vertex positions
-    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
-    gl.vertexAttribPointer(
-        rectangle.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        0 * Float32Array.BYTES_PER_ELEMENT
-    );
-
-    // Vertex colors
-    gl.enableVertexAttribArray(rectangle.shader.attributes.color);
-    gl.vertexAttribPointer(
-        rectangle.shader.attributes.color,
-        3,
-        gl.FLOAT,
-        false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        2 * Float32Array.BYTES_PER_ELEMENT
-    );
-
-    rectangle.drawMode = gl.TRIANGLES;
-    rectangle.drawOffset = 0;
-    rectangle.drawCount = 6;
-}
-
-// =============================================================
-// 8. MAIN APPLICATION
+// MAIN
 // =============================================================
 
 function main() {
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -325,7 +331,7 @@ function main() {
 }
 
 // =============================================================
-// 9. START
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener("DOMContentLoaded", main);

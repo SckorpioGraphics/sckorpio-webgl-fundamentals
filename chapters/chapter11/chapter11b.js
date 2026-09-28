@@ -8,7 +8,30 @@ Topics:
 */
 
 // =============================================================
-// 1. GLSL Shader Sources
+// GLOBAL OBJECTS
+// =============================================================
+let canvas = null;
+let gl = null;
+
+// =============================================================
+// Scene Objects
+// =============================================================
+
+var state = {
+    // Vertices
+    aX: 0, aY: 0,
+    bX: 100, bY: 0,
+    cX: 0, cY: 200,
+    // Transfoms
+    translateX: 0,
+    translateY: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1
+};
+
+// =============================================================
+// SHADER STRINGS
 // =============================================================
 
 const vertexShaderSource = `#version 300 es
@@ -30,6 +53,14 @@ const fragmentShaderSource = `#version 300 es
         out_color = vec4(0.39, 0.33, 0.58, 1.0);    // Sckorpio-Purple
     }
 `;
+
+// =============================================================
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
+// =============================================================
 
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -57,7 +88,7 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 // =============================================================
-// 2. Helper Functions
+// Helper Functions
 // =============================================================
 
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
@@ -73,21 +104,8 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// 0. GUI using.. lil-gui
+// GUI Setup Functions
 // =============================================================
-
-var state = {
-    // Vertices
-    aX: 0, aY: 0,
-    bX: 100, bY: 0,
-    cX: 0, cY: 200,
-    // Transfoms
-    translateX: 0,
-    translateY: 0,
-    rotation: 0,
-    scaleX: 1,
-    scaleY: 1
-};
 
 function setupGUI(canvas, render) {
     const gui = new lil.GUI();
@@ -113,9 +131,8 @@ function setupGUI(canvas, render) {
     transformFolder.add(state, "scaleY", -5, 5, 0.01).name("Scale Y").onChange(render);
 }
 
-
 // =============================================================
-// 3. Main Application Entry Point
+// MAIN
 // =============================================================
 
 function main() {
@@ -123,13 +140,13 @@ function main() {
     // 1. WEBGL CANVAS
     // -------------------------------------------------------------
     // canvas
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if (!canvas) {
         console.error("Canvas element not found");
         return;
     }
     // context
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if (!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -279,7 +296,12 @@ function main() {
     window.addEventListener("resize", render);
 }
 
+// =============================================================
+// STARTUP AND EXPORTS
+// =============================================================
+
 // Start app once DOM content is ready
+
 window.addEventListener("DOMContentLoaded", main);
 
 export {

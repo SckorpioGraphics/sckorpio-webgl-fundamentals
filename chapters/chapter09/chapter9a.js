@@ -13,124 +13,14 @@ Topics:
 ###############################################################*/
 
 // =============================================================
-// 1. GLSL SHADER SOURCES
+// GLOBAL OBJECTS
 // =============================================================
-
-const vertexShaderSource = `#version 300 es
-    in vec2 a_position;
-    uniform mat3 u_projectionMatrix;
-
-    void main() {
-        // WORLD -> CAMERA
-        vec2 cameraPosition = vec2(-300.0, -200.0); // Hardcoded camera position.
-        vec2 viewPosition = a_position - cameraPosition;
-
-        // CAMERA -> CLIP
-        vec3 clipPosition = u_projectionMatrix * vec3(viewPosition, 1.0);
-
-        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
-    }
-`;
-
-const fragmentShaderSource = `#version 300 es
-    precision mediump float;
-    uniform vec4 u_color;
-    out vec4 out_color;
-
-    void main() {
-        out_color = u_color;
-    }
-`;
+let canvas = null;
+let gl = null;
 
 // =============================================================
-// 2. WEBGL UTILITY FUNCTIONS
+// Scene Objects
 // =============================================================
-
-function createShader(gl, type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    if(compileStatus) return shader;
-
-    console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
-}
-
-function createProgram(gl, vertexShader, fragmentShader) {
-    const program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-
-    const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
-    if(linkStatus) return program;
-
-    console.error("Program Linking Error:", gl.getProgramInfoLog(program));
-    gl.deleteProgram(program);
-}
-
-// =============================================================
-// 3. HELPER FUNCTIONS
-// =============================================================
-
-function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-    const width = (canvas.clientWidth * multiplier) | 0;
-    const height = (canvas.clientHeight * multiplier) | 0;
-
-    if(canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        return true;
-    }
-
-    return false;
-}
-
-// =============================================================
-// UI
-// =============================================================
-
-// No UI in this chapter yet.
-// The focus here is on using a matrix
-// to convert pixel space to clip space.
-
-// =============================================================
-// 4. SHADER DATA
-// =============================================================
-
-const shader = {
-    program: null,
-    attributes: {
-        position: null
-    },
-    uniforms: {
-        projectionMatrix: null,
-        color: null
-    }
-};
-
-// =============================================================
-// 5. CAMERA DATA
-// =============================================================
-
-const camera = {
-    projectionMatrix: null
-}
-
-// =============================================================
-// 6. OBJECT DATA
-// =============================================================
-
-const grid = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
 
 const xAxis = {
     shader: null,
@@ -160,8 +50,107 @@ const rectangle = {
 };
 
 // =============================================================
-// 6. SHADER SETUP
+// Camera Objects
 // =============================================================
+
+const camera = {
+    projectionMatrix: null
+}
+
+// =============================================================
+// 6. OBJECT DATA
+// =============================================================
+
+const grid = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+// =============================================================
+// Shader Objects
+// =============================================================
+
+// No UI in this chapter yet.
+// The focus here is on using a matrix
+// to convert pixel space to clip space.
+
+const shader = {
+    program: null,
+    attributes: {
+        position: null
+    },
+    uniforms: {
+        projectionMatrix: null,
+        color: null
+    }
+};
+
+// =============================================================
+// SHADER STRINGS
+// =============================================================
+
+const vertexShaderSource = `#version 300 es
+    in vec2 a_position;
+    uniform mat3 u_projectionMatrix;
+
+    void main() {
+        // WORLD -> CAMERA
+        vec2 cameraPosition = vec2(-300.0, -200.0); // Hardcoded camera position.
+        vec2 viewPosition = a_position - cameraPosition;
+
+        // CAMERA -> CLIP
+        vec3 clipPosition = u_projectionMatrix * vec3(viewPosition, 1.0);
+
+        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
+    }
+`;
+
+const fragmentShaderSource = `#version 300 es
+    precision mediump float;
+    uniform vec4 u_color;
+    out vec4 out_color;
+
+    void main() {
+        out_color = u_color;
+    }
+`;
+
+// =============================================================
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
+// =============================================================
+
+function createShader(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if(compileStatus) return shader;
+
+    console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+}
+
+function createProgram(gl, vertexShader, fragmentShader) {
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if(linkStatus) return program;
+
+    console.error("Program Linking Error:", gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+}
 
 function setupShader(gl) {
     // Shaders
@@ -180,7 +169,53 @@ function setupShader(gl) {
 }
 
 // =============================================================
-// 7. OBJECT SETUP
+// Helper Functions
+// =============================================================
+
+function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
+    const width = (canvas.clientWidth * multiplier) | 0;
+    const height = (canvas.clientHeight * multiplier) | 0;
+
+    if(canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        return true;
+    }
+
+    return false;
+}
+
+// =============================================================
+// Camera-Related Matrix Functions
+// =============================================================
+
+function setupProjectionMatrix(gl){
+    // PIXEL SPACE -> CLIP SPACE MATRIX
+        const width = gl.canvas.width;
+        const height = gl.canvas.height;
+
+        /*
+            Pixel -> Clip:
+
+            x' = (2 * x / width) - 1
+            y' = 1 - (2 * y / height)
+
+            Matrix:
+
+            |  2/w    0     -1 |
+            |   0    -2/h    1 |
+            |   0     0      1 |
+        */
+
+        camera.projectionMatrix = mat3.fromValues(
+            2 / width,  0,           0,
+            0,         -2 / height, 0,
+            -1,         1,          1
+        );
+}
+
+// =============================================================
+// Scene Objects Creation Functions
 // =============================================================
 
 function setupGrid(gl, shader) {
@@ -290,45 +325,17 @@ function setupRectangle(gl, shader) {
 }
 
 // =============================================================
-// 8. SCENE SETUP
-// =============================================================
-function setupProjectionMatrix(gl){
-    // PIXEL SPACE -> CLIP SPACE MATRIX
-        const width = gl.canvas.width;
-        const height = gl.canvas.height;
-
-        /*
-            Pixel -> Clip:
-
-            x' = (2 * x / width) - 1
-            y' = 1 - (2 * y / height)
-
-            Matrix:
-
-            |  2/w    0     -1 |
-            |   0    -2/h    1 |
-            |   0     0      1 |
-        */
-
-        camera.projectionMatrix = mat3.fromValues(
-            2 / width,  0,           0,
-            0,         -2 / height, 0,
-            -1,         1,          1
-        );
-}
-
-// =============================================================
-// 8. MAIN APPLICATION
+// MAIN
 // =============================================================
 
 function main() {
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -378,7 +385,7 @@ function main() {
 }
 
 // =============================================================
-// 9. START
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener("DOMContentLoaded", main);

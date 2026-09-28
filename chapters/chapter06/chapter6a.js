@@ -8,7 +8,44 @@ Topics:
 */
 
 // =============================================================
-// 1. GLSL SHADER SOURCES
+// GLOBAL OBJECTS
+// =============================================================
+let canvas = null;
+let gl = null;
+
+// =============================================================
+// Scene Objects
+// =============================================================
+
+const uiState = {
+    intensity: 1.0
+};
+
+const triangle = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+// =============================================================
+// Shader Objects
+// =============================================================
+
+const shader = {
+    program: null,
+    attributes: {
+        position: null
+    },
+    uniforms: {
+        intensity: null
+    }
+};
+
+// =============================================================
+// SHADER STRINGS
 // =============================================================
 
 const vertexShaderSource = `#version 300 es
@@ -32,7 +69,11 @@ const fragmentShaderSource = `#version 300 es
 `;
 
 // =============================================================
-// 2. WEBGL UTILITY FUNCTIONS
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
 // =============================================================
 
 function createShader(gl, type, source) {
@@ -60,8 +101,20 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
+function setupShader(gl) {
+    // Shaders
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    // Program
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
+    // Attributes
+    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+    // uniforms
+    shader.uniforms.intensity = gl.getUniformLocation(shader.program, "u_intensity");
+}
+
 // =============================================================
-// 3. HELPER FUNCTIONS
+// Helper Functions
 // =============================================================
 
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
@@ -78,69 +131,7 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// UI
-// =============================================================
-
-const uiState = {
-    intensity: 1.0
-};
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-
-    const uniformFolder = gui.addFolder("Uniforms");
-
-    const intensityFolder = uniformFolder.addFolder("Intensity");
-    intensityFolder.add(uiState, "intensity", 0, 1)
-        .name("Intensity")
-        .onChange(render);
-}
-
-// =============================================================
-// 4. SHADER DATA
-// =============================================================
-
-const shader = {
-    program: null,
-    attributes: {
-        position: null
-    },
-    uniforms: {
-        intensity: null
-    }
-};
-
-// =============================================================
-// 5. OBJECT DATA
-// =============================================================
-
-const triangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// 6. SHADER SETUP
-// =============================================================
-
-function setupShader(gl) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    // uniforms
-    shader.uniforms.intensity = gl.getUniformLocation(shader.program, "u_intensity");
-}
-
-// =============================================================
-// 7. OBJECT SETUP
+// Scene Objects Creation Functions
 // =============================================================
 
 function setupTriangle(gl, shader) {
@@ -183,17 +174,32 @@ function setupTriangle(gl, shader) {
 }
 
 // =============================================================
-// 8. MAIN APPLICATION
+// GUI Setup Functions
+// =============================================================
+
+function setupGUI(render) {
+    const gui = new lil.GUI();
+
+    const uniformFolder = gui.addFolder("Uniforms");
+
+    const intensityFolder = uniformFolder.addFolder("Intensity");
+    intensityFolder.add(uiState, "intensity", 0, 1)
+        .name("Intensity")
+        .onChange(render);
+}
+
+// =============================================================
+// MAIN
 // =============================================================
 
 function main() {
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -233,7 +239,7 @@ function main() {
 }
 
 // =============================================================
-// 9. START
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener("DOMContentLoaded", main);

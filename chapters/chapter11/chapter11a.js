@@ -8,21 +8,38 @@ Topics:
 */
 
 // =============================================================
-// 1. GLSL Shader Sources
+// GLOBAL OBJECTS
+// =============================================================
+let canvas = null;
+let gl = null;
+
+// =============================================================
+// Scene Objects
+// =============================================================
+
+var state = {
+    // Vertices
+    aX: 100, aY: 0,
+    bX: 50, bY: 50,
+    cX: 50, cY: 150
+};
+
+// =============================================================
+// SHADER STRINGS
 // =============================================================
 
 const vertexShaderSource = `#version 300 es
     in vec2 a_position;
 
     uniform vec2 u_translation;
-    uniform mat3 u_pixelMatrix;
+    uniform mat3 u_projectionMatrix;
 
     void main() {
         // Apply translation
         vec2 position = a_position + u_translation;
 
         // Convert pixel -> clip space
-        vec3 transformedPosition = u_pixelMatrix * vec3(position, 1.0);
+        vec3 transformedPosition = u_projectionMatrix * vec3(position, 1.0);
 
         gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
     }
@@ -36,6 +53,14 @@ const fragmentShaderSource = `#version 300 es
         out_color = vec4(0.39, 0.33, 0.58, 1.0);    // Sckorpio-Purple
     }
 `;
+
+// =============================================================
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
+// =============================================================
 
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -63,7 +88,7 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 // =============================================================
-// 2. Helper Functions
+// Helper Functions
 // =============================================================
 
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
@@ -79,15 +104,8 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// 0. GUI using.. lil-gui
+// GUI Setup Functions
 // =============================================================
-
-var state = {
-    // Vertices
-    aX: 100, aY: 0,
-    bX: 50, bY: 50,
-    cX: 50, cY: 150
-};
 
 function setupGUI(canvas, render) {
     const gui = new lil.GUI();
@@ -106,9 +124,8 @@ function setupGUI(canvas, render) {
     pointCFolder.add(state, "cY", 0, canvas.height).name("Y").onChange(render);
 }
 
-
 // =============================================================
-// 3. Main Application Entry Point
+// MAIN
 // =============================================================
 
 function main() {
@@ -116,13 +133,13 @@ function main() {
     // 1. WEBGL CANVAS
     // -------------------------------------------------------------
     // canvas
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if (!canvas) {
         console.error("Canvas element not found");
         return;
     }
     // context
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if (!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -265,7 +282,12 @@ function main() {
     window.addEventListener("resize", render);
 }
 
+// =============================================================
+// STARTUP AND EXPORTS
+// =============================================================
+
 // Start app once DOM content is ready
+
 window.addEventListener("DOMContentLoaded", main);
 
 export {

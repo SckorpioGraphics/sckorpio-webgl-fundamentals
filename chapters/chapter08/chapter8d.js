@@ -11,7 +11,48 @@ Topics:
 */
 
 // =============================================================
-// 1. GLSL SHADER SOURCES
+// GLOBAL OBJECTS
+// =============================================================
+let canvas = null;
+let gl = null;
+
+// =============================================================
+// Scene Objects
+// =============================================================
+
+const rectangle = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+// =============================================================
+// Shader Objects
+// =============================================================
+
+/*
+    No UI in this chapter yet.
+
+    The focus here is on generating and rendering
+    multiple pixel-space rectangles using one buffer.
+*/
+
+const shader = {
+    program: null,
+    attributes: {
+        position: null
+    },
+    uniforms: {
+        projectionMatrix: null,
+        color: null
+    }
+};
+
+// =============================================================
+// SHADER STRINGS
 // =============================================================
 
 const vertexShaderSource = `#version 300 es
@@ -41,7 +82,11 @@ const fragmentShaderSource = `#version 300 es
 `;
 
 // =============================================================
-// 2. WEBGL UTILITY FUNCTIONS
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
 // =============================================================
 
 function createShader(gl, type, source) {
@@ -69,8 +114,21 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
+function setupShader(gl) {
+    // Shaders
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    // Program
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
+    // Attributes
+    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+    // uniforms
+    shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
+    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
+}
+
 // =============================================================
-// 3. HELPER FUNCTIONS
+// Helper Functions
 // =============================================================
 
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
@@ -112,63 +170,7 @@ function setRectangle(gl, x, y, width, height) {
 }
 
 // =============================================================
-// UI
-// =============================================================
-
-/*
-    No UI in this chapter yet.
-
-    The focus here is on generating and rendering
-    multiple pixel-space rectangles using one buffer.
-*/
-
-// =============================================================
-// 4. SHADER DATA
-// =============================================================
-
-const shader = {
-    program: null,
-    attributes: {
-        position: null
-    },
-    uniforms: {
-        projectionMatrix: null,
-        color: null
-    }
-};
-
-// =============================================================
-// 5. OBJECT DATA
-// =============================================================
-
-const rectangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// 6. SHADER SETUP
-// =============================================================
-
-function setupShader(gl) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    // uniforms
-    shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
-    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
-}
-
-// =============================================================
-// 7. OBJECT SETUP
+// Scene Objects Creation Functions
 // =============================================================
 
 function setupRectangle(gl, shader) {
@@ -201,17 +203,17 @@ function setupRectangle(gl, shader) {
 }
 
 // =============================================================
-// 8. MAIN APPLICATION
+// MAIN
 // =============================================================
 
 function main() {
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -302,7 +304,7 @@ function main() {
 }
 
 // =============================================================
-// 9. START
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener("DOMContentLoaded", main);

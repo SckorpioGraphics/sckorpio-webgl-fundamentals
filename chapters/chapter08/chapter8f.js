@@ -14,108 +14,13 @@ Topics:
 */
 
 // =============================================================
-// 1. GLSL SHADER SOURCES
+// GLOBAL OBJECTS
 // =============================================================
-
-const vertexShaderSource = `#version 300 es
-    in vec2 a_position;
-
-    uniform mat3 u_projectionMatrix;
-
-    void main() {
-        // Apply pixel -> clip space matrix
-        vec3 transformedPosition = u_projectionMatrix * vec3(a_position, 1.0);
-
-        // Convert to clip-space position
-        gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
-    }
-`;
-
-const fragmentShaderSource = `#version 300 es
-    precision mediump float;
-
-    uniform vec4 u_color;
-
-    out vec4 out_color;
-
-    void main() {
-        out_color = u_color;
-    }
-`;
+let canvas = null;
+let gl = null;
 
 // =============================================================
-// 2. WEBGL UTILITY FUNCTIONS
-// =============================================================
-
-function createShader(gl, type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    if(compileStatus) return shader;
-
-    console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
-}
-
-function createProgram(gl, vertexShader, fragmentShader) {
-    const program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-
-    const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
-    if(linkStatus) return program;
-
-    console.error("Program Linking Error:", gl.getProgramInfoLog(program));
-    gl.deleteProgram(program);
-}
-
-// =============================================================
-// 3. HELPER FUNCTIONS
-// =============================================================
-
-function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-    const width = (canvas.clientWidth * multiplier) | 0;
-    const height = (canvas.clientHeight * multiplier) | 0;
-
-    if(canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        return true;
-    }
-
-    return false;
-}
-
-// =============================================================
-// UI
-// =============================================================
-
-/*
-    No UI in this chapter yet.
-    The focus here is on using a matrix
-    to convert pixel space to clip space.
-*/
-
-// =============================================================
-// 4. SHADER DATA
-// =============================================================
-
-const shader = {
-    program: null,
-    attributes: {
-        position: null
-    },
-    uniforms: {
-        projectionMatrix: null,
-        color: null
-    }
-};
-
-// =============================================================
-// 5. OBJECT DATA
+// Scene Objects
 // =============================================================
 
 const grid = {
@@ -155,8 +60,88 @@ const rectangle = {
 };
 
 // =============================================================
-// 6. SHADER SETUP
+// Shader Objects
 // =============================================================
+
+/*
+    No UI in this chapter yet.
+    The focus here is on using a matrix
+    to convert pixel space to clip space.
+*/
+
+const shader = {
+    program: null,
+    attributes: {
+        position: null
+    },
+    uniforms: {
+        projectionMatrix: null,
+        color: null
+    }
+};
+
+// =============================================================
+// SHADER STRINGS
+// =============================================================
+
+const vertexShaderSource = `#version 300 es
+    in vec2 a_position;
+
+    uniform mat3 u_projectionMatrix;
+
+    void main() {
+        // Apply pixel -> clip space matrix
+        vec3 transformedPosition = u_projectionMatrix * vec3(a_position, 1.0);
+
+        // Convert to clip-space position
+        gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
+    }
+`;
+
+const fragmentShaderSource = `#version 300 es
+    precision mediump float;
+
+    uniform vec4 u_color;
+
+    out vec4 out_color;
+
+    void main() {
+        out_color = u_color;
+    }
+`;
+
+// =============================================================
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
+// =============================================================
+
+function createShader(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if(compileStatus) return shader;
+
+    console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+}
+
+function createProgram(gl, vertexShader, fragmentShader) {
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if(linkStatus) return program;
+
+    console.error("Program Linking Error:", gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+}
 
 function setupShader(gl) {
     // Shaders
@@ -172,7 +157,24 @@ function setupShader(gl) {
 }
 
 // =============================================================
-// 7. OBJECT SETUP
+// Helper Functions
+// =============================================================
+
+function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
+    const width = (canvas.clientWidth * multiplier) | 0;
+    const height = (canvas.clientHeight * multiplier) | 0;
+
+    if(canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        return true;
+    }
+
+    return false;
+}
+
+// =============================================================
+// Scene Objects Creation Functions
 // =============================================================
 
 function setupGrid(gl, shader) {
@@ -356,17 +358,17 @@ function setupRectangle(gl, shader) {
 }
 
 // =============================================================
-// 8. MAIN APPLICATION
+// MAIN
 // =============================================================
 
 function main() {
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -493,7 +495,7 @@ function main() {
 }
 
 // =============================================================
-// 9. START
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener("DOMContentLoaded", main);

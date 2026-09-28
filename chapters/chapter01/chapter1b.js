@@ -5,9 +5,41 @@ CHAPTER 1b: Creating a Basic Triangle
 ###############################################################
 */
 
+// =============================================================
+// GLOBAL OBJECTS
+// =============================================================
+let canvas = null;
+let gl = null;
 
 // =============================================================
-// 1. GLSL SHADER SOURCES
+// Scene Objects
+// =============================================================
+const triangle = {
+    shader: null,
+
+    vao: null,
+    vbo: null,
+
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+// =============================================================
+// Shader Objects
+// =============================================================
+const shader = {
+    program: null,
+
+    attributes: {
+        position: null
+    },
+
+    uniforms: {}
+};
+
+// =============================================================
+// SHADER STRINGS
 // =============================================================
 const vertexShaderSource = `#version 300 es
     in vec2 a_position;
@@ -27,9 +59,12 @@ const fragmentShaderSource = `#version 300 es
     }
 `;
 
+// =============================================================
+// FUNCTIONS
+// =============================================================
 
 // =============================================================
-// 2. WEBGL UTILITY FUNCTIONS
+// Shader Creating Functions
 // =============================================================
 
 // Compile Shader
@@ -61,9 +96,20 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
+function setupShader(gl) {
+    // Compile shaders
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    // Create shader program
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
+    // Get attribute locations
+    shader.attributes.position = gl.getAttribLocation(shader.program,"a_position");
+    // Get uniform locations
+    // Future uniforms will be stored here.
+}
 
 // =============================================================
-// 3. HELPER FUNCTIONS
+// Helper Functions
 // =============================================================
 
 // Resize Canvas
@@ -80,56 +126,9 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     return false;
 }
 
-
 // =============================================================
-// 4. SHADER DATA
+// Scene Objects Creation Functions
 // =============================================================
-const shader = {
-    program: null,
-
-    attributes: {
-        position: null
-    },
-
-    uniforms: {}
-};
-
-
-// =============================================================
-// 5. OBJECT DATA
-// =============================================================
-const triangle = {
-    shader: null,
-
-    vao: null,
-    vbo: null,
-
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-
-// =============================================================
-// 6. SHADER SETUP
-// =============================================================
-function setupShader(gl) {
-    // Compile shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    // Create shader program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Get attribute locations
-    shader.attributes.position = gl.getAttribLocation(shader.program,"a_position");
-    // Get uniform locations
-    // Future uniforms will be stored here.
-}
-
-
-// =============================================================
-// 7. OBJECT SETUP
-// =============================================================
-
 function setupTriangle(gl, shader) {
     // Connect shader to object
     triangle.shader = shader;
@@ -186,23 +185,21 @@ function setupTriangle(gl, shader) {
     triangle.drawCount = 3;
 }
 
-
 // =============================================================
-// 8. MAIN APPLICATION
+// MAIN
 // =============================================================
-
 function main() {
     // ---------------------------------------------------------
     // 1. WEBGL CANVAS
     // ---------------------------------------------------------
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
 
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
 
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
@@ -253,9 +250,8 @@ function main() {
     window.addEventListener("resize", render);
 }
 
-
 // =============================================================
-// 9. START
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener("DOMContentLoaded", main);

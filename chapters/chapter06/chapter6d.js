@@ -13,7 +13,67 @@ Topics:
 */
 
 // =============================================================
-// 1. GLSL SHADER SOURCES
+// GLOBAL OBJECTS
+// =============================================================
+let canvas = null;
+let gl = null;
+
+// =============================================================
+// Scene Objects
+// =============================================================
+
+const uiState = {
+    // Vertex Positions
+    aX: -0.5,
+    aY: 0.0,
+    bX: 0.5,
+    bY: 0.0,
+    cX: 0.0,
+    cY: 0.5,
+
+    // Vertex Colors
+    aR: 1.0,
+    aG: 0.0,
+    aB: 0.0,
+    bR: 0.0,
+    bG: 1.0,
+    bB: 0.0,
+    cR: 0.0,
+    cG: 0.0,
+    cB: 1.0,
+
+    // Uniform Color
+    r: 0.0,
+    g: 0.0,
+    b: 0.0
+};
+
+const triangle = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+// =============================================================
+// Shader Objects
+// =============================================================
+
+const shader = {
+    program: null,
+    attributes: {
+        position: null,
+        color: null
+    },
+    uniforms: {
+        color: null
+    }
+};
+
+// =============================================================
+// SHADER STRINGS
 // =============================================================
 
 const vertexShaderSource = `#version 300 es
@@ -42,7 +102,11 @@ const fragmentShaderSource = `#version 300 es
 `;
 
 // =============================================================
-// 2. WEBGL UTILITY FUNCTIONS
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
 // =============================================================
 
 function createShader(gl, type, source) {
@@ -70,8 +134,21 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
+function setupShader(gl) {
+    // Shaders
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    // Program
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
+    // Attributes
+    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+    shader.attributes.color = gl.getAttribLocation(shader.program, "a_color");
+    // uniforms
+    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
+}
+
 // =============================================================
-// 3. HELPER FUNCTIONS
+// Helper Functions
 // =============================================================
 
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
@@ -88,34 +165,50 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// UI
+// Scene Objects Creation Functions
 // =============================================================
 
-const uiState = {
-    // Vertex Positions
-    aX: -0.5,
-    aY: 0.0,
-    bX: 0.5,
-    bY: 0.0,
-    cX: 0.0,
-    cY: 0.5,
+function setupTriangle(gl, shader) {
+    triangle.shader = shader;
 
-    // Vertex Colors
-    aR: 1.0,
-    aG: 0.0,
-    aB: 0.0,
-    bR: 0.0,
-    bG: 1.0,
-    bB: 0.0,
-    cR: 0.0,
-    cG: 0.0,
-    cB: 1.0,
+    triangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
 
-    // Uniform Color
-    r: 0.0,
-    g: 0.0,
-    b: 0.0
-};
+    triangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(triangle.vao);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+
+    // Vertex positions
+    gl.enableVertexAttribArray(triangle.shader.attributes.position);
+    gl.vertexAttribPointer(
+        triangle.shader.attributes.position,
+        2,
+        gl.FLOAT,
+        false,
+        5 * Float32Array.BYTES_PER_ELEMENT,
+        0 * Float32Array.BYTES_PER_ELEMENT
+    );
+
+    // Vertex colors
+    gl.enableVertexAttribArray(triangle.shader.attributes.color);
+    gl.vertexAttribPointer(
+        triangle.shader.attributes.color,
+        3,
+        gl.FLOAT,
+        false,
+        5 * Float32Array.BYTES_PER_ELEMENT,
+        2 * Float32Array.BYTES_PER_ELEMENT
+    );
+
+    triangle.drawMode = gl.TRIANGLES;
+    triangle.drawOffset = 0;
+    triangle.drawCount = 3;
+}
+
+// =============================================================
+// GUI Setup Functions
+// =============================================================
 
 function setupGUI(render) {
     const gui = new lil.GUI();
@@ -164,104 +257,17 @@ function setupGUI(render) {
 }
 
 // =============================================================
-// 4. SHADER DATA
-// =============================================================
-
-const shader = {
-    program: null,
-    attributes: {
-        position: null,
-        color: null
-    },
-    uniforms: {
-        color: null
-    }
-};
-
-// =============================================================
-// 5. OBJECT DATA
-// =============================================================
-
-const triangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// 6. SHADER SETUP
-// =============================================================
-
-function setupShader(gl) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    shader.attributes.color = gl.getAttribLocation(shader.program, "a_color");
-    // uniforms
-    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
-}
-
-// =============================================================
-// 7. OBJECT SETUP
-// =============================================================
-
-function setupTriangle(gl, shader) {
-    triangle.shader = shader;
-
-    triangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-
-    triangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(triangle.vao);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-
-    // Vertex positions
-    gl.enableVertexAttribArray(triangle.shader.attributes.position);
-    gl.vertexAttribPointer(
-        triangle.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        0 * Float32Array.BYTES_PER_ELEMENT
-    );
-
-    // Vertex colors
-    gl.enableVertexAttribArray(triangle.shader.attributes.color);
-    gl.vertexAttribPointer(
-        triangle.shader.attributes.color,
-        3,
-        gl.FLOAT,
-        false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        2 * Float32Array.BYTES_PER_ELEMENT
-    );
-
-    triangle.drawMode = gl.TRIANGLES;
-    triangle.drawOffset = 0;
-    triangle.drawCount = 3;
-}
-
-// =============================================================
-// 8. MAIN APPLICATION
+// MAIN
 // =============================================================
 
 function main() {
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -325,7 +331,7 @@ function main() {
 }
 
 // =============================================================
-// 9. START
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener("DOMContentLoaded", main);

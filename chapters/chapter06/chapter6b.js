@@ -9,7 +9,53 @@ Topics:
 */
 
 // =============================================================
-// 1. GLSL SHADER SOURCES
+// GLOBAL OBJECTS
+// =============================================================
+let canvas = null;
+let gl = null;
+
+// =============================================================
+// Scene Objects
+// =============================================================
+
+const uiState = {
+    // Color
+    r: 0.39,
+    g: 0.33,
+    b: 0.58,
+
+    // Intensity
+    intensity: 1.0
+};
+
+const triangle = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+// =============================================================
+// Shader Objects
+// =============================================================
+
+const shader = {
+    program: null,
+    attributes: {
+        position: null
+    },
+    uniforms: {
+        colorR: null,
+        colorG: null,
+        colorB: null,
+        intensity: null
+    }
+};
+
+// =============================================================
+// SHADER STRINGS
 // =============================================================
 
 const vertexShaderSource = `#version 300 es
@@ -41,7 +87,11 @@ const fragmentShaderSource = `#version 300 es
 `;
 
 // =============================================================
-// 2. WEBGL UTILITY FUNCTIONS
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
 // =============================================================
 
 function createShader(gl, type, source) {
@@ -69,87 +119,6 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
-// =============================================================
-// 3. HELPER FUNCTIONS
-// =============================================================
-
-function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-    const width = (canvas.clientWidth * multiplier) | 0;
-    const height = (canvas.clientHeight * multiplier) | 0;
-
-    if(canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        return true;
-    }
-
-    return false;
-}
-
-// =============================================================
-// UI
-// =============================================================
-
-const uiState = {
-    // Color
-    r: 0.39,
-    g: 0.33,
-    b: 0.58,
-
-    // Intensity
-    intensity: 1.0
-};
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-
-    const uniformFolder = gui.addFolder("Uniforms");
-
-    const colorFolder = uniformFolder.addFolder("Color");
-    colorFolder.add(uiState, "r", 0, 1).name("R").onChange(render);
-    colorFolder.add(uiState, "g", 0, 1).name("G").onChange(render);
-    colorFolder.add(uiState, "b", 0, 1).name("B").onChange(render);
-
-    const intensityFolder = uniformFolder.addFolder("Intensity");
-    intensityFolder.add(uiState, "intensity", 0, 1)
-        .name("Intensity")
-        .onChange(render);
-}
-
-// =============================================================
-// 4. SHADER DATA
-// =============================================================
-
-const shader = {
-    program: null,
-    attributes: {
-        position: null
-    },
-    uniforms: {
-        colorR: null,
-        colorG: null,
-        colorB: null,
-        intensity: null
-    }
-};
-
-// =============================================================
-// 5. OBJECT DATA
-// =============================================================
-
-const triangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// 6. SHADER SETUP
-// =============================================================
-
 function setupShader(gl) {
     // Shaders
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
@@ -166,7 +135,24 @@ function setupShader(gl) {
 }
 
 // =============================================================
-// 7. OBJECT SETUP
+// Helper Functions
+// =============================================================
+
+function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
+    const width = (canvas.clientWidth * multiplier) | 0;
+    const height = (canvas.clientHeight * multiplier) | 0;
+
+    if(canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        return true;
+    }
+
+    return false;
+}
+
+// =============================================================
+// Scene Objects Creation Functions
 // =============================================================
 
 function setupTriangle(gl, shader) {
@@ -209,17 +195,37 @@ function setupTriangle(gl, shader) {
 }
 
 // =============================================================
-// 8. MAIN APPLICATION
+// GUI Setup Functions
+// =============================================================
+
+function setupGUI(render) {
+    const gui = new lil.GUI();
+
+    const uniformFolder = gui.addFolder("Uniforms");
+
+    const colorFolder = uniformFolder.addFolder("Color");
+    colorFolder.add(uiState, "r", 0, 1).name("R").onChange(render);
+    colorFolder.add(uiState, "g", 0, 1).name("G").onChange(render);
+    colorFolder.add(uiState, "b", 0, 1).name("B").onChange(render);
+
+    const intensityFolder = uniformFolder.addFolder("Intensity");
+    intensityFolder.add(uiState, "intensity", 0, 1)
+        .name("Intensity")
+        .onChange(render);
+}
+
+// =============================================================
+// MAIN
 // =============================================================
 
 function main() {
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -275,7 +281,7 @@ function main() {
 }
 
 // =============================================================
-// 9. START
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener("DOMContentLoaded", main);

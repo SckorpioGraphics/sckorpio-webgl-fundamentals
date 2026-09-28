@@ -7,7 +7,51 @@ Topics:
 */
 
 // =============================================================
-// 1. GLSL SHADER SOURCES
+// GLOBAL OBJECTS
+// =============================================================
+let canvas = null;
+let gl = null;
+
+// =============================================================
+// Scene Objects
+// =============================================================
+
+const uiState = {
+    centerX: 0.0,
+    centerY: 0.0,
+    radius: 0.5,
+    points: 5
+};
+
+const polygon = {
+    shader: null,
+
+    vao: null,
+    vbo: null,
+    ibo: null,
+
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+    drawType: null
+};
+
+// =============================================================
+// Shader Objects
+// =============================================================
+
+const shader = {
+    program: null,
+
+    attributes: {
+        position: null
+    },
+
+    uniforms: {}
+};
+
+// =============================================================
+// SHADER STRINGS
 // =============================================================
 
 const vertexShaderSource = `#version 300 es
@@ -29,7 +73,11 @@ const fragmentShaderSource = `#version 300 es
 `;
 
 // =============================================================
-// 2. WEBGL UTILITY FUNCTIONS
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
 // =============================================================
 
 function createShader(gl, type, source) {
@@ -57,8 +105,19 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
+function setupShader(gl) {
+    // Shaders
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    // Program
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
+    // Attributes
+    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+    // Future uniforms
+}
+
 // =============================================================
-// 3. HELPER FUNCTIONS
+// Helper Functions
 // =============================================================
 
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
@@ -75,79 +134,7 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// UI
-// =============================================================
-
-const uiState = {
-    centerX: 0.0,
-    centerY: 0.0,
-    radius: 0.5,
-    points: 5
-};
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-    const polygonFolder = gui.addFolder("Polygon");
-
-    // Center
-    const centerFolder = polygonFolder.addFolder("Center");
-    centerFolder.add(uiState, "centerX", -1, 1).name("centerX").onChange(render);
-    centerFolder.add(uiState, "centerY", -1, 1).name("centerY").onChange(render);
-
-    // Dimension
-    const dimFolder = polygonFolder.addFolder("Dimensions");
-    dimFolder.add(uiState, "radius", 0, 1).name("radius").onChange(render);
-    dimFolder.add(uiState, "points", 3, 20, 1).name("points").onChange(render);
-}
-
-// =============================================================
-// 4. SHADER DATA
-// =============================================================
-
-const shader = {
-    program: null,
-
-    attributes: {
-        position: null
-    },
-
-    uniforms: {}
-};
-
-// =============================================================
-// 5. OBJECT DATA
-// =============================================================
-
-const polygon = {
-    shader: null,
-
-    vao: null,
-    vbo: null,
-    ibo: null,
-
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0,
-    drawType: null
-};
-
-// =============================================================
-// 6. SHADER SETUP
-// =============================================================
-
-function setupShader(gl) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    // Future uniforms
-}
-
-// =============================================================
-// 7. OBJECT SETUP
+// Scene Objects Creation Functions
 // =============================================================
 
 function setupPolygon(gl, shader) {
@@ -199,18 +186,37 @@ function setupPolygon(gl, shader) {
 }
 
 // =============================================================
-// 8. MAIN APPLICATION
+// GUI Setup Functions
+// =============================================================
+
+function setupGUI(render) {
+    const gui = new lil.GUI();
+    const polygonFolder = gui.addFolder("Polygon");
+
+    // Center
+    const centerFolder = polygonFolder.addFolder("Center");
+    centerFolder.add(uiState, "centerX", -1, 1).name("centerX").onChange(render);
+    centerFolder.add(uiState, "centerY", -1, 1).name("centerY").onChange(render);
+
+    // Dimension
+    const dimFolder = polygonFolder.addFolder("Dimensions");
+    dimFolder.add(uiState, "radius", 0, 1).name("radius").onChange(render);
+    dimFolder.add(uiState, "points", 3, 20, 1).name("points").onChange(render);
+}
+
+// =============================================================
+// MAIN
 // =============================================================
 
 function main() {
     // WEBGL CANVAS
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -299,7 +305,7 @@ function main() {
 }
 
 // =============================================================
-// 9. START
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener("DOMContentLoaded", main);

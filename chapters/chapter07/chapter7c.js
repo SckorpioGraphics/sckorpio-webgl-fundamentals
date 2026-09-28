@@ -13,12 +13,65 @@ Topics:
 */
 
 // =============================================================
-// 1. GLSL SHADER SOURCES
+// GLOBAL OBJECTS
+// =============================================================
+let canvas = null;
+let gl = null;
+
+// =============================================================
+// Scene Objects
 // =============================================================
 
-// -------------------------------------------------------------
-// BASIC SHADER
-// -------------------------------------------------------------
+const triangle = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+const rectangle = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+// =============================================================
+// Shader Objects
+// =============================================================
+
+/*
+    No UI in this chapter yet.
+    The focus here is on rendering multiple
+    independent objects with different shaders.
+*/
+
+const basicShader = {
+    program: null,
+    attributes: {
+        position: null
+    },
+    uniforms: {
+        color: null
+    }
+};
+
+const colorVertexShader = {
+    program: null,
+    attributes: {
+        position: null,
+        color: null
+    },
+    uniforms: {}
+};
+
+// =============================================================
+// SHADER STRINGS
+// =============================================================
 
 const basicVertexShaderSource = `#version 300 es
     in vec2 a_position;
@@ -39,10 +92,6 @@ const basicFragmentShaderSource = `#version 300 es
         out_color = vec4(u_color, 1.0);
     }
 `;
-
-// -------------------------------------------------------------
-// VERTEX COLOR SHADER
-// -------------------------------------------------------------
 
 const colorVertexShaderSource = `#version 300 es
     in vec2 a_position;
@@ -69,7 +118,11 @@ const colorFragmentShaderSource = `#version 300 es
 `;
 
 // =============================================================
-// 2. WEBGL UTILITY FUNCTIONS
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
 // =============================================================
 
 function createShader(gl, type, source) {
@@ -97,82 +150,6 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
-// =============================================================
-// 3. HELPER FUNCTIONS
-// =============================================================
-
-function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-    const width = (canvas.clientWidth * multiplier) | 0;
-    const height = (canvas.clientHeight * multiplier) | 0;
-
-    if(canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        return true;
-    }
-
-    return false;
-}
-
-// =============================================================
-// UI
-// =============================================================
-
-/*
-    No UI in this chapter yet.
-    The focus here is on rendering multiple
-    independent objects with different shaders.
-*/
-
-// =============================================================
-// 4. SHADER DATA
-// =============================================================
-
-const basicShader = {
-    program: null,
-    attributes: {
-        position: null
-    },
-    uniforms: {
-        color: null
-    }
-};
-
-const colorVertexShader = {
-    program: null,
-    attributes: {
-        position: null,
-        color: null
-    },
-    uniforms: {}
-};
-
-// =============================================================
-// 5. OBJECT DATA
-// =============================================================
-
-const triangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-const rectangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// 6. SHADER SETUP
-// =============================================================
-
 function setupBasicShader(gl) {
     const vertexShader = createShader(gl,gl.VERTEX_SHADER,basicVertexShaderSource);
     const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,basicFragmentShaderSource);
@@ -190,7 +167,24 @@ function setupcolorVertexShader(gl) {
 }
 
 // =============================================================
-// 7. OBJECT SETUP
+// Helper Functions
+// =============================================================
+
+function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
+    const width = (canvas.clientWidth * multiplier) | 0;
+    const height = (canvas.clientHeight * multiplier) | 0;
+
+    if(canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        return true;
+    }
+
+    return false;
+}
+
+// =============================================================
+// Scene Objects Creation Functions
 // =============================================================
 
 function setupTriangle(gl, shader) {
@@ -296,17 +290,17 @@ function setupRectangle(gl, shader) {
 }
 
 // =============================================================
-// 8. MAIN APPLICATION
+// MAIN
 // =============================================================
 
 function main() {
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -364,7 +358,7 @@ function main() {
 }
 
 // =============================================================
-// 9. START
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener("DOMContentLoaded", main);

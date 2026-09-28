@@ -10,7 +10,67 @@ Topics:
 */
 
 // =============================================================
-// 1. GLSL SHADER SOURCES
+// GLOBAL OBJECTS
+// =============================================================
+let canvas = null;
+let gl = null;
+
+// =============================================================
+// Scene Objects
+// =============================================================
+
+const uiState = {
+    // Vertex Positions
+    aX: -0.5,
+    aY: 0.0,
+    bX: 0.5,
+    bY: 0.0,
+    cX: 0.0,
+    cY: 0.5,
+
+    // Vertex Colors
+    aR: 1.0,
+    aG: 0.0,
+    aB: 0.0,
+
+    bR: 0.0,
+    bG: 1.0,
+    bB: 0.0,
+
+    cR: 0.0,
+    cG: 0.0,
+    cB: 1.0
+};
+
+const triangle = {
+    shader: null,
+
+    vao: null,
+    positionVbo: null,
+    colorVbo: null,
+
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+// =============================================================
+// Shader Objects
+// =============================================================
+
+const shader = {
+    program: null,
+
+    attributes: {
+        position: null,
+        color: null
+    },
+
+    uniforms: {}
+};
+
+// =============================================================
+// SHADER STRINGS
 // =============================================================
 
 const vertexShaderSource = `#version 300 es
@@ -37,7 +97,11 @@ const fragmentShaderSource = `#version 300 es
 `;
 
 // =============================================================
-// 2. WEBGL UTILITY FUNCTIONS
+// FUNCTIONS
+// =============================================================
+
+// =============================================================
+// Shader Creating Functions
 // =============================================================
 
 function createShader(gl, type, source) {
@@ -65,8 +129,20 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
+function setupShader(gl) {
+    // Shaders
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    // Program
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
+    // Attributes
+    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+    shader.attributes.color = gl.getAttribLocation(shader.program, "a_color");
+    // Future uniforms
+}
+
 // =============================================================
-// 3. HELPER FUNCTIONS
+// Helper Functions
 // =============================================================
 
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
@@ -83,130 +159,7 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// UI
-// =============================================================
-
-const uiState = {
-    // Vertex Positions
-    aX: -0.5,
-    aY: 0.0,
-    bX: 0.5,
-    bY: 0.0,
-    cX: 0.0,
-    cY: 0.5,
-
-    // Vertex Colors
-    aR: 1.0,
-    aG: 0.0,
-    aB: 0.0,
-
-    bR: 0.0,
-    bG: 1.0,
-    bB: 0.0,
-
-    cR: 0.0,
-    cG: 0.0,
-    cB: 1.0
-};
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-
-    // ---------------------------------------------------------
-    // VERTICES
-    // ---------------------------------------------------------
-
-    const verticesFolder = gui.addFolder("Vertices");
-
-    // Point A
-    const pointAFolder = verticesFolder.addFolder("Point A");
-    pointAFolder.add(uiState, "aX", -1, 1).name("X").onChange(render);
-    pointAFolder.add(uiState, "aY", -1, 1).name("Y").onChange(render);
-
-    // Point B
-    const pointBFolder = verticesFolder.addFolder("Point B");
-    pointBFolder.add(uiState, "bX", -1, 1).name("X").onChange(render);
-    pointBFolder.add(uiState, "bY", -1, 1).name("Y").onChange(render);
-
-    // Point C
-    const pointCFolder = verticesFolder.addFolder("Point C");
-    pointCFolder.add(uiState, "cX", -1, 1).name("X").onChange(render);
-    pointCFolder.add(uiState, "cY", -1, 1).name("Y").onChange(render);
-
-    // ---------------------------------------------------------
-    // COLORS
-    // ---------------------------------------------------------
-
-    const colorFolder = gui.addFolder("Color");
-
-    // Point A
-    const pointAColorFolder = colorFolder.addFolder("Point A");
-    pointAColorFolder.add(uiState, "aR", 0, 1).name("R").onChange(render);
-    pointAColorFolder.add(uiState, "aG", 0, 1).name("G").onChange(render);
-    pointAColorFolder.add(uiState, "aB", 0, 1).name("B").onChange(render);
-
-    // Point B
-    const pointBColorFolder = colorFolder.addFolder("Point B");
-    pointBColorFolder.add(uiState, "bR", 0, 1).name("R").onChange(render);
-    pointBColorFolder.add(uiState, "bG", 0, 1).name("G").onChange(render);
-    pointBColorFolder.add(uiState, "bB", 0, 1).name("B").onChange(render);
-
-    // Point C
-    const pointCColorFolder = colorFolder.addFolder("Point C");
-    pointCColorFolder.add(uiState, "cR", 0, 1).name("R").onChange(render);
-    pointCColorFolder.add(uiState, "cG", 0, 1).name("G").onChange(render);
-    pointCColorFolder.add(uiState, "cB", 0, 1).name("B").onChange(render);
-}
-
-// =============================================================
-// 4. SHADER DATA
-// =============================================================
-
-const shader = {
-    program: null,
-
-    attributes: {
-        position: null,
-        color: null
-    },
-
-    uniforms: {}
-};
-
-// =============================================================
-// 5. OBJECT DATA
-// =============================================================
-
-const triangle = {
-    shader: null,
-
-    vao: null,
-    positionVbo: null,
-    colorVbo: null,
-
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// 6. SHADER SETUP
-// =============================================================
-
-function setupShader(gl) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    shader.attributes.color = gl.getAttribLocation(shader.program, "a_color");
-    // Future uniforms
-}
-
-// =============================================================
-// 7. OBJECT SETUP
+// Scene Objects Creation Functions
 // =============================================================
 
 function setupTriangle(gl, shader) {
@@ -270,18 +223,71 @@ function setupTriangle(gl, shader) {
 }
 
 // =============================================================
-// 8. MAIN APPLICATION
+// GUI Setup Functions
+// =============================================================
+
+function setupGUI(render) {
+    const gui = new lil.GUI();
+
+    // ---------------------------------------------------------
+    // VERTICES
+    // ---------------------------------------------------------
+
+    const verticesFolder = gui.addFolder("Vertices");
+
+    // Point A
+    const pointAFolder = verticesFolder.addFolder("Point A");
+    pointAFolder.add(uiState, "aX", -1, 1).name("X").onChange(render);
+    pointAFolder.add(uiState, "aY", -1, 1).name("Y").onChange(render);
+
+    // Point B
+    const pointBFolder = verticesFolder.addFolder("Point B");
+    pointBFolder.add(uiState, "bX", -1, 1).name("X").onChange(render);
+    pointBFolder.add(uiState, "bY", -1, 1).name("Y").onChange(render);
+
+    // Point C
+    const pointCFolder = verticesFolder.addFolder("Point C");
+    pointCFolder.add(uiState, "cX", -1, 1).name("X").onChange(render);
+    pointCFolder.add(uiState, "cY", -1, 1).name("Y").onChange(render);
+
+    // ---------------------------------------------------------
+    // COLORS
+    // ---------------------------------------------------------
+
+    const colorFolder = gui.addFolder("Color");
+
+    // Point A
+    const pointAColorFolder = colorFolder.addFolder("Point A");
+    pointAColorFolder.add(uiState, "aR", 0, 1).name("R").onChange(render);
+    pointAColorFolder.add(uiState, "aG", 0, 1).name("G").onChange(render);
+    pointAColorFolder.add(uiState, "aB", 0, 1).name("B").onChange(render);
+
+    // Point B
+    const pointBColorFolder = colorFolder.addFolder("Point B");
+    pointBColorFolder.add(uiState, "bR", 0, 1).name("R").onChange(render);
+    pointBColorFolder.add(uiState, "bG", 0, 1).name("G").onChange(render);
+    pointBColorFolder.add(uiState, "bB", 0, 1).name("B").onChange(render);
+
+    // Point C
+    const pointCColorFolder = colorFolder.addFolder("Point C");
+    pointCColorFolder.add(uiState, "cR", 0, 1).name("R").onChange(render);
+    pointCColorFolder.add(uiState, "cG", 0, 1).name("G").onChange(render);
+    pointCColorFolder.add(uiState, "cB", 0, 1).name("B").onChange(render);
+}
+
+// =============================================================
+// MAIN
 // =============================================================
 
 function main() {
     // WEBGL CANVAS
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -351,7 +357,7 @@ function main() {
 }
 
 // =============================================================
-// 9. START
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener("DOMContentLoaded", main);

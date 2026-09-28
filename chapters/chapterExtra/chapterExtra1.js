@@ -12,9 +12,14 @@ Topics:
 ###############################################################
 */
 
+// =============================================================
+// GLOBAL OBJECTS
+// =============================================================
+let canvas = null;
+let gl = null;
 
 // =============================================================
-// 1. GLSL Shader Sources
+// SHADER STRINGS
 // =============================================================
 
 const vertexShaderSource = `#version 300 es
@@ -44,14 +49,18 @@ const fragmentShaderSource = `#version 300 es
     }
 `;
 
+// =============================================================
+// FUNCTIONS
+// =============================================================
 
 // =============================================================
-// 2. WebGL Helper Functions
+// Shader Creating Functions
 // =============================================================
 
 /**
  * Compiles a GLSL shader.
  */
+
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
 
@@ -73,10 +82,10 @@ function createShader(gl, type, source) {
     gl.deleteShader(shader);
 }
 
-
 /**
  * Links vertex and fragment shaders into a GPU program.
  */
+
 function createProgram(gl, vertexShader, fragmentShader) {
     const program = gl.createProgram();
 
@@ -100,10 +109,14 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
+// =============================================================
+// Helper Functions
+// =============================================================
 
 /**
  * Resizes the internal drawing buffer to match CSS display pixels.
  */
+
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     const width = (canvas.clientWidth * multiplier) | 0;
     const height = (canvas.clientHeight * multiplier) | 0;
@@ -117,6 +130,24 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     return false;
 }
 
+/**
+ * Uploads two 2D points to the active ARRAY_BUFFER.
+ */
+
+function setLineGeometry(gl, x1, y1, x2, y2) {
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([
+            x1, y1,
+            x2, y2
+        ]),
+        gl.DYNAMIC_DRAW
+    );
+}
+
+// =============================================================
+// Camera-Related Matrix Functions
+// =============================================================
 
 /**
  * Generates a 3x3 projection matrix converting
@@ -129,6 +160,7 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
  *     (-1,+1) → top-left
  *     (+1,-1) → bottom-right
  */
+
 function m3Projection(width, height) {
     return new Float32Array([
          2 / width,          0, 0,
@@ -137,24 +169,8 @@ function m3Projection(width, height) {
     ]);
 }
 
-
-/**
- * Uploads two 2D points to the active ARRAY_BUFFER.
- */
-function setLineGeometry(gl, x1, y1, x2, y2) {
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array([
-            x1, y1,
-            x2, y2
-        ]),
-        gl.DYNAMIC_DRAW
-    );
-}
-
-
 // =============================================================
-// 3. Main Application Entry Point
+// MAIN
 // =============================================================
 
 function main() {
@@ -163,7 +179,7 @@ function main() {
     // 1. WEBGL CANVAS
     // -------------------------------------------------------------
 
-    const canvas = document.querySelector("#c");
+    canvas = document.querySelector("#c");
 
     if (!canvas) {
         console.error("Canvas element '#c' not found.");
@@ -171,7 +187,7 @@ function main() {
     }
 
     // Get WebGL 2.0 context
-    const gl = canvas.getContext("webgl2");
+    gl = canvas.getContext("webgl2");
 
     if (!gl) {
         console.error(
@@ -420,16 +436,14 @@ function main() {
     requestAnimationFrame(render);
 }
 
-
 // =============================================================
-// 6. Execution Trigger
+// STARTUP AND EXPORTS
 // =============================================================
 
 window.addEventListener(
     "DOMContentLoaded",
     main
 );
-
 
 export {
     main
