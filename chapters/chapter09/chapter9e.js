@@ -201,19 +201,19 @@ function setupProjectionMatrix(gl){
         Pixel -> Clip:
 
         x' = (2 * x / width) - 1
-        y' = 1 - (2 * y / height)
+        y' = (2 * y / height) - 1
 
         Matrix:
 
-        |  2/w    0     -1 |
-        |   0    -2/h    1 |
-        |   0     0      1 |
+        |  2/w    0    -1  |
+        |   0    2/h    1  |
+        |   0     0     1  |
     */
 
     camera.projectionMatrix = mat3.fromValues(
         2 / width,  0,           0,
-        0,         -2 / height, 0,
-        -1,         1,          1
+        0,          2 / height,  0,
+        -1,        -1,           1
     );
 }
 
@@ -334,7 +334,7 @@ function setupGUI(render) {
 
     const controlFunc = {
         up: () => {
-            camera.y -= camera.panSpeed;
+            camera.y += camera.panSpeed;
             render();
         },
         left: () => {
@@ -342,7 +342,7 @@ function setupGUI(render) {
             render();
         },
         down: () => {
-            camera.y += camera.panSpeed;
+            camera.y -= camera.panSpeed;
             render();
         },
         right: () => {
@@ -435,13 +435,13 @@ function main() {
     window.addEventListener("keydown", event => {
         switch(event.key) {
             case "ArrowUp":
-                camera.y -= camera.panSpeed;
+                camera.y += camera.panSpeed;
                 break;
             case "ArrowLeft":
                 camera.x -= camera.panSpeed;
                 break;
             case "ArrowDown":
-                camera.y += camera.panSpeed;
+                camera.y -= camera.panSpeed;
                 break;
             case "ArrowRight":
                 camera.x += camera.panSpeed;

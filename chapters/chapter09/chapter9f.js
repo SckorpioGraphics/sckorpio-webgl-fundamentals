@@ -209,9 +209,9 @@ function setupViewMatrix() {
 }
 
 function updateCamera() {
-    if(controls.panUp) camera.y -= camera.panSpeed;
+    if(controls.panUp) camera.y += camera.panSpeed;
     if(controls.panLeft) camera.x -= camera.panSpeed;
-    if(controls.panDown) camera.y += camera.panSpeed;
+    if(controls.panDown) camera.y -= camera.panSpeed;
     if(controls.panRight) camera.x += camera.panSpeed;
     if(controls.panZoomIn) camera.zoom += camera.zoomSpeed;
     if(controls.panZoomOut) camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
@@ -226,19 +226,19 @@ function setupProjectionMatrix(gl){
         Pixel -> Clip:
 
         x' = (2 * x / width) - 1
-        y' = 1 - (2 * y / height)
+        y' = (2 * y / height) - 1
 
         Matrix:
 
-        |  2/w    0     -1 |
-        |   0    -2/h    1 |
-        |   0     0      1 |
+        |  2/w    0    -1  |
+        |   0    2/h    1  |
+        |   0     0     1  |
     */
 
     camera.projectionMatrix = mat3.fromValues(
         2 / width,  0,           0,
-        0,         -2 / height, 0,
-        -1,         1,          1
+        0,          2 / height,  0,
+        -1,        -1,           1
     );
 }
 

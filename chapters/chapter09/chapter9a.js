@@ -8,7 +8,6 @@ Topics:
 - Vertex data in pixel space
 - projectionMatrix as a uniform mat3
 - Pixel space -> clip space
-- Inverted Y
 - Multiple objects in pixel space
 ###############################################################*/
 
@@ -198,19 +197,19 @@ function setupProjectionMatrix(gl){
             Pixel -> Clip:
 
             x' = (2 * x / width) - 1
-            y' = 1 - (2 * y / height)
+            y' = (2 * y / height) - 1
 
             Matrix:
 
             |  2/w    0     -1 |
-            |   0    -2/h    1 |
+            |   0    2/h    1 |
             |   0     0      1 |
         */
 
         camera.projectionMatrix = mat3.fromValues(
             2 / width,  0,           0,
-            0,         -2 / height, 0,
-            -1,         1,          1
+            0,          2 / height,  0,
+            -1,        -1,           1
         );
 }
 
