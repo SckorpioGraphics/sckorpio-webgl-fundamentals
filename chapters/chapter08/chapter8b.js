@@ -1,11 +1,12 @@
 /* #############################################################
-CHAPTER 8b: 2D Space(Inverted Y)
+CHAPTER 8c: 2D Space (using Projection Matrix)
 
 Topics:
 - Creating a basic rectangle
 - Vertex data in pixel space
-- Uniforms for screen-space data
-- Pixel space to clip space conversion
+- Matrix as a uniform
+- mat3
+- Pixel space -> clip space
 - Inverted Y
 ###############################################################
 */
@@ -35,8 +36,8 @@ const rectangle = {
 
 /*
     No UI in this chapter yet.
-    The focus here is on pixel-space coordinates
-    and their conversion to clip space.
+    The focus here is on using a matrix
+    to convert pixel space to clip space.
 */
 
 const shader = {
@@ -45,7 +46,7 @@ const shader = {
         position: null
     },
     uniforms: {
-        resolution: null
+        projectionMatrix: null
     }
 };
 
@@ -56,22 +57,14 @@ const shader = {
 const vertexShaderSource = `#version 300 es
     in vec2 a_position;
 
-    uniform vec2 u_resolution;
+    uniform mat3 u_projectionMatrix;
 
     void main() {
-        // Pixel space to [0, 1]
-        vec2 zeroToOne = a_position / u_resolution;
+        // Apply pixel space -> clip space matrix
+        vec3 clipPostion = u_projectionMatrix * vec3(a_position, 1.0);
 
-        // [0, 1] to [0, 2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
-
-        // [0, 2] to [-1, 1]
-        vec2 clipPostion = zeroToTwo - 1.0;
-
-        // Inver vertical (TopLeft corner= (0,0))
-        vec2 clipPostionInverted = clipPostion * vec2(1.0,-1.0);
-
-        gl_Position = vec4(clipPostionInverted, 0.0, 1.0);
+        // Convert to clip-space position
+        gl_Position = vec4(clipPostion.xy, 0.0, 1.0);
     }
 `;
 
@@ -127,7 +120,7 @@ function setupShader(gl) {
     // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
     // uniforms
-    shader.uniforms.resolution = gl.getUniformLocation(shader.program, "u_resolution");
+    shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
 }
 
 // =============================================================
@@ -225,11 +218,36 @@ function main() {
 
         gl.useProgram(rectangle.shader.program);
 
-        // Pass canvas resolution to shader
-        gl.uniform2f(
-            rectangle.shader.uniforms.resolution,
-            gl.canvas.width,
-            gl.canvas.height
+        // ---------------------------------------------------------
+        // PIXEL SPACE -> CLIP SPACE MATRIX
+        // ---------------------------------------------------------
+
+        const width = gl.canvas.width;
+        const height = gl.canvas.height;
+
+        /*
+            Pixel -> Clip:
+
+            x' = (2 * x / width) - 1
+            y' = (2 * y / height) - 1
+
+            Matrix:
+
+            |  2/w    0     -1 |
+            |   0    2/h    1 |
+            |   0     0      1 |
+        */
+
+        const projectionMatrix = mat3.fromValues(
+            2 / width,  0,           0,
+            0,          2 / height,  0,
+            -1,        -1,            1
+        );
+
+        gl.uniformMatrix3fv(
+            rectangle.shader.uniforms.projectionMatrix,
+            false,
+            projectionMatrix
         );
 
         gl.bindVertexArray(rectangle.vao);
