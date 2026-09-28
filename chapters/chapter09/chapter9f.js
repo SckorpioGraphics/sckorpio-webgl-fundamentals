@@ -73,12 +73,12 @@ const camera = {
 };
 
 const controls = {
-    up: false,
-    left: false,
-    down: false,
-    right: false,
-    zoomIn: false,
-    zoomOut: false
+    panUp: false,
+    panLeft: false,
+    panDown: false,
+    panRight: false,
+    panZoomIn: false,
+    panZoomOut: false
 };
 
 // =============================================================
@@ -96,12 +96,6 @@ const shader = {
         color: null
     }
 };
-
-// =============================================================
-// Key State Objects
-// =============================================================
-
-const keys = {};
 
 // =============================================================
 // SHADER STRINGS
@@ -215,12 +209,12 @@ function setupViewMatrix() {
 }
 
 function updateCamera() {
-    if(controls.up || keys["arrowup"] || keys["w"]) camera.y -= camera.panSpeed;
-    if(controls.left || keys["arrowleft"] || keys["a"]) camera.x -= camera.panSpeed;
-    if(controls.down || keys["arrowdown"] || keys["s"]) camera.y += camera.panSpeed;
-    if(controls.right || keys["arrowright"] || keys["d"]) camera.x += camera.panSpeed;
-    if(controls.zoomIn || keys["i"]) camera.zoom += camera.zoomSpeed;
-    if(controls.zoomOut || keys["o"]) camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
+    if(controls.panUp) camera.y -= camera.panSpeed;
+    if(controls.panLeft) camera.x -= camera.panSpeed;
+    if(controls.panDown) camera.y += camera.panSpeed;
+    if(controls.panRight) camera.x += camera.panSpeed;
+    if(controls.panZoomIn) camera.zoom += camera.zoomSpeed;
+    if(controls.panZoomOut) camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
 }
 
 function setupProjectionMatrix(gl){
@@ -363,12 +357,12 @@ function setupGUI() {
     const gui = new lil.GUI();
     const cameraFolder = gui.addFolder("Camera");
 
-    cameraFolder.add(controls, "up").name("↑ Up");
-    cameraFolder.add(controls, "left").name("← Left");
-    cameraFolder.add(controls, "down").name("↓ Down");
-    cameraFolder.add(controls, "right").name("→ Right");
-    cameraFolder.add(controls, "zoomIn").name("Zoom In");
-    cameraFolder.add(controls, "zoomOut").name("Zoom Out");
+    cameraFolder.add(controls, "panUp").name("↑ Up");
+    cameraFolder.add(controls, "panLeft").name("← Left");
+    cameraFolder.add(controls, "panDown").name("↓ Down");
+    cameraFolder.add(controls, "panRight").name("→ Right");
+    cameraFolder.add(controls, "panZoomIn").name("Zoom In");
+    cameraFolder.add(controls, "panZoomOut").name("Zoom Out");
 }
 
 // =============================================================
@@ -376,11 +370,55 @@ function setupGUI() {
 // =============================================================
 
 window.addEventListener("keydown", event => {
-    keys[event.key.toLowerCase()] = true;
+    switch(event.key) {
+        case "ArrowUp":
+            controls.panUp = true;
+            break;
+        case "ArrowLeft":
+            controls.panLeft = true;
+            break;
+        case "ArrowDown":
+            controls.panDown = true;
+            break;
+        case "ArrowRight":
+            controls.panRight = true;
+            break;
+        case "I":
+        case "i":
+            controls.panZoomIn = true;
+            break;
+        case "O":
+        case "o":
+            controls.panZoomOut = true;
+            break;
+        default:
+    }
 });
 
 window.addEventListener("keyup", event => {
-    keys[event.key.toLowerCase()] = false;
+    switch(event.key) {
+        case "ArrowUp":
+            controls.panUp = false;
+            break;
+        case "ArrowLeft":
+            controls.panLeft = false;
+            break;
+        case "ArrowDown":
+            controls.panDown = false;
+            break;
+        case "ArrowRight":
+            controls.panRight = false;
+            break;
+        case "I":
+        case "i":
+            controls.panZoomIn = false;
+            break;
+        case "O":
+        case "o":
+            controls.panZoomOut = false;
+            break;
+        default:
+    }
 });
 
 // =============================================================

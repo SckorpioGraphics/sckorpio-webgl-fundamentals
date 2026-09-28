@@ -185,13 +185,6 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Camera-Related Matrix Functions
 // =============================================================
 
-function createViewMatrix(camera) {
-    const matrix = mat3.create();
-    mat3.fromTranslation(matrix, [-camera.x, -camera.y]);
-    mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
-    return matrix;
-}
-
 function setupViewMatrix() {
     const matrix = mat3.create();
     mat3.fromTranslation(matrix, [-camera.x, -camera.y]);
@@ -339,7 +332,7 @@ function setupGUI(render) {
     const gui = new lil.GUI();
     const cameraFolder = gui.addFolder("Camera");
 
-    const controls = {
+    const controlFunc = {
         up: () => {
             camera.y -= camera.panSpeed;
             render();
@@ -366,13 +359,18 @@ function setupGUI(render) {
         }
     };
 
-    cameraFolder.add(controls, "up").name("↑ Up");
-    cameraFolder.add(controls, "left").name("← Left");
-    cameraFolder.add(controls, "down").name("↓ Down");
-    cameraFolder.add(controls, "right").name("→ Right");
-    cameraFolder.add(controls, "zoomIn").name("Zoom In");
-    cameraFolder.add(controls, "zoomOut").name("Zoom Out");
+    cameraFolder.add(controlFunc, "up").name("↑ Up");
+    cameraFolder.add(controlFunc, "left").name("← Left");
+    cameraFolder.add(controlFunc, "down").name("↓ Down");
+    cameraFolder.add(controlFunc, "right").name("→ Right");
+    cameraFolder.add(controlFunc, "zoomIn").name("Zoom In");
+    cameraFolder.add(controlFunc, "zoomOut").name("Zoom Out");
 }
+// =============================================================
+// Key Event Functions
+// =============================================================
+
+
 
 // =============================================================
 // MAIN
@@ -462,7 +460,7 @@ function main() {
 
         render();
     });
-
+    
     render();
     window.addEventListener("resize", render);
 }
