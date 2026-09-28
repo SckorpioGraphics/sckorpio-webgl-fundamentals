@@ -1,18 +1,19 @@
 /* #############################################################
-   CHAPTER 9b: 2D Camera — Camera as Data
+   CHAPTER 9c: 2D Camera — Zoom
 
    Topics:
    - Camera position
-   - Camera as data
+   - Camera zoom
    - Uniform vec2
-   - Passing camera position from JavaScript
-   - GUI camera controls
+   - Passing camera data from JavaScript
+   - Discrete zoom controls
 
    No keyboard yet.
-   No zoom yet.
+   No smooth movement yet.
    No view matrix yet.
    #############################################################
 */
+
 
 // =============================================================
 // 1. GLSL SHADER SOURCES
@@ -22,16 +23,18 @@ const vertexShaderSource = `#version 300 es
     in vec2 a_position;
 
     uniform vec2 u_cameraPosition;
+    uniform float u_cameraZoom;
     uniform mat3 u_projectionMatrix;
 
     void main() {
         // ---------------------------------------------------------
-        // WORLD -> VIEW
+        // WORLD -> CAMERA
         // ---------------------------------------------------------
         vec2 viewPosition = a_position - u_cameraPosition;
+        viewPosition *= u_cameraZoom;
 
         // ---------------------------------------------------------
-        // VIEW -> CLIP
+        // CAMERA -> CLIP
         // ---------------------------------------------------------
         vec3 clipPosition = u_projectionMatrix * vec3(viewPosition, 1.0);
 
@@ -111,7 +114,9 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 const camera = {
     x: -300,
     y: -200,
+    zoom: 1.0,
     panSpeed: 50,
+    zoomSpeed: 0.1,
     projectionMatrix: null
 };
 
@@ -135,6 +140,14 @@ function setupGUI(render) {
         right: () => {
             camera.x += camera.panSpeed;
             render();
+        },
+        zoomIn: () => {
+            camera.zoom += camera.zoomSpeed;
+            render();
+        },
+        zoomOut: () => {
+            camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
+            render();
         }
     };
 
@@ -142,6 +155,8 @@ function setupGUI(render) {
     cameraFolder.add(controls, "left").name("← Left");
     cameraFolder.add(controls, "down").name("↓ Down");
     cameraFolder.add(controls, "right").name("→ Right");
+    cameraFolder.add(controls, "zoomIn").name("Zoom In");
+    cameraFolder.add(controls, "zoomOut").name("Zoom Out");
 }
 
 
@@ -156,10 +171,12 @@ const shader = {
     },
     uniforms: {
         camera: null,
+        zoom: null,
         projectionMatrix: null,
         color: null
     }
 };
+
 
 // =============================================================
 // 5. OBJECT DATA
@@ -201,8 +218,9 @@ const rectangle = {
     drawCount: 0
 };
 
+
 // =============================================================
-// 6. SHADER SETUP
+// 7. SHADER SETUP
 // =============================================================
 
 function setupShader(gl) {
@@ -218,12 +236,14 @@ function setupShader(gl) {
 
     // Uniforms
     shader.uniforms.camera = gl.getUniformLocation(shader.program, "u_cameraPosition");
+    shader.uniforms.zoom = gl.getUniformLocation(shader.program, "u_cameraZoom");
     shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
 }
 
+
 // =============================================================
-// 7. OBJECT SETUP
+// 8. OBJECT SETUP
 // =============================================================
 
 function setupGrid(gl, shader) {
@@ -300,7 +320,7 @@ function setupYAxis(gl, shader) {
 
     gl.enableVertexAttribArray(yAxis.shader.attributes.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, yAxis.vbo);
-    gl.vertexAttribPointer(xAxis.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(yAxis.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
 
     yAxis.drawMode = gl.LINES;
     yAxis.drawOffset = 0;
@@ -336,7 +356,7 @@ function setupRectangle(gl, shader) {
 }
 
 // =============================================================
-// 8. SCENE SETUP
+// 9. SCENE SETUP
 // =============================================================
 function setupProjectionMatrix(gl){
     // PIXEL SPACE -> CLIP SPACE MATRIX
@@ -364,7 +384,7 @@ function setupProjectionMatrix(gl){
 }
 
 // =============================================================
-// 9. MAIN APPLICATION
+// 10. MAIN APPLICATION
 // =============================================================
 
 function main() {
@@ -399,16 +419,15 @@ function main() {
         // ---------------------------------------------------------
         // PROJECTION MATRIX
         // ---------------------------------------------------------
-
         setupProjectionMatrix(gl);
-    
         gl.uniformMatrix3fv(shader.uniforms.projectionMatrix, false, camera.projectionMatrix);
 
         // ---------------------------------------------------------
-        // CAMERA
+        // CAMERA PAN/ZOOM
         // ---------------------------------------------------------
 
         gl.uniform2f(shader.uniforms.camera, camera.x, camera.y);
+        gl.uniform1f(shader.uniforms.zoom, camera.zoom);
 
         // ---------------------------------------------------------
         // GRID

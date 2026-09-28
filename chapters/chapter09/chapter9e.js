@@ -1,16 +1,14 @@
 /* #############################################################
-   CHAPTER 9b: 2D Camera — Camera as Data
+   CHAPTER 9e: 2D Camera — Keyboard Controls
 
    Topics:
    - Camera position
-   - Camera as data
-   - Uniform vec2
-   - Passing camera position from JavaScript
+   - Camera zoom
+   - View matrix
+   - Keyboard input
+   - Discrete camera movement
+   - Key states
    - GUI camera controls
-
-   No keyboard yet.
-   No zoom yet.
-   No view matrix yet.
    #############################################################
 */
 
@@ -20,37 +18,25 @@
 
 const vertexShaderSource = `#version 300 es
     in vec2 a_position;
-
-    uniform vec2 u_cameraPosition;
+    uniform mat3 u_viewMatrix;
     uniform mat3 u_projectionMatrix;
 
     void main() {
-        // ---------------------------------------------------------
-        // WORLD -> VIEW
-        // ---------------------------------------------------------
-        vec2 viewPosition = a_position - u_cameraPosition;
-
-        // ---------------------------------------------------------
-        // VIEW -> CLIP
-        // ---------------------------------------------------------
-        vec3 clipPosition = u_projectionMatrix * vec3(viewPosition, 1.0);
-
+        vec3 viewPosition = u_viewMatrix * vec3(a_position, 1.0);
+        vec3 clipPosition = u_projectionMatrix * viewPosition;
         gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
     }
 `;
 
 const fragmentShaderSource = `#version 300 es
     precision mediump float;
-
     uniform vec4 u_color;
-
     out vec4 out_color;
 
     void main() {
         out_color = u_color;
     }
 `;
-
 
 // =============================================================
 // 2. WEBGL UTILITY FUNCTIONS
@@ -81,7 +67,6 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
-
 // =============================================================
 // 3. HELPER FUNCTIONS
 // =============================================================
@@ -99,21 +84,33 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     return false;
 }
 
+function createViewMatrix(camera) {
+    const matrix = mat3.create();
+    mat3.fromTranslation(matrix, [-camera.x, -camera.y]);
+    mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
+    return matrix;
+}
 
 // =============================================================
 // UI
 // =============================================================
 
-// -------------------------------------------------------------
-// CAMERA
-// -------------------------------------------------------------
-
 const camera = {
     x: -300,
     y: -200,
+    zoom: 1.0,
     panSpeed: 50,
+    zoomSpeed: 0.1,
+    viewMatrix: null,
     projectionMatrix: null
 };
+
+function setupViewMatrix() {
+    const matrix = mat3.create();
+    mat3.fromTranslation(matrix, [-camera.x, -camera.y]);
+    mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
+    camera.viewMatrix = matrix;
+}
 
 function setupGUI(render) {
     const gui = new lil.GUI();
@@ -135,6 +132,14 @@ function setupGUI(render) {
         right: () => {
             camera.x += camera.panSpeed;
             render();
+        },
+        zoomIn: () => {
+            camera.zoom += camera.zoomSpeed;
+            render();
+        },
+        zoomOut: () => {
+            camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
+            render();
         }
     };
 
@@ -142,8 +147,9 @@ function setupGUI(render) {
     cameraFolder.add(controls, "left").name("← Left");
     cameraFolder.add(controls, "down").name("↓ Down");
     cameraFolder.add(controls, "right").name("→ Right");
+    cameraFolder.add(controls, "zoomIn").name("Zoom In");
+    cameraFolder.add(controls, "zoomOut").name("Zoom Out");
 }
-
 
 // =============================================================
 // 4. SHADER DATA
@@ -155,7 +161,7 @@ const shader = {
         position: null
     },
     uniforms: {
-        camera: null,
+        viewMatrix: null,
         projectionMatrix: null,
         color: null
     }
@@ -217,7 +223,7 @@ function setupShader(gl) {
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
 
     // Uniforms
-    shader.uniforms.camera = gl.getUniformLocation(shader.program, "u_cameraPosition");
+    shader.uniforms.viewMatrix = gl.getUniformLocation(shader.program, "u_viewMatrix");
     shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
 }
@@ -233,12 +239,10 @@ function setupGrid(gl, shader) {
     const spacing = 100;
     const range = 10000;
 
-    // Vertical lines
     for(let x = -range; x <= range; x += spacing) {
         positions.push(x, -range, x, range);
     }
 
-    // Horizontal lines
     for(let y = -range; y <= range; y += spacing) {
         positions.push(-range, y, range, y);
     }
@@ -249,7 +253,6 @@ function setupGrid(gl, shader) {
 
     grid.vao = gl.createVertexArray();
     gl.bindVertexArray(grid.vao);
-
     gl.enableVertexAttribArray(grid.shader.attributes.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, grid.vbo);
     gl.vertexAttribPointer(grid.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
@@ -273,7 +276,6 @@ function setupXAxis(gl, shader) {
 
     xAxis.vao = gl.createVertexArray();
     gl.bindVertexArray(xAxis.vao);
-
     gl.enableVertexAttribArray(xAxis.shader.attributes.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, xAxis.vbo);
     gl.vertexAttribPointer(xAxis.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
@@ -297,10 +299,9 @@ function setupYAxis(gl, shader) {
 
     yAxis.vao = gl.createVertexArray();
     gl.bindVertexArray(yAxis.vao);
-
     gl.enableVertexAttribArray(yAxis.shader.attributes.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, yAxis.vbo);
-    gl.vertexAttribPointer(xAxis.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(yAxis.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
 
     yAxis.drawMode = gl.LINES;
     yAxis.drawOffset = 0;
@@ -325,7 +326,6 @@ function setupRectangle(gl, shader) {
 
     rectangle.vao = gl.createVertexArray();
     gl.bindVertexArray(rectangle.vao);
-
     gl.enableVertexAttribArray(rectangle.shader.attributes.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
     gl.vertexAttribPointer(rectangle.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
@@ -336,7 +336,7 @@ function setupRectangle(gl, shader) {
 }
 
 // =============================================================
-// 8. SCENE SETUP
+// 9. SCENE SETUP
 // =============================================================
 function setupProjectionMatrix(gl){
     // PIXEL SPACE -> CLIP SPACE MATRIX
@@ -363,8 +363,9 @@ function setupProjectionMatrix(gl){
     );
 }
 
+
 // =============================================================
-// 9. MAIN APPLICATION
+// 8. MAIN APPLICATION
 // =============================================================
 
 function main() {
@@ -396,47 +397,25 @@ function main() {
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.useProgram(shader.program);
 
-        // ---------------------------------------------------------
         // PROJECTION MATRIX
-        // ---------------------------------------------------------
-
         setupProjectionMatrix(gl);
-    
         gl.uniformMatrix3fv(shader.uniforms.projectionMatrix, false, camera.projectionMatrix);
 
-        // ---------------------------------------------------------
-        // CAMERA
-        // ---------------------------------------------------------
-
-        gl.uniform2f(shader.uniforms.camera, camera.x, camera.y);
-
-        // ---------------------------------------------------------
-        // GRID
-        // ---------------------------------------------------------
+        // VIEW MATRIX
+        setupViewMatrix();
+        gl.uniformMatrix3fv(shader.uniforms.viewMatrix, false, camera.viewMatrix);
 
         gl.bindVertexArray(grid.vao);
         gl.uniform4f(shader.uniforms.color, 0.39, 0.33, 0.58, 1.0);
         gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
 
-        // ---------------------------------------------------------
-        // X AXIS
-        // ---------------------------------------------------------
-
         gl.bindVertexArray(xAxis.vao);
         gl.uniform4f(shader.uniforms.color, 1.0, 0.0, 0.0, 1.0);
         gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
 
-        // ---------------------------------------------------------
-        // Y AXIS
-        // ---------------------------------------------------------
-
         gl.bindVertexArray(yAxis.vao);
         gl.uniform4f(shader.uniforms.color, 0.0, 1.0, 0.0, 1.0);
         gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
-
-        // ---------------------------------------------------------
-        // RECTANGLE
-        // ---------------------------------------------------------
 
         gl.bindVertexArray(rectangle.vao);
         gl.uniform4f(shader.uniforms.color, 0.39, 0.33, 0.58, 1.0);
@@ -444,11 +423,39 @@ function main() {
     }
 
     setupGUI(render);
-    render();
 
+    window.addEventListener("keydown", event => {
+        switch(event.key) {
+            case "ArrowUp":
+                camera.y -= camera.panSpeed;
+                break;
+            case "ArrowLeft":
+                camera.x -= camera.panSpeed;
+                break;
+            case "ArrowDown":
+                camera.y += camera.panSpeed;
+                break;
+            case "ArrowRight":
+                camera.x += camera.panSpeed;
+                break;
+            case "I":
+            case "i":
+                camera.zoom += camera.zoomSpeed;
+                break;
+            case "O":
+            case "o":
+                camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
+                break;
+            default:
+                return;
+        }
+
+        render();
+    });
+
+    render();
     window.addEventListener("resize", render);
 }
-
 
 // =============================================================
 // 9. START
