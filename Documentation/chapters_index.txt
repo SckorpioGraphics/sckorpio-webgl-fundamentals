@@ -2,9 +2,10 @@ SCKORPIO GRAPHICS — WEBGL FUNDAMENTALS
 IMPLEMENTED CHAPTER AND FILE INDEX
 ===================================
 
-Scope: 50 numbered lesson files in chapters 1–10, plus two supplemental files
-under chapterExtra. The file path is the canonical lesson ID. Source comment
-headers sometimes have stale numbering; those mismatches are noted below.
+Scope: 58 numbered lesson files in chapters 1–13, plus two supplemental files
+under chapterExtra. Chapter 1b is a blank template. The file path is the
+canonical lesson ID. Source comment headers sometimes have stale numbering;
+those mismatches are noted below.
 
 CHAPTER 1 — WEBGL BASICS AND LESSON STRUCTURE
 ---------------------------------------------
@@ -19,14 +20,15 @@ the least abstracted example.
 1b — Blank lesson template
 File: chapters/chapter01/chapter1b.js
 An organizational scaffold rather than a rendering example. Its section
-placeholders reserve areas for global data, shader strings, shader/helper/
-camera/scene/GUI/input functions, main, and startup/exports.
+placeholders reserve areas for global data, shader/camera/scene objects,
+helper categories, main, and startup/exports.
 
 1c — Template-based triangle
 File: chapters/chapter01/chapter1c.js
-Completes the triangle lesson using the template structure: module-scope
-canvas/gl and shader/scene state, GLSL strings, reusable shader helpers,
-resize helper, triangle buffer/VAO setup, main/render, and DOM-ready startup.
+Completes the triangle lesson using the template structure: shader metadata
+and GLSL strings, reusable shader helpers, resize helper, triangle buffer/VAO
+setup, top-level render(gl), local canvas/context initialization in main(),
+and DOM-ready startup.
 The source header incorrectly labels this file as 1b and calls it the template.
 
 CHAPTER 2 — GEOMETRY AND INDEXING
@@ -260,26 +262,72 @@ alongside the existing world, projection, and camera pipeline.
 10b — Rotation
 File: chapters/chapter10/chapter10b.js
 Adds object rotation to the translated 2D scene and exposes the transform to
-the GUI.
+the GUI. Its source header still labels this 10a.
 
 10c — Scale
 File: chapters/chapter10/chapter10c.js
-Adds independent X/Y scale values to the object-transform example.
+Adds independent X/Y scale values to the object-transform example. Its source
+header still labels this 10a.
 
 10d — Composed model matrix
 File: chapters/chapter10/chapter10d.js
 Builds a model matrix by applying translation, rotation, and scale, then
-composes model, view, and projection transforms for the rectangle.
+composes model, view, and projection transforms for the rectangle. Its source
+header still labels this 10a.
 
-10e — Model-matrix letter F
-File: chapters/chapter10/chapter10e.js
-Applies the composed 2D model transform to indexed letter-F geometry in the
-camera/world scene. The source header repeats the 10d label.
+CHAPTER 11 — 2D ROTATION
+------------------------
+11a — Rotation with sine and cosine
+File: chapters/chapter11/chapter11a.js
+Rotates the letter F around the origin by calculating the rotated coordinates
+directly with sine and cosine.
 
-10f — Multiple independently transformed objects
-File: chapters/chapter10/chapter10f.js
-Renders the letter F and rectangle with separate transform state/model
-matrices, alongside the grid and axes. The source header calls this 10e.
+11b — Rotation matrix
+File: chapters/chapter11/chapter11b.js
+Builds a rotation matrix in the shader and applies it with translation.
+
+11c — Transform order
+File: chapters/chapter11/chapter11c.js
+Changes the order of rotation and translation matrix multiplication to show
+how transformation order changes the result. Its source header repeats 11b.
+
+11d — Rotation around a pivot
+File: chapters/chapter11/chapter11d.js
+Translates a letter around a chosen pivot, rotates it, translates it back, and
+visualizes the pivot.
+
+CHAPTER 12 — 2D SCALE
+---------------------
+12a — Direct uniform scale
+File: chapters/chapter12/chapter12a.js
+Scales letter-F coordinates directly in the shader before applying the other
+object transforms.
+
+12b — Scale matrix
+File: chapters/chapter12/chapter12b.js
+Uses a scale matrix for uniform and non-uniform X/Y scaling.
+
+CHAPTER 13 — MODEL MATRICES
+---------------------------
+13a — Build the model matrix in the shader
+File: chapters/chapter13/chapter13a.js
+Combines translation, rotation, and scale in the vertex shader, then applies
+view and projection transforms.
+
+13b — Pass a model matrix as a uniform
+File: chapters/chapter13/chapter13b.js
+Builds the model matrix in JavaScript and passes it to the shader, separating
+model, view, and projection transformations.
+
+13c — Independent model matrices
+File: chapters/chapter13/chapter13c.js
+Gives multiple objects their own model matrices while sharing view and
+projection state. Its source header repeats 13b.
+
+13d — Transformation composition
+File: chapters/chapter13/chapter13d.js
+Composes model, view, and projection transforms for multiple objects in the
+camera/world scene. Its source header says 13c.
 
 SUPPLEMENTAL EXPERIMENTS
 -----------------------
@@ -300,11 +348,12 @@ LEARNING FLOW
 Raw WebGL pipeline → structured lesson template → geometry and indices →
 primitive topology → dynamic geometry → vertex data and uniforms → multiple
 objects/programs → pixel and world coordinates → camera/view matrix/input →
-object/model transforms.
+translation and rotation → scale → model-matrix composition.
 
 ROADMAP AFTER THE IMPLEMENTED FILES
 -----------------------------------
-The next planned topics are 2D textures and sprites, then 3D world geometry,
-camera, projection, transformations, textures, lighting, materials, and a
-complete multi-object rendering pipeline. They are planned episodes, not
-implemented lesson files in the current source tree. See series_episodes.txt.
+The next planned topics begin with 2D textures and sprites, then continue into
+3D world geometry, camera, projection, transformations, textures, lighting,
+materials, and a complete multi-object rendering pipeline. They are planned
+episodes, not implemented lesson files in the current source tree. See
+series_episodes.txt.

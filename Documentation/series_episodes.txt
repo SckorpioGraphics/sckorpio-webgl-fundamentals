@@ -5,14 +5,13 @@ EPISODE PLAN AND IMPLEMENTATION STATUS
 PURPOSE
 -------
 This file connects the planned teaching sequence to the code that actually
-exists. Chapters 1–10 below are implemented in this repository. Chapters
-11–20 are the forward plan and do not yet have lesson source files here.
+exists. Chapters 1–13 below are implemented in this repository. Chapters
+14–23 are the forward plan and do not yet have lesson source files here.
 
 The repository's implemented grouping is canonical: pixel/world work is
-Chapter 8, camera is Chapter 9, and object transformations are Chapter 10.
-Older episode notes split these subjects differently. Future episode numbers
-continue from the implemented repository sequence rather than preserving that
-older numbering.
+Chapter 8, camera is Chapter 9, and 2D object transformations continue through
+Chapters 10–13 (translation, rotation, scale, and model matrices). Future
+episode numbers continue from the implemented repository sequence.
 
 IMPLEMENTED SERIES
 ==================
@@ -94,11 +93,28 @@ CHAPTER 9 — 2D CAMERA
 CHAPTER 10 — 2D OBJECT TRANSFORMATIONS
 --------------------------------------
 10a. Translate object vertices with uniform values.
-10b. Add rotation.
-10c. Add independent X/Y scale.
+10b. Add object rotation to the translated scene.
+10c. Add independent X/Y scale values.
 10d. Compose translation, rotation, and scale into a model matrix.
-10e. Apply the model-matrix workflow to indexed letter-F geometry.
-10f. Transform a letter F and rectangle independently in one scene.
+
+CHAPTER 11 — 2D ROTATION
+------------------------
+11a. Rotate an object with sine and cosine.
+11b. Represent rotation with a matrix.
+11c. Compare the results of changing translation/rotation order.
+11d. Rotate around and visualize a pivot.
+
+CHAPTER 12 — 2D SCALE
+---------------------
+12a. Apply uniform scale directly to vertex coordinates.
+12b. Use a scale matrix for uniform and non-uniform scaling.
+
+CHAPTER 13 — MODEL MATRICES
+---------------------------
+13a. Compose translation, rotation, and scale in the shader.
+13b. Build a model matrix in JavaScript and pass it as a uniform.
+13c. Give multiple objects independent model matrices.
+13d. Compose model, view, and projection transforms across a scene.
 
 The file-by-file path, implementation detail, and source-header caveats are in
 chapters_index.txt.
@@ -106,87 +122,87 @@ chapters_index.txt.
 PLANNED CONTINUATION
 ====================
 
-CHAPTER 11 — 2D TEXTURES
+CHAPTER 14 — 2D TEXTURES
 ------------------------
-11a. Create a texture object and understand texture unit/state.
-11b. Upload image or generated pixel data and configure texture parameters.
-11c. Add UV coordinates to geometry and define texture orientation.
-11d. Sample textures in a fragment shader; compare filtering and wrapping.
-11e. Render a textured rectangle.
-11f. Combine a texture with the existing 2D transform pipeline.
-11g. Render multiple textured objects with independent texture state.
+14a. Create a texture object and understand texture unit/state.
+14b. Upload image or generated pixel data and configure texture parameters.
+14c. Add UV coordinates to geometry and define texture orientation.
+14d. Sample textures in a fragment shader; compare filtering and wrapping.
+14e. Render a textured rectangle.
+14f. Combine a texture with the existing 2D transform pipeline.
+14g. Render multiple textured objects with independent texture state.
 
-CHAPTER 12 — 2D SPRITES AND SCENES
+CHAPTER 15 — 2D SPRITES AND SCENES
 ----------------------------------
-12a. Represent a sprite as textured geometry plus transform/state.
-12b. Read sprite frames from a sprite sheet.
-12c. Select UV sub-rectangles for individual frames.
-12d. Animate frame selection over time.
-12e. Flip sprite UVs or geometry for orientation changes.
-12f. Draw multiple sprites with shared rendering resources.
-12g. Assemble a small 2D scene from reusable sprites.
+15a. Represent a sprite as textured geometry plus transform/state.
+15b. Read sprite frames from a sprite sheet.
+15c. Select UV sub-rectangles for individual frames.
+15d. Animate frame selection over time.
+15e. Flip sprite UVs or geometry for orientation changes.
+15f. Draw multiple sprites with shared rendering resources.
+15g. Assemble a small 2D scene from reusable sprites.
 
-CHAPTER 13 — 3D WORLD AND DEPTH
+CHAPTER 16 — 3D WORLD AND DEPTH
 -------------------------------
-13a. Introduce XYZ coordinates and 3D vertex data.
-13b. Build basic 3D geometry and a triangle/cube example.
-13c. Draw multiple 3D objects.
-13d. Explain depth values and depth testing.
-13e. Enable and inspect the depth buffer.
-13f. Combine geometry into a simple 3D world.
+16a. Introduce XYZ coordinates and 3D vertex data.
+16b. Build basic 3D geometry and a triangle/cube example.
+16c. Draw multiple 3D objects.
+16d. Explain depth values and depth testing.
+16e. Enable and inspect the depth buffer.
+16f. Combine geometry into a simple 3D world.
 
-CHAPTER 14 — 3D CAMERA
+CHAPTER 17 — 3D CAMERA
 ----------------------
-14a. Camera position and orientation.
-14b. View matrix and look-at construction.
-14c. Camera movement in 3D.
-14d. First-person camera controls.
-14e. Mouse and keyboard camera input.
+17a. Camera position and orientation.
+17b. View matrix and look-at construction.
+17c. Camera movement in 3D.
+17d. First-person camera controls.
+17e. Mouse and keyboard camera input.
 
-CHAPTER 15 — 3D PROJECTION
+CHAPTER 18 — 3D PROJECTION
 --------------------------
-15a. Orthographic projection.
-15b. Perspective projection.
-15c. Field of view and aspect ratio.
-15d. Near and far clipping planes.
-15e. Perspective depth and the projection pipeline.
+18a. Orthographic projection.
+18b. Perspective projection.
+18c. Field of view and aspect ratio.
+18d. Near and far clipping planes.
+18e. Perspective depth and the projection pipeline.
 
-CHAPTER 16 — 3D TRANSFORMATIONS
+CHAPTER 19 — 3D TRANSFORMATIONS
 -------------------------------
-16a. mat4 and homogeneous 3D coordinates.
-16b. Translation and scale.
-16c. Rotation around X, Y, and Z.
-16d. Transformation composition and order.
-16e. Model matrices for independent objects.
+19a. mat4 and homogeneous 3D coordinates.
+19b. Translation and scale.
+19c. Rotation around X, Y, and Z.
+19d. Transformation composition and order.
+19e. Model matrices for independent objects.
 
-CHAPTER 17 — 3D TEXTURES
+CHAPTER 20 — 3D TEXTURES
 ------------------------
-17a. Textured cube and 3D UV coordinates.
-17b. Texture filtering and wrapping.
-17c. Multiple textured 3D objects.
+20a. Textured cube and 3D UV coordinates.
+20b. Texture filtering and wrapping.
+20c. Multiple textured 3D objects.
 
-CHAPTER 18 — LIGHTING FUNDAMENTALS
+CHAPTER 21 — LIGHTING FUNDAMENTALS
 ----------------------------------
-18a. Surface normals and normal attributes.
-18b. Diffuse lighting and light position.
-18c. Ambient plus diffuse contribution.
-18d. Specular lighting and view direction.
-18e. Combine components into a Phong-style lighting model.
+21a. Surface normals and normal attributes.
+21b. Diffuse lighting and light position.
+21c. Ambient plus diffuse contribution.
+21d. Specular lighting and view direction.
+21e. Combine components into a Phong-style lighting model.
 
-CHAPTER 19 — MATERIALS AND MULTIPLE LIGHTS
+CHAPTER 22 — MATERIALS AND MULTIPLE LIGHTS
 -------------------------------------------
-19a. Material color and properties.
-19b. Combine one light with a material.
-19c. Add multiple lights and compare materials.
-19d. Combine textures, lighting, and multiple objects.
-19e. Assemble a small lit scene.
+22a. Material color and properties.
+22b. Combine one light with a material.
+22c. Add multiple lights and compare materials.
+22d. Combine textures, lighting, and multiple objects.
+22e. Assemble a small lit scene.
 
-CHAPTER 20 — COMPLETE WEBGL PIPELINE
+CHAPTER 23 — COMPLETE WEBGL PIPELINE
 -------------------------------------
-20a. Multiple meshes and draw calls.
-20b. Model/view/projection integration.
-20c. Combine textures, normals, materials, lighting, and depth.
-20d. Add camera control and render a complete scene.
+23a. Multiple meshes and draw calls.
+23b. Model/view/projection integration.
+23c. Combine textures, normals, materials, lighting, and depth.
+23d. Add camera control and render a complete scene.
 
 SERIES RELATIONSHIP
 ===================
