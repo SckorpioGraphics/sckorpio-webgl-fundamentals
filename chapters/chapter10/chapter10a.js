@@ -14,8 +14,6 @@
 // =============================================================
 
 // Canvas / WebGL Context
-let canvas = null;
-let gl = null;
 
 // Shader Objects
 const shaderInfo = {
@@ -307,7 +305,7 @@ function setupRectangle(gl, shader) {
     rectangle.drawCount = 6;
 }
 
-function updateRectangle() {
+function updateRectangle(gl) {
     const halfWidth = rectangle.width / 2;
     const halfHeight = rectangle.height / 2;
 
@@ -331,7 +329,7 @@ function updateRectangle() {
 // GUI Setup Functions
 // =============================================================
 
-function setupGUI() {
+function setupGUI(gl) {
     const gui = new lil.GUI();
     const cameraFolder = gui.addFolder("Camera");
 
@@ -343,8 +341,8 @@ function setupGUI() {
     cameraFolder.add(controls, "panZoomOut").name("Zoom Out");
 
     const rectangleFolder = gui.addFolder("Rectangle");
-    rectangleFolder.add(rectangle, "positionX", -1000, 1000).name("positionX").onChange(updateRectangle);
-    rectangleFolder.add(rectangle, "positionY", -1000, 1000).name("positionY").onChange(updateRectangle);
+    rectangleFolder.add(rectangle, "positionX", -1000, 1000).name("positionX").onChange(() => updateRectangle(gl));
+    rectangleFolder.add(rectangle, "positionY", -1000, 1000).name("positionY").onChange(() => updateRectangle(gl));
 }
 
 // =============================================================
@@ -404,7 +402,7 @@ window.addEventListener("keyup", event => {
 // =============================================================
 // RENDER
 // =============================================================
-function render() {
+function render(gl) {
     updateCamera();
 
     resizeCanvasToDisplaySize(gl.canvas);
@@ -442,21 +440,21 @@ function render() {
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
     gl.drawArrays(rectangle.drawMode, rectangle.drawOffset, rectangle.drawCount);
 
-    requestAnimationFrame(render);
+    requestAnimationFrame(() => render(gl));
 }
 
 // =============================================================
 // MAIN
 // =============================================================
 function main() {
-    canvas = document.querySelector("#c");
+    const canvas = document.querySelector("#c");
 
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    gl = canvas.getContext("webgl2");
+    const gl = canvas.getContext("webgl2");
 
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
@@ -468,12 +466,12 @@ function main() {
     setupXAxis(gl, shaderInfo);
     setupYAxis(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
-    updateRectangle();
+    updateRectangle(gl);
 
 
 
-    setupGUI();
-    render();
+    setupGUI(gl);
+    render(gl);
 }
 
 // =============================================================

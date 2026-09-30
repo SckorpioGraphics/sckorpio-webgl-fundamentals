@@ -15,8 +15,6 @@
 // =============================================================
 
 // Canvas / WebGL Context
-let canvas = null;
-let gl = null;
 
 // Shader Objects
 const shaderInfo = {
@@ -451,7 +449,7 @@ window.addEventListener("keyup", event => {
 // =============================================================
 // RENDER
 // =============================================================
-function render() {
+function render(gl) {
     updateCamera();
 
     resizeCanvasToDisplaySize(gl.canvas);
@@ -501,21 +499,21 @@ function render() {
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
     gl.drawElements(letterF.drawMode,letterF.drawCount,letterF.drawType,letterF.drawOffset);
 
-    requestAnimationFrame(render);
+    requestAnimationFrame(() => render(gl));
 }
 
 // =============================================================
 // MAIN
 // =============================================================
 function main() {
-    canvas = document.querySelector("#c");
+    const canvas = document.querySelector("#c");
 
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    gl = canvas.getContext("webgl2");
+    const gl = canvas.getContext("webgl2");
 
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
@@ -531,7 +529,7 @@ function main() {
 
 
     setupGUI();
-    render();
+    render(gl);
 }
 
 // =============================================================

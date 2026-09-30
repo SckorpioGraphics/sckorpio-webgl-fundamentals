@@ -8,9 +8,6 @@ CHAPTER 1b: Creating a Basic Triangle
 // =============================================================
 // GLOBAL OBJECTS
 // =============================================================
-let canvas = null;
-let gl = null;
-
 // =============================================================
 // Scene Objects
 // =============================================================
@@ -185,7 +182,7 @@ function setupTriangle(gl, shader) {
 // =============================================================
 // RENDER
 // =============================================================
-function render() {
+function render(gl) {
     // CANVAS
     resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(
@@ -220,14 +217,14 @@ function main() {
     // ---------------------------------------------------------
     // 1. WEBGL CANVAS
     // ---------------------------------------------------------
-    canvas = document.querySelector("#c");
+    const canvas = document.querySelector("#c");
 
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    gl = canvas.getContext("webgl2");
+    const gl = canvas.getContext("webgl2");
 
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
@@ -246,10 +243,10 @@ function main() {
 
 
     // First render
-    render();
+    render(gl);
 
     // Render again when window is resized
-    window.addEventListener("resize", render);
+    window.addEventListener("resize", () => render(gl));
 }
 
 // =============================================================

@@ -10,8 +10,6 @@ Topics:
 // =============================================================
 // GLOBAL OBJECTS
 // =============================================================
-let canvas = null;
-let gl = null;
 
 // =============================================================
 // Scene Objects
@@ -185,7 +183,7 @@ function setupGUI(render) {
 // =============================================================
 // RENDER
 // =============================================================
-function render() {
+function render(gl) {
     resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
@@ -213,13 +211,13 @@ function render() {
 // MAIN
 // =============================================================
 function main() {
-    canvas = document.querySelector("#c");
+    const canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    gl = canvas.getContext("webgl2");
+    const gl = canvas.getContext("webgl2");
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -230,10 +228,10 @@ function main() {
 
 
 
-    setupGUI(render);
+    setupGUI(() => render(gl));
 
-    render();
-    window.addEventListener("resize", render);
+    render(gl);
+    window.addEventListener("resize", () => render(gl));
 }
 
 // =============================================================

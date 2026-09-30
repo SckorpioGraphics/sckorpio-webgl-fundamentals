@@ -14,8 +14,6 @@
 // =============================================================
 
 // Canvas / WebGL Context
-let canvas = null;
-let gl = null;
 
 // Shader Objects
 const shaderInfo = {
@@ -329,7 +327,7 @@ function setupLetterF(gl, shader) {
     letterF.drawType = gl.UNSIGNED_SHORT;
 }
 
-function updateLetterF() {
+function updateLetterF(gl) {
     const x = letterF.positionX;
     const y = letterF.positionY;
 
@@ -360,7 +358,7 @@ function updateLetterF() {
 // GUI Setup Functions
 // =============================================================
 
-function setupGUI() {
+function setupGUI(gl) {
     const gui = new lil.GUI();
     const cameraFolder = gui.addFolder("Camera");
 
@@ -372,8 +370,8 @@ function setupGUI() {
     cameraFolder.add(controls, "panZoomOut").name("Zoom Out");
 
     const letterFFolder = gui.addFolder("LetterF");
-    letterFFolder.add(letterF, "positionX", -1000, 1000).name("positionX").onChange(updateLetterF);
-    letterFFolder.add(letterF, "positionY", -1000, 1000).name("positionY").onChange(updateLetterF);
+    letterFFolder.add(letterF, "positionX", -1000, 1000).name("positionX").onChange(() => updateLetterF(gl));
+    letterFFolder.add(letterF, "positionY", -1000, 1000).name("positionY").onChange(() => updateLetterF(gl));
 }
 
 // =============================================================
@@ -433,7 +431,7 @@ window.addEventListener("keyup", event => {
 // =============================================================
 // RENDER
 // =============================================================
-function render() {
+function render(gl) {
     updateCamera();
 
     resizeCanvasToDisplaySize(gl.canvas);
@@ -472,21 +470,21 @@ function render() {
     gl.drawElements(letterF.drawMode,letterF.drawCount,letterF.drawType,letterF.drawOffset);
 
 
-    requestAnimationFrame(render);
+    requestAnimationFrame(() => render(gl));
 }
 
 // =============================================================
 // MAIN
 // =============================================================
 function main() {
-    canvas = document.querySelector("#c");
+    const canvas = document.querySelector("#c");
 
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
-    gl = canvas.getContext("webgl2");
+    const gl = canvas.getContext("webgl2");
 
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
@@ -498,12 +496,12 @@ function main() {
     setupXAxis(gl, shaderInfo);
     setupYAxis(gl, shaderInfo);
     setupLetterF(gl, shaderInfo);
-    updateLetterF();
+    updateLetterF(gl);
 
 
 
-    setupGUI();
-    render();
+    setupGUI(gl);
+    render(gl);
 }
 
 // =============================================================
