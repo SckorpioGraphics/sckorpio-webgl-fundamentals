@@ -141,8 +141,8 @@ const letterF = {
     drawOffset: 0,
     drawCount: 0,
     drawType: null,
-    positionX: 200,
-    positionY: 150,
+    positionX: 300,
+    positionY: 200,
     rotation: 0,
     scaleX: 1.0,
     scaleY: 1.0

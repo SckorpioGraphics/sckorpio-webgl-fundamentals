@@ -110,7 +110,7 @@ const rectangle = {
     positionX: 200,
     positionY: 150,
     width: 200,
-    height: 150
+    height: 100
 };
 
 // =============================================================
