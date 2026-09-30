@@ -1,86 +1,23 @@
 /* #############################################################
-   CHAPTER 10a: 2D Transformations — Translation
+CHAPTER 10a: 2D World
 
-   Topics:
-   - Translating a rectangle
-   - GUI camera controls
-   - Using Dynamic Buffer geometry
-   - Object translation
-   #############################################################
-*/
+Topics:
+- Creating a grid in pixel space
+- Also adding X-Axis and Y-Axis
+- Creating a rectangle in pixel space
+- Vertex data in pixel space
+- projectionMatrix as a uniform mat3
+- Pixel space -> clip space
+- Multiple objects in pixel space
+###############################################################*/
 
 // =============================================================
-// GLOBAL DATA
+// GLOBAL OBJECTS
 // =============================================================
 
-// Canvas / WebGL Context
-
-// Shader Objects
-const shaderInfo = {
-    vertexShaderSource: `#version 300 es
-    in vec2 a_position;
-
-    uniform mat3 u_viewMatrix;
-    uniform mat3 u_projectionMatrix;
-
-    void main() {
-        vec3 viewPosition = u_viewMatrix * vec3(a_position, 1.0);
-        vec3 clipPosition = u_projectionMatrix * viewPosition;
-
-        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
-    }
-`,
-    fragmentShaderSource: `#version 300 es
-    precision mediump float;
-
-    uniform vec4 u_color;
-
-    out vec4 out_color;
-
-    void main() {
-        out_color = u_color;
-    }
-`,
-    program: null,
-    attributes: {
-        position: null
-    },
-    uniforms: {
-        viewMatrix: null,
-        projectionMatrix: null,
-        color: null
-    }
-};
-
-// Camera Objects
-const camera = {
-    x: -300,
-    y: -200,
-    zoom: 1.0,
-    panSpeed: 10,
-    zoomSpeed: 0.1,
-    viewMatrix: null,
-    projectionMatrix: null
-};
-
-const controls = {
-    panUp: false,
-    panLeft: false,
-    panDown: false,
-    panRight: false,
-    panZoomIn: false,
-    panZoomOut: false
-};
-
+// =============================================================
 // Scene Objects
-const grid = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
+// =============================================================
 
 const xAxis = {
     shader: null,
@@ -106,11 +43,71 @@ const rectangle = {
     vbo: null,
     drawMode: null,
     drawOffset: 0,
-    drawCount: 0,
-    positionX: 200,
-    positionY: 150,
-    width: 200,
-    height: 150
+    drawCount: 0
+};
+
+// =============================================================
+// Camera Objects
+// =============================================================
+
+const camera = {
+    projectionMatrix: null
+}
+
+// =============================================================
+// 6. OBJECT DATA
+// =============================================================
+
+const grid = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+// =============================================================
+// Shader Objects
+// =============================================================
+
+// No UI in this chapter yet.
+// The focus here is on using a matrix
+// to convert pixel space to clip space.
+
+const shaderInfo = {
+    vertexShaderSource: `#version 300 es
+    in vec2 a_position;
+    uniform mat3 u_projectionMatrix;
+
+    void main() {
+        // WORLD -> CAMERA
+        vec2 cameraPosition = vec2(-300.0, -200.0); // Hardcoded camera position.
+        vec2 viewPosition = a_position - cameraPosition;
+
+        // CAMERA -> CLIP
+        vec3 clipPosition = u_projectionMatrix * vec3(viewPosition, 1.0);
+
+        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
+    }
+`,
+    fragmentShaderSource: `#version 300 es
+    precision mediump float;
+    uniform vec4 u_color;
+    out vec4 out_color;
+
+    void main() {
+        out_color = u_color;
+    }
+`,
+    program: null,
+    attributes: {
+        position: null
+    },
+    uniforms: {
+        projectionMatrix: null,
+        color: null
+    }
 };
 
 // =============================================================
@@ -147,14 +144,17 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 function setupShader(gl, shader) {
+    // Shaders
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
 
+    // Program
     shader.program = createProgram(gl, vertexShader, fragmentShader);
 
+    // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
 
-    shader.uniforms.viewMatrix = gl.getUniformLocation(shader.program, "u_viewMatrix");
+    // Uniforms
     shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
 }
@@ -177,38 +177,36 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// Camera / Matrix Functions
+// Camera-Related Matrix Functions
 // =============================================================
 
-function setupViewMatrix() {
-    const matrix = mat3.create();
-    mat3.fromTranslation(matrix, [-camera.x, -camera.y]);
-    mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
-    camera.viewMatrix = matrix;
-}
+function setupProjectionMatrix(gl){
+    // PIXEL SPACE -> CLIP SPACE MATRIX
+        const width = gl.canvas.width;
+        const height = gl.canvas.height;
 
-function updateCamera() {
-    if(controls.panUp) camera.y += camera.panSpeed;
-    if(controls.panLeft) camera.x -= camera.panSpeed;
-    if(controls.panDown) camera.y -= camera.panSpeed;
-    if(controls.panRight) camera.x += camera.panSpeed;
-    if(controls.panZoomIn) camera.zoom += camera.zoomSpeed;
-    if(controls.panZoomOut) camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
-}
+        /*
+            Pixel -> Clip:
 
-function setupProjectionMatrix(gl) {
-    const width = gl.canvas.width;
-    const height = gl.canvas.height;
+            x' = (2 * x / width) - 1
+            y' = (2 * y / height) - 1
 
-    camera.projectionMatrix = mat3.fromValues(
-        2 / width,  0,           0,
-        0,          2 / height,  0,
-        -1,        -1,           1
-    );
+            Matrix:
+
+            |  2/w    0     -1 |
+            |   0    2/h    1 |
+            |   0     0      1 |
+        */
+
+        camera.projectionMatrix = mat3.fromValues(
+            2 / width,  0,           0,
+            0,          2 / height,  0,
+            -1,        -1,           1
+        );
 }
 
 // =============================================================
-// Scene Object Creation Functions
+// Scene Objects Creation Functions
 // =============================================================
 
 function setupGrid(gl, shader) {
@@ -218,10 +216,12 @@ function setupGrid(gl, shader) {
     const spacing = 100;
     const range = 10000;
 
+    // Vertical lines
     for(let x = -range; x <= range; x += spacing) {
         positions.push(x, -range, x, range);
     }
 
+    // Horizontal lines
     for(let y = -range; y <= range; y += spacing) {
         positions.push(-range, y, range, y);
     }
@@ -290,9 +290,19 @@ function setupYAxis(gl, shader) {
 function setupRectangle(gl, shader) {
     rectangle.shader = shader;
 
+    const positions = new Float32Array([
+        200, 150, // Left Bottom
+        400, 150, // Right Bottom
+        200, 300, // Left Top
+
+        200, 300, // Left Top
+        400, 150, // Right Bottom
+        400, 300  // Right Top
+    ]);
+
     rectangle.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-    // Vertex Data Filled Dynamically by updateRectangle()
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 
     rectangle.vao = gl.createVertexArray();
     gl.bindVertexArray(rectangle.vao);
@@ -305,120 +315,20 @@ function setupRectangle(gl, shader) {
     rectangle.drawCount = 6;
 }
 
-function updateRectangle(gl) {
-    const halfWidth = rectangle.width / 2;
-    const halfHeight = rectangle.height / 2;
-
-    const x = rectangle.positionX;
-    const y = rectangle.positionY;
-
-    const positions = new Float32Array([
-        x - halfWidth, y - halfHeight,
-        x + halfWidth, y - halfHeight,
-        x - halfWidth, y + halfHeight,
-        x - halfWidth, y + halfHeight,
-        x + halfWidth, y - halfHeight,
-        x + halfWidth, y + halfHeight
-    ]);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
-}
-
-// =============================================================
-// GUI Setup Functions
-// =============================================================
-
-function setupGUI(gl) {
-    const gui = new lil.GUI();
-    const cameraFolder = gui.addFolder("Camera");
-
-    cameraFolder.add(controls, "panUp").name("↑ Up");
-    cameraFolder.add(controls, "panLeft").name("← Left");
-    cameraFolder.add(controls, "panDown").name("↓ Down");
-    cameraFolder.add(controls, "panRight").name("→ Right");
-    cameraFolder.add(controls, "panZoomIn").name("Zoom In");
-    cameraFolder.add(controls, "panZoomOut").name("Zoom Out");
-
-    const rectangleFolder = gui.addFolder("Rectangle");
-    rectangleFolder.add(rectangle, "positionX", -1000, 1000).name("positionX").onChange(() => updateRectangle(gl));
-    rectangleFolder.add(rectangle, "positionY", -1000, 1000).name("positionY").onChange(() => updateRectangle(gl));
-}
-
-// =============================================================
-// Input / Event Functions
-// =============================================================
-
-window.addEventListener("keydown", event => {
-    switch(event.key) {
-        case "ArrowUp":
-            controls.panUp = true;
-            break;
-        case "ArrowLeft":
-            controls.panLeft = true;
-            break;
-        case "ArrowDown":
-            controls.panDown = true;
-            break;
-        case "ArrowRight":
-            controls.panRight = true;
-            break;
-        case "I":
-        case "i":
-            controls.panZoomIn = true;
-            break;
-        case "O":
-        case "o":
-            controls.panZoomOut = true;
-            break;
-    }
-});
-
-window.addEventListener("keyup", event => {
-    switch(event.key) {
-        case "ArrowUp":
-            controls.panUp = false;
-            break;
-        case "ArrowLeft":
-            controls.panLeft = false;
-            break;
-        case "ArrowDown":
-            controls.panDown = false;
-            break;
-        case "ArrowRight":
-            controls.panRight = false;
-            break;
-        case "I":
-        case "i":
-            controls.panZoomIn = false;
-            break;
-        case "O":
-        case "o":
-            controls.panZoomOut = false;
-            break;
-    }
-});
-
 // =============================================================
 // RENDER
 // =============================================================
 function render(gl) {
-    updateCamera();
-
     resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
     gl.clearColor(0.32, 0.63, 0.67, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
+
     gl.useProgram(shaderInfo.program);
 
-    // PROJECTION MATRIX
     setupProjectionMatrix(gl);
     gl.uniformMatrix3fv(shaderInfo.uniforms.projectionMatrix, false, camera.projectionMatrix);
-
-    // VIEW MATRIX
-    setupViewMatrix();
-    gl.uniformMatrix3fv(shaderInfo.uniforms.viewMatrix, false, camera.viewMatrix);
 
     // GRID
     gl.bindVertexArray(grid.vao);
@@ -439,8 +349,6 @@ function render(gl) {
     gl.bindVertexArray(rectangle.vao);
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
     gl.drawArrays(rectangle.drawMode, rectangle.drawOffset, rectangle.drawCount);
-
-    requestAnimationFrame(() => render(gl));
 }
 
 // =============================================================
@@ -448,14 +356,12 @@ function render(gl) {
 // =============================================================
 function main() {
     const canvas = document.querySelector("#c");
-
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
     const gl = canvas.getContext("webgl2");
-
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -466,12 +372,11 @@ function main() {
     setupXAxis(gl, shaderInfo);
     setupYAxis(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
-    updateRectangle(gl);
 
 
 
-    setupGUI(gl);
     render(gl);
+    window.addEventListener("resize", () => render(gl));
 }
 
 // =============================================================

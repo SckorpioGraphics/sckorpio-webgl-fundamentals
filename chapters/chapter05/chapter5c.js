@@ -1,10 +1,9 @@
 /* #############################################################
-CHAPTER 5c: Combined Interleaved Buffer
+CHAPTER 5c: Dynamic Polygon Outline
 
 Topics:
-- Adding a basic UI to manipulate
-- Vertex positions
-- Vertex color
+- Learning Topology LINE_LOOP
+- Making a Polygon to Circle
 ###############################################################
 */
 
@@ -17,37 +16,23 @@ Topics:
 // =============================================================
 
 const uiState = {
-    // Vertex Positions
-    aX: -0.5,
-    aY: 0.0,
-    bX: 0.5,
-    bY: 0.0,
-    cX: 0.0,
-    cY: 0.5,
-
-    // Vertex Colors
-    aR: 1.0,
-    aG: 0.0,
-    aB: 0.0,
-
-    bR: 0.0,
-    bG: 1.0,
-    bB: 0.0,
-
-    cR: 0.0,
-    cG: 0.0,
-    cB: 1.0
+    centerX: 0.0,
+    centerY: 0.0,
+    radius: 0.5,
+    points: 5
 };
 
-const triangle = {
+const polygon = {
     shader: null,
 
     vao: null,
     vbo: null,
+    ibo: null,
 
     drawMode: null,
     drawOffset: 0,
-    drawCount: 0
+    drawCount: 0,
+    drawType: null
 };
 
 // =============================================================
@@ -57,30 +42,24 @@ const triangle = {
 const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
-    in vec3 a_color;
-
-    out vec4 v_color;
 
     void main() {
         gl_Position = vec4(a_position, 0.0, 1.0);
-        v_color = vec4(a_color, 1.0);
     }
 `,
     fragmentShaderSource: `#version 300 es
-    precision highp float;
-
-    in vec4 v_color;
-    out vec4 out_color;
+    precision mediump float;
+    out vec4 out_Color;
 
     void main() {
-        out_color = v_color;
+        // out_Color = vec4(0.0, 1.0, 1.0, 1.0); // Cyan
+        out_Color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio Purple
     }
 `,
     program: null,
 
     attributes: {
-        position: null,
-        color: null
+        position: null
     },
 
     uniforms: {}
@@ -127,7 +106,6 @@ function setupShader(gl, shader) {
     shader.program = createProgram(gl, vertexShader, fragmentShader);
     // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    shader.attributes.color = gl.getAttribLocation(shader.program, "a_color");
     // Future uniforms
 }
 
@@ -152,55 +130,52 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupTriangle(gl, shader) {
-    triangle.shader = shader;
+function setupPolygon(gl, shader) {
+    polygon.shader = shader;
 
     // ---------------------------------------------------------
     // VERTEX BUFFER
     // ---------------------------------------------------------
 
-    triangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+    polygon.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
 
-    // Position + color data will be updated from the UI.
+    // Vertex data will be generated from the UI during rendering.
+
+    // ---------------------------------------------------------
+    // INDEX BUFFER
+    // ---------------------------------------------------------
+
+    polygon.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
 
     // ---------------------------------------------------------
     // VERTEX ARRAY
     // ---------------------------------------------------------
 
-    triangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(triangle.vao);
+    polygon.vao = gl.createVertexArray();
+    gl.bindVertexArray(polygon.vao);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-
-    // Vertex positions
-    gl.enableVertexAttribArray(triangle.shader.attributes.position);
+    gl.enableVertexAttribArray(polygon.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
 
     gl.vertexAttribPointer(
-        triangle.shader.attributes.position,
+        polygon.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        0 * Float32Array.BYTES_PER_ELEMENT
+        0,
+        0
     );
 
-    // Vertex colors
-    gl.enableVertexAttribArray(triangle.shader.attributes.color);
-
-    gl.vertexAttribPointer(
-        triangle.shader.attributes.color,
-        3,
-        gl.FLOAT,
-        false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        2 * Float32Array.BYTES_PER_ELEMENT
-    );
+    // Index buffer binding is stored inside the VAO.
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
 
     // Draw data
-    triangle.drawMode = gl.TRIANGLES;
-    triangle.drawOffset = 0;
-    triangle.drawCount = 3;
+    polygon.drawMode = gl.LINE_LOOP;
+    polygon.drawOffset = 0;
+    polygon.drawCount = 0;
+    polygon.drawType = gl.UNSIGNED_SHORT;
 }
 
 // =============================================================
@@ -209,51 +184,17 @@ function setupTriangle(gl, shader) {
 
 function setupGUI(render) {
     const gui = new lil.GUI();
+    const polygonFolder = gui.addFolder("Polygon");
 
-    // ---------------------------------------------------------
-    // VERTICES
-    // ---------------------------------------------------------
+    // Center
+    const centerFolder = polygonFolder.addFolder("Center");
+    centerFolder.add(uiState, "centerX", -1, 1).name("centerX").onChange(render);
+    centerFolder.add(uiState, "centerY", -1, 1).name("centerY").onChange(render);
 
-    const verticesFolder = gui.addFolder("Vertices");
-
-    // Point A
-    const pointAFolder = verticesFolder.addFolder("Point A");
-    pointAFolder.add(uiState, "aX", -1, 1).name("X").onChange(render);
-    pointAFolder.add(uiState, "aY", -1, 1).name("Y").onChange(render);
-
-    // Point B
-    const pointBFolder = verticesFolder.addFolder("Point B");
-    pointBFolder.add(uiState, "bX", -1, 1).name("X").onChange(render);
-    pointBFolder.add(uiState, "bY", -1, 1).name("Y").onChange(render);
-
-    // Point C
-    const pointCFolder = verticesFolder.addFolder("Point C");
-    pointCFolder.add(uiState, "cX", -1, 1).name("X").onChange(render);
-    pointCFolder.add(uiState, "cY", -1, 1).name("Y").onChange(render);
-
-    // ---------------------------------------------------------
-    // COLORS
-    // ---------------------------------------------------------
-
-    const colorFolder = gui.addFolder("Color");
-
-    // Point A
-    const pointAColorFolder = colorFolder.addFolder("Point A");
-    pointAColorFolder.add(uiState, "aR", 0, 1).name("R").onChange(render);
-    pointAColorFolder.add(uiState, "aG", 0, 1).name("G").onChange(render);
-    pointAColorFolder.add(uiState, "aB", 0, 1).name("B").onChange(render);
-
-    // Point B
-    const pointBColorFolder = colorFolder.addFolder("Point B");
-    pointBColorFolder.add(uiState, "bR", 0, 1).name("R").onChange(render);
-    pointBColorFolder.add(uiState, "bG", 0, 1).name("G").onChange(render);
-    pointBColorFolder.add(uiState, "bB", 0, 1).name("B").onChange(render);
-
-    // Point C
-    const pointCColorFolder = colorFolder.addFolder("Point C");
-    pointCColorFolder.add(uiState, "cR", 0, 1).name("R").onChange(render);
-    pointCColorFolder.add(uiState, "cG", 0, 1).name("G").onChange(render);
-    pointCColorFolder.add(uiState, "cB", 0, 1).name("B").onChange(render);
+    // Dimension
+    const dimFolder = polygonFolder.addFolder("Dimensions");
+    dimFolder.add(uiState, "radius", 0, 1).name("radius").onChange(render);
+    dimFolder.add(uiState, "points", 3, 20, 1).name("points").onChange(render);
 }
 
 // =============================================================
@@ -266,34 +207,55 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(triangle.shader.program);
-    gl.bindVertexArray(triangle.vao);
+    gl.useProgram(polygon.shader.program);
+    gl.bindVertexArray(polygon.vao);
 
-    // Interleaved vertex data CPU side
-    // Each vertex = X, Y, R, G, B
-    const vertexData = new Float32Array([
-        uiState.aX, uiState.aY,
-        uiState.aR, uiState.aG, uiState.aB, // Point A
+    // Vertex and index data CPU side
+    const positionsData = [];
+    const indicesData = [];
 
-        uiState.bX, uiState.bY,
-        uiState.bR, uiState.bG, uiState.bB, // Point B
+    for(let i = 0; i < uiState.points; i++) {
+        const angle = (i / uiState.points) * (2 * Math.PI);
 
-        uiState.cX, uiState.cY,
-        uiState.cR, uiState.cG, uiState.cB  // Point C
-    ]);
+        const x = uiState.centerX +
+                  Math.sin(angle) * uiState.radius;
 
-    // Update interleaved vertex data on the GPU
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+        const y = uiState.centerY +
+                  Math.cos(angle) * uiState.radius;
+
+        positionsData.push(x);
+        positionsData.push(y);
+
+        indicesData.push(i);
+    }
+
+    const positions = new Float32Array(positionsData);
+    const indices = new Uint16Array(indicesData);
+
+    // Update vertex data on the GPU
+    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
     gl.bufferData(
         gl.ARRAY_BUFFER,
-        vertexData,
+        positions,
         gl.DYNAMIC_DRAW
     );
 
-    gl.drawArrays(
-        triangle.drawMode,
-        triangle.drawOffset,
-        triangle.drawCount
+    // Update index data on the GPU
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        indices,
+        gl.DYNAMIC_DRAW
+    );
+
+    // Update draw data
+    polygon.drawCount = indices.length;
+
+    gl.drawElements(
+        polygon.drawMode,
+        polygon.drawCount,
+        polygon.drawType,
+        polygon.drawOffset
     );
 }
 
@@ -316,7 +278,7 @@ function main() {
 
     // SETUP
     setupShader(gl, shaderInfo);
-    setupTriangle(gl, shaderInfo);
+    setupPolygon(gl, shaderInfo);
 
     // RENDER
 

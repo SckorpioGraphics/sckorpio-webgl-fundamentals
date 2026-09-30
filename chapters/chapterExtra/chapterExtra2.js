@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 8d: Pixel Space
+SUPPLEMENTAL EXPERIMENT 2: Random Pixel-Space Rectangles
 
 Topics:
 - Creating multiple random rectangles

@@ -1,8 +1,11 @@
 /* #############################################################
-CHAPTER 3d: Learning Topology — LINE_LOOP
+CHAPTER 3d: Making Geometry Using Triangles (F Letter)
 
 Topics:
-- Making Lines Zig-Zag End Point Connected
+- Letter F using Triangles
+- Using Index Buffer
+- Vertex Reuse
+- drawElements()
 ###############################################################
 */
 
@@ -14,7 +17,7 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const lineLoop = {
+const letterF = {
     shader: null,
 
     vao: null,
@@ -122,29 +125,50 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupLineLoop(gl, shader) {
-    lineLoop.shader = shader;
+function setupLetterF(gl, shader) {
+    letterF.shader = shader;
 
-    // v0          v2         v4
-    //   \          \          \
-    //    \          \          \
-    //     v1         v3         v5
+    /*
+        v2-------v3--------v4
+        |\       |\         |
+        |\       |   \      |
+        | \      |      \   |
+        |  \     v6________v5
+        |   \    |
+        |    \   v7_____v8
+        |     \  |  \    |
+        |      \ |    \  |
+        |       \v10____v9
+        |        |
+        |        |
+        v0_______v1
+    */
 
     // ---------------------------------------------------------
     // VERTEX BUFFER
     // ---------------------------------------------------------
 
     const positions = new Float32Array([
-        -0.6,  0.2,   // v0
-        -0.4, -0.2,   // v1
-        -0.2,  0.2,   // v2
-         0.0, -0.2,   // v3
-         0.2,  0.2,   // v4
-         0.4, -0.2    // v5
+        // Left column
+        -0.4, -0.6,   // 0
+        -0.2, -0.6,   // 1
+        -0.4,  0.6,   // 2
+        -0.2,  0.6,   // 3
+
+        // Top bar
+         0.2,  0.6,   // 4
+         0.2,  0.4,   // 5
+        -0.4,  0.4,   // 6
+
+        // Middle bar
+        -0.4,  0.2,   // 7
+         0.1,  0.2,   // 8
+         0.1,  0.0,   // 9
+        -0.4,  0.0    // 10
     ]);
 
-    lineLoop.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, lineLoop.vbo);
+    letterF.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, letterF.vbo);
     gl.bufferData(
         gl.ARRAY_BUFFER,
         positions,
@@ -156,11 +180,21 @@ function setupLineLoop(gl, shader) {
     // ---------------------------------------------------------
 
     const indices = new Uint16Array([
-        0, 1, 2, 3, 4, 5
+        // LEFT COLUMN
+        0, 1, 2,
+        2, 1, 3,
+
+        // TOP BAR
+        3, 6, 5,
+        3, 5, 4,
+
+        // MIDDLE BAR
+        7, 10, 9,
+        7, 9, 8
     ]);
 
-    lineLoop.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, lineLoop.ibo);
+    letterF.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, letterF.ibo);
     gl.bufferData(
         gl.ELEMENT_ARRAY_BUFFER,
         indices,
@@ -171,14 +205,14 @@ function setupLineLoop(gl, shader) {
     // VERTEX ARRAY
     // ---------------------------------------------------------
 
-    lineLoop.vao = gl.createVertexArray();
-    gl.bindVertexArray(lineLoop.vao);
+    letterF.vao = gl.createVertexArray();
+    gl.bindVertexArray(letterF.vao);
 
-    gl.enableVertexAttribArray(lineLoop.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, lineLoop.vbo);
+    gl.enableVertexAttribArray(letterF.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, letterF.vbo);
 
     gl.vertexAttribPointer(
-        lineLoop.shader.attributes.position,
+        letterF.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -187,13 +221,13 @@ function setupLineLoop(gl, shader) {
     );
 
     // Index buffer binding is stored inside the VAO.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, lineLoop.ibo);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, letterF.ibo);
 
     // Draw data
-    lineLoop.drawMode = gl.LINE_LOOP;
-    lineLoop.drawOffset = 0;
-    lineLoop.drawCount = indices.length;
-    lineLoop.drawType = gl.UNSIGNED_SHORT;
+    letterF.drawMode = gl.TRIANGLES;
+    letterF.drawOffset = 0;
+    letterF.drawCount = indices.length;
+    letterF.drawType = gl.UNSIGNED_SHORT;
 }
 
 // =============================================================
@@ -206,14 +240,14 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(lineLoop.shader.program);
-    gl.bindVertexArray(lineLoop.vao);
+    gl.useProgram(letterF.shader.program);
+    gl.bindVertexArray(letterF.vao);
 
     gl.drawElements(
-        lineLoop.drawMode,
-        lineLoop.drawCount,
-        lineLoop.drawType,
-        lineLoop.drawOffset
+        letterF.drawMode,
+        letterF.drawCount,
+        letterF.drawType,
+        letterF.drawOffset
     );
 }
 
@@ -236,7 +270,7 @@ function main() {
 
     // SETUP
     setupShader(gl, shaderInfo);
-    setupLineLoop(gl, shaderInfo);
+    setupLetterF(gl, shaderInfo);
 
     // RENDER
 

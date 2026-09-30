@@ -1,13 +1,15 @@
 /* #############################################################
-CHAPTER 8c: 2D Space (using Projection Matrix)
+CHAPTER 8b: Multiple Objects
 
 Topics:
-- Creating a basic rectangle
-- Vertex data in pixel space
-- Matrix as a uniform
-- mat3
-- Pixel space -> clip space
-- Inverted Y
+- Rendering multiple objects
+- A Triangle and a Line Loop
+- Separate VAO/VBO for each object
+- Different topologies
+- Different shapes
+- Different colors
+- Multiple draw calls
+- Using the same shader for multiple objects
 ###############################################################
 */
 
@@ -19,7 +21,16 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const rectangle = {
+const triangle = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
+
+const hexagon = {
     shader: null,
     vao: null,
     vbo: null,
@@ -34,31 +45,25 @@ const rectangle = {
 
 /*
     No UI in this chapter yet.
-    The focus here is on using a matrix
-    to convert pixel space to clip space.
+    The focus here is on rendering multiple
+    independent objects with different topologies.
 */
 
 const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
-    uniform mat3 u_projectionMatrix;
-
     void main() {
-        // Apply pixel space -> clip space matrix
-        vec3 clipPostion = u_projectionMatrix * vec3(a_position, 1.0);
-
-        // Convert to clip-space position
-        gl_Position = vec4(clipPostion.xy, 0.0, 1.0);
+        gl_Position = vec4(a_position, 0.0, 1.0);
     }
 `,
     fragmentShaderSource: `#version 300 es
     precision mediump float;
-
+    uniform vec3 u_color;
     out vec4 out_color;
 
     void main() {
-        out_color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio Purple
+        out_color = vec4(u_color, 1.0);
     }
 `,
     program: null,
@@ -66,7 +71,7 @@ const shaderInfo = {
         position: null
     },
     uniforms: {
-        projectionMatrix: null
+        color: null
     }
 };
 
@@ -112,7 +117,7 @@ function setupShader(gl, shader) {
     // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
     // uniforms
-    shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
+    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
 }
 
 // =============================================================
@@ -136,39 +141,31 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupRectangle(gl, shader) {
-    rectangle.shader = shader;
+function setupTriangle(gl, shader) {
+    triangle.shader = shader;
 
     const positions = new Float32Array([
-        20, 20,       // Left Bottom
-        200, 20,      // Right Bottom
-        20, 100,      // Left Top
-
-        20, 100,      // Left Top
-        200, 20,      // Right Bottom
-        200, 100      // Right Top
+        -0.7, 0.0,
+        -0.5, 0.5,
+        -0.3, 0.0
     ]);
 
-    rectangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
+    triangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
     gl.bufferData(
         gl.ARRAY_BUFFER,
         positions,
         gl.STATIC_DRAW
     );
 
-    rectangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(rectangle.vao);
+    triangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(triangle.vao);
 
-    gl.enableVertexAttribArray(
-        rectangle.shader.attributes.position
-    );
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    gl.enableVertexAttribArray(triangle.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
 
     gl.vertexAttribPointer(
-        rectangle.shader.attributes.position,
+        triangle.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -176,9 +173,49 @@ function setupRectangle(gl, shader) {
         0
     );
 
-    rectangle.drawMode = gl.TRIANGLES;
-    rectangle.drawOffset = 0;
-    rectangle.drawCount = 6;
+    triangle.drawMode = gl.TRIANGLES;
+    triangle.drawOffset = 0;
+    triangle.drawCount = 3;
+}
+
+function setupHexagon(gl, shader) {
+    hexagon.shader = shader;
+
+    const positions = new Float32Array([
+         0.6,  0.0,
+         0.45, 0.26,
+         0.15, 0.26,
+         0.0,  0.0,
+         0.15,-0.26,
+         0.45,-0.26
+    ]);
+
+    hexagon.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, hexagon.vbo);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.STATIC_DRAW
+    );
+
+    hexagon.vao = gl.createVertexArray();
+    gl.bindVertexArray(hexagon.vao);
+
+    gl.enableVertexAttribArray(hexagon.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, hexagon.vbo);
+
+    gl.vertexAttribPointer(
+        hexagon.shader.attributes.position,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0
+    );
+
+    hexagon.drawMode = gl.LINE_LOOP;
+    hexagon.drawOffset = 0;
+    hexagon.drawCount = 6;
 }
 
 // =============================================================
@@ -191,46 +228,40 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(rectangle.shader.program);
+    gl.useProgram(shaderInfo.program);
 
     // ---------------------------------------------------------
-    // PIXEL SPACE -> CLIP SPACE MATRIX
+    // TRIANGLE
     // ---------------------------------------------------------
 
-    const width = gl.canvas.width;
-    const height = gl.canvas.height;
-
-    /*
-        Pixel -> Clip:
-
-        x' = (2 * x / width) - 1
-        y' = (2 * y / height) - 1
-
-        Matrix:
-
-        |  2/w    0     -1 |
-        |   0    2/h    1 |
-        |   0     0      1 |
-    */
-
-    const projectionMatrix = mat3.fromValues(
-        2 / width,  0,           0,
-        0,          2 / height,  0,
-        -1,        -1,            1
+    gl.uniform3f(
+        shaderInfo.uniforms.color,
+        1.0, 0.0, 0.0   // Red
     );
 
-    gl.uniformMatrix3fv(
-        rectangle.shader.uniforms.projectionMatrix,
-        false,
-        projectionMatrix
-    );
-
-    gl.bindVertexArray(rectangle.vao);
+    gl.bindVertexArray(triangle.vao);
 
     gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
+    );
+
+    // ---------------------------------------------------------
+    // HEXAGON
+    // ---------------------------------------------------------
+
+    gl.uniform3f(
+        shaderInfo.uniforms.color,
+        1.0, 0.0, 1.0   // Magenta
+    );
+
+    gl.bindVertexArray(hexagon.vao);
+
+    gl.drawArrays(
+        hexagon.drawMode,
+        hexagon.drawOffset,
+        hexagon.drawCount
     );
 }
 
@@ -251,7 +282,9 @@ function main() {
     }
 
     setupShader(gl, shaderInfo);
-    setupRectangle(gl, shaderInfo);
+
+    setupTriangle(gl, shaderInfo);
+    setupHexagon(gl, shaderInfo);
 
 
 

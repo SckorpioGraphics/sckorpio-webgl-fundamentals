@@ -1,10 +1,16 @@
 /* #############################################################
-CHAPTER 3c: Learning Topology — LINE_STRIP
+CHAPTER 3c: Introducing the Index Buffer
 
 Topics:
-- Making Line Zig-Zag Connected
+- Rectangle using Triangles
+- Using Index Buffer
+- drawElements()
 ###############################################################
 */
+
+
+// NEW WebGL 2.0 Way...
+// Passing position data directly in clip space [-1, +1]
 
 // =============================================================
 // GLOBAL OBJECTS
@@ -14,7 +20,7 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const lineStrip = {
+const rectangle = {
     shader: null,
 
     vao: null,
@@ -122,29 +128,32 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupLineStrip(gl, shader) {
-    lineStrip.shader = shader;
+function setupRectangle(gl, shader) {
+    rectangle.shader = shader;
 
-    // v0          v2         v4
-    //   \          \          \
-    //    \          \          \
-    //     v1         v3         v5
+    /*
+        v1-----------v3
+        | \           |
+        |   \         |
+        |     \       |
+        |       \     |
+        v0__________\v2
+    */
 
     // ---------------------------------------------------------
     // VERTEX BUFFER
     // ---------------------------------------------------------
 
+    // Only store each vertex ONCE
     const positions = new Float32Array([
-        -0.6,  0.2,   // v0
-        -0.4, -0.2,   // v1
-        -0.2,  0.2,   // v2
-         0.0, -0.2,   // v3
-         0.2,  0.2,   // v4
-         0.4, -0.2    // v5
+        -0.5, 0.0,  // v0
+        -0.5, 0.5,  // v1
+         0.5, 0.0,  // v2
+         0.5, 0.5   // v3
     ]);
 
-    lineStrip.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, lineStrip.vbo);
+    rectangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
     gl.bufferData(
         gl.ARRAY_BUFFER,
         positions,
@@ -155,12 +164,14 @@ function setupLineStrip(gl, shader) {
     // INDEX BUFFER
     // ---------------------------------------------------------
 
+    // Each number refers to a vertex in the vertex buffer
     const indices = new Uint16Array([
-        0, 1, 2, 3, 4, 5
+        0, 2, 1,    // Triangle 1
+        2, 3, 1     // Triangle 2
     ]);
 
-    lineStrip.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, lineStrip.ibo);
+    rectangle.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, rectangle.ibo);
     gl.bufferData(
         gl.ELEMENT_ARRAY_BUFFER,
         indices,
@@ -171,14 +182,14 @@ function setupLineStrip(gl, shader) {
     // VERTEX ARRAY
     // ---------------------------------------------------------
 
-    lineStrip.vao = gl.createVertexArray();
-    gl.bindVertexArray(lineStrip.vao);
+    rectangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(rectangle.vao);
 
-    gl.enableVertexAttribArray(lineStrip.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, lineStrip.vbo);
+    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
 
     gl.vertexAttribPointer(
-        lineStrip.shader.attributes.position,
+        rectangle.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -186,14 +197,14 @@ function setupLineStrip(gl, shader) {
         0
     );
 
-    // Index buffer binding is stored inside the VAO.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, lineStrip.ibo);
+    // Index buffer — IMPORTANT
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, rectangle.ibo);
 
     // Draw data
-    lineStrip.drawMode = gl.LINE_STRIP;
-    lineStrip.drawOffset = 0;
-    lineStrip.drawCount = indices.length;
-    lineStrip.drawType = gl.UNSIGNED_SHORT;
+    rectangle.drawMode = gl.TRIANGLES;
+    rectangle.drawOffset = 0;
+    rectangle.drawCount = indices.length;
+    rectangle.drawType = gl.UNSIGNED_SHORT;
 }
 
 // =============================================================
@@ -206,14 +217,14 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(lineStrip.shader.program);
-    gl.bindVertexArray(lineStrip.vao);
+    gl.useProgram(rectangle.shader.program);
+    gl.bindVertexArray(rectangle.vao);
 
     gl.drawElements(
-        lineStrip.drawMode,
-        lineStrip.drawCount,
-        lineStrip.drawType,
-        lineStrip.drawOffset
+        rectangle.drawMode,
+        rectangle.drawCount,
+        rectangle.drawType,
+        rectangle.drawOffset
     );
 }
 
@@ -236,7 +247,7 @@ function main() {
 
     // SETUP
     setupShader(gl, shaderInfo);
-    setupLineStrip(gl, shaderInfo);
+    setupRectangle(gl, shaderInfo);
 
     // RENDER
 

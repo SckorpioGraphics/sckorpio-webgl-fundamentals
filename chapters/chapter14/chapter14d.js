@@ -1,5 +1,5 @@
 /* #############################################################
-   CHAPTER 13c: Model Matrix — Transformation Composition
+   CHAPTER 14d: Model Matrix — Multiple Object Composition
 
    Topics:
    - Multiple objects each having their own model matrix

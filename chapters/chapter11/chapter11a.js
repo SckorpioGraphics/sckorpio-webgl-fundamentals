@@ -1,11 +1,11 @@
 /* #############################################################
-   CHAPTER 11a: 2D Transformations — Rotation
+   CHAPTER 11a: 2D Transformations — Translation
 
    Topics:
-   - Rotating a letterF around the origin
+   - Translating a rectangle
    - GUI camera controls
-   - Using Rotation with sin() and cos()
-   - Object rotation
+   - Using Dynamic Buffer geometry
+   - Object translation
    #############################################################
 */
 
@@ -22,27 +22,9 @@ const shaderInfo = {
 
     uniform mat3 u_viewMatrix;
     uniform mat3 u_projectionMatrix;
-    uniform float u_translationX;
-    uniform float u_translationY;
-    uniform float u_rotation;
 
     void main() {
-        vec3 localPosition = vec3(a_position, 1.0);
-
-        float c = cos(u_rotation);
-        float s = sin(u_rotation);
-        float rotatedX = localPosition.x * c - localPosition.y * s;
-        float rotatedY = localPosition.x * s + localPosition.y * c;
-        vec3 rotatedPosition = vec3(rotatedX, rotatedY, 1.0);
-
-        mat3 translationMatrix = mat3(
-            1.0,            0.0,            0.0,
-            0.0,            1.0,            0.0,
-            u_translationX, u_translationY, 1.0
-        );
-
-        vec3 worldPosition = translationMatrix * rotatedPosition;
-        vec3 viewPosition = u_viewMatrix * worldPosition;
+        vec3 viewPosition = u_viewMatrix * vec3(a_position, 1.0);
         vec3 clipPosition = u_projectionMatrix * viewPosition;
 
         gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
@@ -64,9 +46,6 @@ const shaderInfo = {
         position: null
     },
     uniforms: {
-        translationX: null,
-        translationY: null,
-        rotation: null,
         viewMatrix: null,
         projectionMatrix: null,
         color: null
@@ -121,17 +100,17 @@ const yAxis = {
     drawCount: 0
 };
 
-const letterF = {
+const rectangle = {
     shader: null,
     vao: null,
     vbo: null,
-    ibo: null,
     drawMode: null,
     drawOffset: 0,
     drawCount: 0,
     positionX: 200,
     positionY: 150,
-    rotation: 0
+    width: 200,
+    height: 150
 };
 
 // =============================================================
@@ -175,9 +154,6 @@ function setupShader(gl, shader) {
 
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
 
-    shader.uniforms.translationX = gl.getUniformLocation(shader.program, "u_translationX");
-    shader.uniforms.translationY = gl.getUniformLocation(shader.program, "u_translationY");
-    shader.uniforms.rotation = gl.getUniformLocation(shader.program, "u_rotation");
     shader.uniforms.viewMatrix = gl.getUniformLocation(shader.program, "u_viewMatrix");
     shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
@@ -311,70 +287,49 @@ function setupYAxis(gl, shader) {
     yAxis.drawCount = 2;
 }
 
-function setupLetterF(gl, shader) {
-    letterF.shader = shader;
+function setupRectangle(gl, shader) {
+    rectangle.shader = shader;
+
+    rectangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    // Vertex Data Filled Dynamically by updateRectangle()
+
+    rectangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(rectangle.vao);
+    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    gl.vertexAttribPointer(rectangle.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
+
+    rectangle.drawMode = gl.TRIANGLES;
+    rectangle.drawOffset = 0;
+    rectangle.drawCount = 6;
+}
+
+function updateRectangle(gl) {
+    const halfWidth = rectangle.width / 2;
+    const halfHeight = rectangle.height / 2;
+
+    const x = rectangle.positionX;
+    const y = rectangle.positionY;
 
     const positions = new Float32Array([
-        // Left column
-        -100, -100,
-         -60, -100,
-        -100,  100,
-         -60,  100,
-
-        // Top bar
-         40,  100,
-         40,   60,
-        -100,   60,
-
-        // Middle bar
-        -100,  20,
-           0,  20,
-           0, -20,
-        -100, -20
+        x - halfWidth, y - halfHeight,
+        x + halfWidth, y - halfHeight,
+        x - halfWidth, y + halfHeight,
+        x - halfWidth, y + halfHeight,
+        x + halfWidth, y - halfHeight,
+        x + halfWidth, y + halfHeight
     ]);
 
-    letterF.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, letterF.vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
-
-    const indices = new Uint16Array([
-        // LEFT COLUMN
-        0, 1, 2,
-        2, 1, 3,
-
-        // TOP BAR
-        3, 6, 5,
-        3, 5, 4,
-
-        // MIDDLE BAR
-        7, 10, 9,
-        7, 9, 8
-    ]);
-
-    letterF.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, letterF.ibo);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
-
-    letterF.vao = gl.createVertexArray();
-    gl.bindVertexArray(letterF.vao);
-
-    gl.enableVertexAttribArray(letterF.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, letterF.vbo);
-    gl.vertexAttribPointer(letterF.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, letterF.ibo);
-
-    letterF.drawMode = gl.TRIANGLES;
-    letterF.drawOffset = 0;
-    letterF.drawCount = indices.length;
-    letterF.drawType = gl.UNSIGNED_SHORT;
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
 }
 
 // =============================================================
 // GUI Setup Functions
 // =============================================================
 
-function setupGUI() {
+function setupGUI(gl) {
     const gui = new lil.GUI();
     const cameraFolder = gui.addFolder("Camera");
 
@@ -385,10 +340,9 @@ function setupGUI() {
     cameraFolder.add(controls, "panZoomIn").name("Zoom In");
     cameraFolder.add(controls, "panZoomOut").name("Zoom Out");
 
-    const letterFFolder = gui.addFolder("LetterF");
-    letterFFolder.add(letterF, "positionX", -1000, 1000).name("positionX");
-    letterFFolder.add(letterF, "positionY", -1000, 1000).name("positionY");
-    letterFFolder.add(letterF, "rotation", 0, Math.PI * 2).name("rotation");
+    const rectangleFolder = gui.addFolder("Rectangle");
+    rectangleFolder.add(rectangle, "positionX", -1000, 1000).name("positionX").onChange(() => updateRectangle(gl));
+    rectangleFolder.add(rectangle, "positionY", -1000, 1000).name("positionY").onChange(() => updateRectangle(gl));
 }
 
 // =============================================================
@@ -468,35 +422,23 @@ function render(gl) {
 
     // GRID
     gl.bindVertexArray(grid.vao);
-    gl.uniform1f(shaderInfo.uniforms.translationX, 0);
-    gl.uniform1f(shaderInfo.uniforms.translationY, 0);
-    gl.uniform1f(shaderInfo.uniforms.rotation, 0);
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
     gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
 
     // X AXIS
     gl.bindVertexArray(xAxis.vao);
-    gl.uniform1f(shaderInfo.uniforms.translationX, 0);
-    gl.uniform1f(shaderInfo.uniforms.translationY, 0);
-    gl.uniform1f(shaderInfo.uniforms.rotation, 0);
     gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
     gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
 
     // Y AXIS
     gl.bindVertexArray(yAxis.vao);
-    gl.uniform1f(shaderInfo.uniforms.translationX, 0);
-    gl.uniform1f(shaderInfo.uniforms.translationY, 0);
-    gl.uniform1f(shaderInfo.uniforms.rotation, 0);
     gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
     gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
 
-    // LETTER-F
-    gl.bindVertexArray(letterF.vao);
-    gl.uniform1f(shaderInfo.uniforms.translationX, letterF.positionX);
-    gl.uniform1f(shaderInfo.uniforms.translationY, letterF.positionY);
-    gl.uniform1f(shaderInfo.uniforms.rotation, letterF.rotation);
+    // RECTANGLE
+    gl.bindVertexArray(rectangle.vao);
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
-    gl.drawElements(letterF.drawMode,letterF.drawCount,letterF.drawType,letterF.drawOffset);
+    gl.drawArrays(rectangle.drawMode, rectangle.drawOffset, rectangle.drawCount);
 
     requestAnimationFrame(() => render(gl));
 }
@@ -523,11 +465,12 @@ function main() {
     setupGrid(gl, shaderInfo);
     setupXAxis(gl, shaderInfo);
     setupYAxis(gl, shaderInfo);
-    setupLetterF(gl, shaderInfo);
+    setupRectangle(gl, shaderInfo);
+    updateRectangle(gl);
 
 
 
-    setupGUI();
+    setupGUI(gl);
     render(gl);
 }
 

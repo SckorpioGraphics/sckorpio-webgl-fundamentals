@@ -1,10 +1,8 @@
 /* #############################################################
-CHAPTER 4b: Dynamic Buffer
+CHAPTER 4b: Learning Topology — LINES
 
 Topics:
-- Making a rectangle
-- Adding a basic UI to manipulate
-- Vertex positions
+- Making Lines Parallel
 ###############################################################
 */
 
@@ -16,22 +14,17 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const uiState = {
-    centerX: 0.0,
-    centerY: 0.0,
-    length: 0.5,
-    width: 0.5
-};
-
-const rectangle = {
+const lines = {
     shader: null,
 
     vao: null,
     vbo: null,
+    ibo: null,
 
     drawMode: null,
     drawOffset: 0,
-    drawCount: 0
+    drawCount: 0,
+    drawType: null
 };
 
 // =============================================================
@@ -129,30 +122,63 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupRectangle(gl, shader) {
-    rectangle.shader = shader;
+function setupLines(gl, shader) {
+    lines.shader = shader;
+
+    // v0          v2          v4
+    //   \          \          \
+    //    \          \          \
+    //     v1         v3         v5
 
     // ---------------------------------------------------------
     // VERTEX BUFFER
     // ---------------------------------------------------------
 
-    rectangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    const positions = new Float32Array([
+        -0.6,  0.2,   // v0
+        -0.4, -0.2,   // v1
+        -0.2,  0.2,   // v2
+         0.0, -0.2,   // v3
+         0.2,  0.2,   // v4
+         0.4, -0.2    // v5
+    ]);
 
-    // Vertex data will be updated from the UI during rendering.
+    lines.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, lines.vbo);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.STATIC_DRAW
+    );
+
+    // ---------------------------------------------------------
+    // INDEX BUFFER
+    // ---------------------------------------------------------
+
+    const indices = new Uint16Array([
+        0, 1, 2, 3, 4, 5
+    ]);
+
+    lines.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, lines.ibo);
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        indices,
+        gl.STATIC_DRAW
+    );
 
     // ---------------------------------------------------------
     // VERTEX ARRAY
     // ---------------------------------------------------------
 
-    rectangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(rectangle.vao);
+    lines.vao = gl.createVertexArray();
+    gl.bindVertexArray(lines.vao);
 
-    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    gl.enableVertexAttribArray(lines.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, lines.vbo);
 
     gl.vertexAttribPointer(
-        rectangle.shader.attributes.position,
+        lines.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -160,29 +186,14 @@ function setupRectangle(gl, shader) {
         0
     );
 
+    // Index buffer binding is stored inside the VAO.
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, lines.ibo);
+
     // Draw data
-    rectangle.drawMode = gl.TRIANGLE_STRIP;
-    rectangle.drawOffset = 0;
-    rectangle.drawCount = 4;
-}
-
-// =============================================================
-// GUI Setup Functions
-// =============================================================
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-    const rectangleFolder = gui.addFolder("Rectangle");
-
-    // Center
-    const centerFolder = rectangleFolder.addFolder("Center");
-    centerFolder.add(uiState, "centerX", -1, 1).name("centerX").onChange(render);
-    centerFolder.add(uiState, "centerY", -1, 1).name("centerY").onChange(render);
-
-    // Dimension
-    const dimFolder = rectangleFolder.addFolder("Dimensions");
-    dimFolder.add(uiState, "length", 0, 2).name("length").onChange(render);
-    dimFolder.add(uiState, "width", 0, 2).name("width").onChange(render);
+    lines.drawMode = gl.LINES;
+    lines.drawOffset = 0;
+    lines.drawCount = indices.length;
+    lines.drawType = gl.UNSIGNED_SHORT;
 }
 
 // =============================================================
@@ -195,36 +206,14 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(rectangle.shader.program);
-    gl.bindVertexArray(rectangle.vao);
+    gl.useProgram(lines.shader.program);
+    gl.bindVertexArray(lines.vao);
 
-    // Vertex data CPU side
-    const positions = new Float32Array([
-        uiState.centerX - uiState.length / 2.0,
-        uiState.centerY + uiState.width / 2.0, // Point 0
-
-        uiState.centerX + uiState.length / 2.0,
-        uiState.centerY + uiState.width / 2.0, // Point 1
-
-        uiState.centerX - uiState.length / 2.0,
-        uiState.centerY - uiState.width / 2.0, // Point 2
-
-        uiState.centerX + uiState.length / 2.0,
-        uiState.centerY - uiState.width / 2.0  // Point 3
-    ]);
-
-    // Update vertex data on the GPU
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.DYNAMIC_DRAW
-    );
-
-    gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
+    gl.drawElements(
+        lines.drawMode,
+        lines.drawCount,
+        lines.drawType,
+        lines.drawOffset
     );
 }
 
@@ -247,13 +236,10 @@ function main() {
 
     // SETUP
     setupShader(gl, shaderInfo);
-    setupRectangle(gl, shaderInfo);
+    setupLines(gl, shaderInfo);
 
     // RENDER
 
-
-    // UI
-    setupGUI(() => render(gl));
 
     render(gl);
     window.addEventListener("resize", () => render(gl));

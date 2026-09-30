@@ -1,11 +1,8 @@
 /* #############################################################
-CHAPTER 2d: Making a Geometry using Triangles (F Letter)
+CHAPTER 4g: Learning Topology — TRIANGLE_STRIP
 
 Topics:
-- Letter F using Triangles
-- Using Index Buffer
-- Vertex Reuse
-- drawElements()
+- Making Strip of Triangles
 ###############################################################
 */
 
@@ -17,7 +14,7 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const letterF = {
+const triangleStrip = {
     shader: null,
 
     vao: null,
@@ -125,23 +122,14 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupLetterF(gl, shader) {
-    letterF.shader = shader;
+function setupTriangleStrip(gl, shader) {
+    triangleStrip.shader = shader;
 
     /*
-        v2-------v3--------v4
-        |\       |\         |
-        |\       |   \      |
-        | \      |      \   |
-        |  \     v6________v5
-        |   \    |
-        |    \   v7_____v8
-        |     \  |  \    |
-        |      \ |    \  |
-        |       \v10____v9
-        |        |
-        |        |
-        v0_______v1
+        v0 ---- v2         v4
+          \     /          / \
+           \   /          /   \
+            v1         v3------v5
     */
 
     // ---------------------------------------------------------
@@ -149,26 +137,17 @@ function setupLetterF(gl, shader) {
     // ---------------------------------------------------------
 
     const positions = new Float32Array([
-        // Left column
-        -0.4, -0.6,   // 0
-        -0.2, -0.6,   // 1
-        -0.4,  0.6,   // 2
-        -0.2,  0.6,   // 3
+        -0.6,  0.2,   // v0
+        -0.4, -0.2,   // v1
+        -0.2,  0.2,   // v2
 
-        // Top bar
-         0.2,  0.6,   // 4
-         0.2,  0.4,   // 5
-        -0.4,  0.4,   // 6
-
-        // Middle bar
-        -0.4,  0.2,   // 7
-         0.1,  0.2,   // 8
-         0.1,  0.0,   // 9
-        -0.4,  0.0    // 10
+         0.0, -0.2,   // v3
+         0.2,  0.2,   // v4
+         0.4, -0.2    // v5
     ]);
 
-    letterF.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, letterF.vbo);
+    triangleStrip.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleStrip.vbo);
     gl.bufferData(
         gl.ARRAY_BUFFER,
         positions,
@@ -180,21 +159,11 @@ function setupLetterF(gl, shader) {
     // ---------------------------------------------------------
 
     const indices = new Uint16Array([
-        // LEFT COLUMN
-        0, 1, 2,
-        2, 1, 3,
-
-        // TOP BAR
-        3, 6, 5,
-        3, 5, 4,
-
-        // MIDDLE BAR
-        7, 10, 9,
-        7, 9, 8
+        0, 1, 2, 3, 4, 5
     ]);
 
-    letterF.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, letterF.ibo);
+    triangleStrip.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleStrip.ibo);
     gl.bufferData(
         gl.ELEMENT_ARRAY_BUFFER,
         indices,
@@ -205,14 +174,14 @@ function setupLetterF(gl, shader) {
     // VERTEX ARRAY
     // ---------------------------------------------------------
 
-    letterF.vao = gl.createVertexArray();
-    gl.bindVertexArray(letterF.vao);
+    triangleStrip.vao = gl.createVertexArray();
+    gl.bindVertexArray(triangleStrip.vao);
 
-    gl.enableVertexAttribArray(letterF.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, letterF.vbo);
+    gl.enableVertexAttribArray(triangleStrip.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleStrip.vbo);
 
     gl.vertexAttribPointer(
-        letterF.shader.attributes.position,
+        triangleStrip.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -221,13 +190,13 @@ function setupLetterF(gl, shader) {
     );
 
     // Index buffer binding is stored inside the VAO.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, letterF.ibo);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleStrip.ibo);
 
     // Draw data
-    letterF.drawMode = gl.TRIANGLES;
-    letterF.drawOffset = 0;
-    letterF.drawCount = indices.length;
-    letterF.drawType = gl.UNSIGNED_SHORT;
+    triangleStrip.drawMode = gl.TRIANGLE_STRIP;
+    triangleStrip.drawOffset = 0;
+    triangleStrip.drawCount = indices.length;
+    triangleStrip.drawType = gl.UNSIGNED_SHORT;
 }
 
 // =============================================================
@@ -240,14 +209,14 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(letterF.shader.program);
-    gl.bindVertexArray(letterF.vao);
+    gl.useProgram(triangleStrip.shader.program);
+    gl.bindVertexArray(triangleStrip.vao);
 
     gl.drawElements(
-        letterF.drawMode,
-        letterF.drawCount,
-        letterF.drawType,
-        letterF.drawOffset
+        triangleStrip.drawMode,
+        triangleStrip.drawCount,
+        triangleStrip.drawType,
+        triangleStrip.drawOffset
     );
 }
 
@@ -270,7 +239,7 @@ function main() {
 
     // SETUP
     setupShader(gl, shaderInfo);
-    setupLetterF(gl, shaderInfo);
+    setupTriangleStrip(gl, shaderInfo);
 
     // RENDER
 

@@ -1,12 +1,11 @@
 /* #############################################################
-   CHAPTER 11b: 2D Transformations — Rotation
+   CHAPTER 11c: 2D Transformations — Scale
 
    Topics:
-   - Rotating a letterF around the origin
+   - Translating a letterF
    - GUI camera controls
-   - Using Rotation Matrix
-   - BUT Changing order of Translation & rotation matrix
-   - Object rotation
+   - Using Dynamic Buffer geometry
+   - Object translation
    #############################################################
 */
 
@@ -25,25 +24,13 @@ const shaderInfo = {
     uniform mat3 u_projectionMatrix;
     uniform float u_translationX;
     uniform float u_translationY;
-    uniform float u_rotation;
 
     void main() {
-        vec3 localPosition = vec3(a_position, 1.0);
+        vec2 position = a_position;
+        position.x += u_translationX;
+        position.y += u_translationY;
 
-        mat3 rotationMatrix = mat3(
-            cos(u_rotation),  sin(u_rotation), 0.0,
-           -sin(u_rotation),  cos(u_rotation), 0.0,
-            0.0,              0.0,             1.0
-        );
-
-        mat3 translationMatrix = mat3(
-            1.0,            0.0,            0.0,
-            0.0,            1.0,            0.0,
-            u_translationX, u_translationY, 1.0
-        );
-
-        vec3 worldPosition = rotationMatrix * translationMatrix * localPosition;
-        vec3 viewPosition = u_viewMatrix * worldPosition;
+        vec3 viewPosition = u_viewMatrix * vec3(position, 1.0);
         vec3 clipPosition = u_projectionMatrix * viewPosition;
 
         gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
@@ -67,7 +54,6 @@ const shaderInfo = {
     uniforms: {
         translationX: null,
         translationY: null,
-        rotation: null,
         viewMatrix: null,
         projectionMatrix: null,
         color: null
@@ -131,8 +117,7 @@ const letterF = {
     drawOffset: 0,
     drawCount: 0,
     positionX: 200,
-    positionY: 150,
-    rotation: 0
+    positionY: 150
 };
 
 // =============================================================
@@ -178,7 +163,6 @@ function setupShader(gl, shader) {
 
     shader.uniforms.translationX = gl.getUniformLocation(shader.program, "u_translationX");
     shader.uniforms.translationY = gl.getUniformLocation(shader.program, "u_translationY");
-    shader.uniforms.rotation = gl.getUniformLocation(shader.program, "u_rotation");
     shader.uniforms.viewMatrix = gl.getUniformLocation(shader.program, "u_viewMatrix");
     shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
@@ -389,7 +373,6 @@ function setupGUI() {
     const letterFFolder = gui.addFolder("LetterF");
     letterFFolder.add(letterF, "positionX", -1000, 1000).name("positionX");
     letterFFolder.add(letterF, "positionY", -1000, 1000).name("positionY");
-    letterFFolder.add(letterF, "rotation", 0, Math.PI * 2).name("rotation");
 }
 
 // =============================================================
@@ -471,7 +454,6 @@ function render(gl) {
     gl.bindVertexArray(grid.vao);
     gl.uniform1f(shaderInfo.uniforms.translationX, 0);
     gl.uniform1f(shaderInfo.uniforms.translationY, 0);
-    gl.uniform1f(shaderInfo.uniforms.rotation, 0);
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
     gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
 
@@ -479,7 +461,6 @@ function render(gl) {
     gl.bindVertexArray(xAxis.vao);
     gl.uniform1f(shaderInfo.uniforms.translationX, 0);
     gl.uniform1f(shaderInfo.uniforms.translationY, 0);
-    gl.uniform1f(shaderInfo.uniforms.rotation, 0);
     gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
     gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
 
@@ -487,7 +468,6 @@ function render(gl) {
     gl.bindVertexArray(yAxis.vao);
     gl.uniform1f(shaderInfo.uniforms.translationX, 0);
     gl.uniform1f(shaderInfo.uniforms.translationY, 0);
-    gl.uniform1f(shaderInfo.uniforms.rotation, 0);
     gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
     gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
 
@@ -495,9 +475,9 @@ function render(gl) {
     gl.bindVertexArray(letterF.vao);
     gl.uniform1f(shaderInfo.uniforms.translationX, letterF.positionX);
     gl.uniform1f(shaderInfo.uniforms.translationY, letterF.positionY);
-    gl.uniform1f(shaderInfo.uniforms.rotation, letterF.rotation);
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
     gl.drawElements(letterF.drawMode,letterF.drawCount,letterF.drawType,letterF.drawOffset);
+
 
     requestAnimationFrame(() => render(gl));
 }

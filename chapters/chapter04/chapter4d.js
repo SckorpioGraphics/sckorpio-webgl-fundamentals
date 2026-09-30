@@ -1,8 +1,8 @@
 /* #############################################################
-CHAPTER 4d: Learning Topology TRIANGLE_FAN
+CHAPTER 4d: Learning Topology — LINE_LOOP
 
 Topics:
-- Making a Polygon to Circle
+- Making Lines Zig-Zag End Point Connected
 ###############################################################
 */
 
@@ -14,14 +14,7 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const uiState = {
-    centerX: 0.0,
-    centerY: 0.0,
-    radius: 0.5,
-    points: 5
-};
-
-const polygon = {
+const lineLoop = {
     shader: null,
 
     vao: null,
@@ -129,37 +122,63 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupPolygon(gl, shader) {
-    polygon.shader = shader;
+function setupLineLoop(gl, shader) {
+    lineLoop.shader = shader;
+
+    // v0          v2         v4
+    //   \          \          \
+    //    \          \          \
+    //     v1         v3         v5
 
     // ---------------------------------------------------------
     // VERTEX BUFFER
     // ---------------------------------------------------------
 
-    polygon.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
+    const positions = new Float32Array([
+        -0.6,  0.2,   // v0
+        -0.4, -0.2,   // v1
+        -0.2,  0.2,   // v2
+         0.0, -0.2,   // v3
+         0.2,  0.2,   // v4
+         0.4, -0.2    // v5
+    ]);
 
-    // Vertex data will be generated from the UI during rendering.
+    lineLoop.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, lineLoop.vbo);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.STATIC_DRAW
+    );
 
     // ---------------------------------------------------------
     // INDEX BUFFER
     // ---------------------------------------------------------
 
-    polygon.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
+    const indices = new Uint16Array([
+        0, 1, 2, 3, 4, 5
+    ]);
+
+    lineLoop.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, lineLoop.ibo);
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        indices,
+        gl.STATIC_DRAW
+    );
 
     // ---------------------------------------------------------
     // VERTEX ARRAY
     // ---------------------------------------------------------
 
-    polygon.vao = gl.createVertexArray();
-    gl.bindVertexArray(polygon.vao);
+    lineLoop.vao = gl.createVertexArray();
+    gl.bindVertexArray(lineLoop.vao);
 
-    gl.enableVertexAttribArray(polygon.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
+    gl.enableVertexAttribArray(lineLoop.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, lineLoop.vbo);
 
     gl.vertexAttribPointer(
-        polygon.shader.attributes.position,
+        lineLoop.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -168,32 +187,13 @@ function setupPolygon(gl, shader) {
     );
 
     // Index buffer binding is stored inside the VAO.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, lineLoop.ibo);
 
     // Draw data
-    polygon.drawMode = gl.TRIANGLE_FAN;
-    polygon.drawOffset = 0;
-    polygon.drawCount = 0;
-    polygon.drawType = gl.UNSIGNED_SHORT;
-}
-
-// =============================================================
-// GUI Setup Functions
-// =============================================================
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-    const polygonFolder = gui.addFolder("Polygon");
-
-    // Center
-    const centerFolder = polygonFolder.addFolder("Center");
-    centerFolder.add(uiState, "centerX", -1, 1).name("centerX").onChange(render);
-    centerFolder.add(uiState, "centerY", -1, 1).name("centerY").onChange(render);
-
-    // Dimension
-    const dimFolder = polygonFolder.addFolder("Dimensions");
-    dimFolder.add(uiState, "radius", 0, 1).name("radius").onChange(render);
-    dimFolder.add(uiState, "points", 3, 20, 1).name("points").onChange(render);
+    lineLoop.drawMode = gl.LINE_LOOP;
+    lineLoop.drawOffset = 0;
+    lineLoop.drawCount = indices.length;
+    lineLoop.drawType = gl.UNSIGNED_SHORT;
 }
 
 // =============================================================
@@ -206,66 +206,14 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(polygon.shader.program);
-    gl.bindVertexArray(polygon.vao);
-
-    // Vertex and index data CPU side
-    const positionsData = [];
-    const indicesData = [];
-
-    // Center
-    positionsData.push(uiState.centerX);
-    positionsData.push(uiState.centerY);
-    indicesData.push(0);
-
-    // Circle Points
-    for(let i = 0; i < uiState.points; i++) {
-        const angle = (i / uiState.points) * (2 * Math.PI);
-
-        const x = uiState.centerX +
-                  Math.cos(angle) * uiState.radius;
-
-        const y = uiState.centerY +
-                  Math.sin(angle) * uiState.radius;
-
-        positionsData.push(x);
-        positionsData.push(y);
-
-        indicesData.push(i + 1);
-    }
-
-    // First point repeat
-    positionsData.push(positionsData[2]);
-    positionsData.push(positionsData[3]);
-    indicesData.push(indicesData[1]);
-
-    const positions = new Float32Array(positionsData);
-    const indices = new Uint16Array(indicesData);
-
-    // Update vertex data on the GPU
-    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.DYNAMIC_DRAW
-    );
-
-    // Update index data on the GPU
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
-    gl.bufferData(
-        gl.ELEMENT_ARRAY_BUFFER,
-        indices,
-        gl.DYNAMIC_DRAW
-    );
-
-    // Update draw data
-    polygon.drawCount = indices.length;
+    gl.useProgram(lineLoop.shader.program);
+    gl.bindVertexArray(lineLoop.vao);
 
     gl.drawElements(
-        polygon.drawMode,
-        polygon.drawCount,
-        polygon.drawType,
-        polygon.drawOffset
+        lineLoop.drawMode,
+        lineLoop.drawCount,
+        lineLoop.drawType,
+        lineLoop.drawOffset
     );
 }
 
@@ -288,13 +236,10 @@ function main() {
 
     // SETUP
     setupShader(gl, shaderInfo);
-    setupPolygon(gl, shaderInfo);
+    setupLineLoop(gl, shaderInfo);
 
     // RENDER
 
-
-    // UI
-    setupGUI(() => render(gl));
 
     render(gl);
     window.addEventListener("resize", () => render(gl));

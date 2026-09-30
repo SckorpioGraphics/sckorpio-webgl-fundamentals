@@ -1,8 +1,8 @@
 /* #############################################################
-CHAPTER 3g: Learning Topology — TRIANGLE_STRIP
+CHAPTER 4f: Learning Topology — TRIANGLES
 
 Topics:
-- Making Strip of Triangles
+- Making Multiple Triangles
 ###############################################################
 */
 
@@ -14,7 +14,7 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const triangleStrip = {
+const triangles = {
     shader: null,
 
     vao: null,
@@ -122,14 +122,14 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupTriangleStrip(gl, shader) {
-    triangleStrip.shader = shader;
+function setupTriangles(gl, shader) {
+    triangles.shader = shader;
 
     /*
         v0 ---- v2         v4
-          \     /          / \
-           \   /          /   \
-            v1         v3------v5
+          \    /          / \
+           \  /          /   \
+            v1         v3-----v5
     */
 
     // ---------------------------------------------------------
@@ -146,8 +146,8 @@ function setupTriangleStrip(gl, shader) {
          0.4, -0.2    // v5
     ]);
 
-    triangleStrip.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleStrip.vbo);
+    triangles.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangles.vbo);
     gl.bufferData(
         gl.ARRAY_BUFFER,
         positions,
@@ -159,11 +159,12 @@ function setupTriangleStrip(gl, shader) {
     // ---------------------------------------------------------
 
     const indices = new Uint16Array([
-        0, 1, 2, 3, 4, 5
+        0, 1, 2,
+        3, 4, 5
     ]);
 
-    triangleStrip.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleStrip.ibo);
+    triangles.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangles.ibo);
     gl.bufferData(
         gl.ELEMENT_ARRAY_BUFFER,
         indices,
@@ -174,14 +175,14 @@ function setupTriangleStrip(gl, shader) {
     // VERTEX ARRAY
     // ---------------------------------------------------------
 
-    triangleStrip.vao = gl.createVertexArray();
-    gl.bindVertexArray(triangleStrip.vao);
+    triangles.vao = gl.createVertexArray();
+    gl.bindVertexArray(triangles.vao);
 
-    gl.enableVertexAttribArray(triangleStrip.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleStrip.vbo);
+    gl.enableVertexAttribArray(triangles.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangles.vbo);
 
     gl.vertexAttribPointer(
-        triangleStrip.shader.attributes.position,
+        triangles.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -190,13 +191,13 @@ function setupTriangleStrip(gl, shader) {
     );
 
     // Index buffer binding is stored inside the VAO.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleStrip.ibo);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangles.ibo);
 
     // Draw data
-    triangleStrip.drawMode = gl.TRIANGLE_STRIP;
-    triangleStrip.drawOffset = 0;
-    triangleStrip.drawCount = indices.length;
-    triangleStrip.drawType = gl.UNSIGNED_SHORT;
+    triangles.drawMode = gl.TRIANGLES;
+    triangles.drawOffset = 0;
+    triangles.drawCount = indices.length;
+    triangles.drawType = gl.UNSIGNED_SHORT;
 }
 
 // =============================================================
@@ -209,14 +210,14 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(triangleStrip.shader.program);
-    gl.bindVertexArray(triangleStrip.vao);
+    gl.useProgram(triangles.shader.program);
+    gl.bindVertexArray(triangles.vao);
 
     gl.drawElements(
-        triangleStrip.drawMode,
-        triangleStrip.drawCount,
-        triangleStrip.drawType,
-        triangleStrip.drawOffset
+        triangles.drawMode,
+        triangles.drawCount,
+        triangles.drawType,
+        triangles.drawOffset
     );
 }
 
@@ -239,7 +240,7 @@ function main() {
 
     // SETUP
     setupShader(gl, shaderInfo);
-    setupTriangleStrip(gl, shaderInfo);
+    setupTriangles(gl, shaderInfo);
 
     // RENDER
 

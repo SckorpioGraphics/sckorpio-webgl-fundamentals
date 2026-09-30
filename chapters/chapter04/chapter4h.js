@@ -1,8 +1,8 @@
 /* #############################################################
-CHAPTER 3e: Learning Topology — LINE_LOOP
+CHAPTER 4h: Learning Topology — TRIANGLE_FAN
 
 Topics:
-- Making a Polygon — Hexagon
+- Making a Filled Polygon — Hexagon
 ###############################################################
 */
 
@@ -126,11 +126,11 @@ function setupHexagon(gl, shader) {
     hexagon.shader = shader;
 
     /*
-             #5---#4
-           /         \
-         #0           #3
+             v6---v5
+           /   \ /   \
+         v1     v0    v4
            \         /
-             #1---#2
+             v2---v3
     */
 
     // ---------------------------------------------------------
@@ -138,12 +138,13 @@ function setupHexagon(gl, shader) {
     // ---------------------------------------------------------
 
     const positions = new Float32Array([
-        -0.6,  0.0,   // v0
-        -0.3, -0.6,   // v1
-         0.3, -0.6,   // v2
-         0.6,  0.0,   // v3
-         0.3,  0.6,   // v4
-        -0.3,  0.6    // v5
+         0.0,  0.0,   // v0 - Center
+        -0.6,  0.0,   // v1
+        -0.3, -0.6,   // v2
+         0.3, -0.6,   // v3
+         0.6,  0.0,   // v4
+         0.3,  0.6,   // v5
+        -0.3,  0.6    // v6
     ]);
 
     hexagon.vbo = gl.createBuffer();
@@ -159,7 +160,7 @@ function setupHexagon(gl, shader) {
     // ---------------------------------------------------------
 
     const indices = new Uint16Array([
-        0, 1, 2, 3, 4, 5
+        0, 1, 2, 3, 4, 5, 6, 1
     ]);
 
     hexagon.ibo = gl.createBuffer();
@@ -193,7 +194,7 @@ function setupHexagon(gl, shader) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, hexagon.ibo);
 
     // Draw data
-    hexagon.drawMode = gl.LINE_LOOP;
+    hexagon.drawMode = gl.TRIANGLE_FAN;
     hexagon.drawOffset = 0;
     hexagon.drawCount = indices.length;
     hexagon.drawType = gl.UNSIGNED_SHORT;

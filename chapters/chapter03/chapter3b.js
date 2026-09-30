@@ -1,10 +1,15 @@
 /* #############################################################
-CHAPTER 3b: Learning Topology — LINES
+CHAPTER 3b: Creating a Rectangle Using Triangles
 
 Topics:
-- Making Lines Parallel
+- Rectangle using Triangles
+- drawArrays()
 ###############################################################
 */
+
+
+// NEW WebGL 2.0 Way...
+// Passing position data directly in clip space [-1, +1]
 
 // =============================================================
 // GLOBAL OBJECTS
@@ -14,17 +19,15 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const lines = {
+const rectangle = {
     shader: null,
 
     vao: null,
     vbo: null,
-    ibo: null,
 
     drawMode: null,
     drawOffset: 0,
-    drawCount: 0,
-    drawType: null
+    drawCount: 0
 };
 
 // =============================================================
@@ -56,6 +59,9 @@ const shaderInfo = {
 
     uniforms: {}
 };
+
+// NEW WebGL 2.0 Way...
+// Passing position data directly in clip space [-1, +1]
 
 // =============================================================
 // FUNCTIONS
@@ -122,63 +128,42 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupLines(gl, shader) {
-    lines.shader = shader;
+function setupRectangle(gl, shader) {
+    rectangle.shader = shader;
 
-    // v0          v2          v4
-    //   \          \          \
-    //    \          \          \
-    //     v1         v3         v5
-
-    // ---------------------------------------------------------
-    // VERTEX BUFFER
-    // ---------------------------------------------------------
+    /*
+        v1-----------v3
+        | \           |
+        |   \         |
+        |     \       |
+        |       \     |
+        v0__________\v2
+    */
 
     const positions = new Float32Array([
-        -0.6,  0.2,   // v0
-        -0.4, -0.2,   // v1
-        -0.2,  0.2,   // v2
-         0.0, -0.2,   // v3
-         0.2,  0.2,   // v4
-         0.4, -0.2    // v5
+        -0.5, 0.0,  // v0
+        -0.5, 0.5,  // v1
+         0.5, 0.0,  // v2
+
+         0.5, 0.0,  // v2
+         0.5, 0.5,  // v3
+        -0.5, 0.5   // v1
     ]);
 
-    lines.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, lines.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
+    // Vertex Buffer
+    rectangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 
-    // ---------------------------------------------------------
-    // INDEX BUFFER
-    // ---------------------------------------------------------
+    // Vertex Array
+    rectangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(rectangle.vao);
 
-    const indices = new Uint16Array([
-        0, 1, 2, 3, 4, 5
-    ]);
-
-    lines.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, lines.ibo);
-    gl.bufferData(
-        gl.ELEMENT_ARRAY_BUFFER,
-        indices,
-        gl.STATIC_DRAW
-    );
-
-    // ---------------------------------------------------------
-    // VERTEX ARRAY
-    // ---------------------------------------------------------
-
-    lines.vao = gl.createVertexArray();
-    gl.bindVertexArray(lines.vao);
-
-    gl.enableVertexAttribArray(lines.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, lines.vbo);
+    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
 
     gl.vertexAttribPointer(
-        lines.shader.attributes.position,
+        rectangle.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -186,14 +171,9 @@ function setupLines(gl, shader) {
         0
     );
 
-    // Index buffer binding is stored inside the VAO.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, lines.ibo);
-
-    // Draw data
-    lines.drawMode = gl.LINES;
-    lines.drawOffset = 0;
-    lines.drawCount = indices.length;
-    lines.drawType = gl.UNSIGNED_SHORT;
+    rectangle.drawMode = gl.TRIANGLES;
+    rectangle.drawOffset = 0;
+    rectangle.drawCount = 6;
 }
 
 // =============================================================
@@ -206,14 +186,13 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(lines.shader.program);
-    gl.bindVertexArray(lines.vao);
+    gl.useProgram(rectangle.shader.program);
+    gl.bindVertexArray(rectangle.vao);
 
-    gl.drawElements(
-        lines.drawMode,
-        lines.drawCount,
-        lines.drawType,
-        lines.drawOffset
+    gl.drawArrays(
+        rectangle.drawMode,
+        rectangle.drawOffset,
+        rectangle.drawCount
     );
 }
 
@@ -236,7 +215,7 @@ function main() {
 
     // SETUP
     setupShader(gl, shaderInfo);
-    setupLines(gl, shaderInfo);
+    setupRectangle(gl, shaderInfo);
 
     // RENDER
 

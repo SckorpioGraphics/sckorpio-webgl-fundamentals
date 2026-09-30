@@ -1,11 +1,14 @@
 /* #############################################################
-CHAPTER 8a: 2D Space
+CHAPTER 8a: Multiple Objects
 
 Topics:
-- Creating a basic rectangle
-- Vertex data in pixel space
-- Uniforms for screen-space data
-- Pixel space to clip space conversion
+- Rendering multiple objects
+- A Traingle and a Rectangle
+- Separate VAO/VBO for each object
+- Different shapes
+- Different colors
+- Multiple draw calls
+- Using the same shader for multiple objects
 ###############################################################
 */
 
@@ -16,6 +19,15 @@ Topics:
 // =============================================================
 // Scene Objects
 // =============================================================
+
+const triangle = {
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0
+};
 
 const rectangle = {
     shader: null,
@@ -32,36 +44,25 @@ const rectangle = {
 
 /*
     No UI in this chapter yet.
-    The focus here is on pixel-space coordinates
-    and their conversion to clip space.
+    The focus here is on rendering multiple
+    independent objects.
 */
 
 const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
-    uniform vec2 u_resolution;
-
     void main() {
-        // Pixel space to [0, 1]
-        vec2 zeroToOne = a_position / u_resolution;
-
-        // [0, 1] to [0, 2]
-        vec2 zeroToTwo = zeroToOne * 2.0;
-
-        // [0, 2] to [-1, 1]
-        vec2 clipPostion = zeroToTwo - 1.0;
-
-        gl_Position = vec4(clipPostion, 0.0, 1.0);
+        gl_Position = vec4(a_position, 0.0, 1.0);
     }
 `,
     fragmentShaderSource: `#version 300 es
     precision mediump float;
-
+    uniform vec3 u_color;
     out vec4 out_color;
 
     void main() {
-        out_color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio Purple
+        out_color = vec4(u_color, 1.0);
     }
 `,
     program: null,
@@ -69,7 +70,7 @@ const shaderInfo = {
         position: null
     },
     uniforms: {
-        resolution: null
+        color: null
     }
 };
 
@@ -115,7 +116,7 @@ function setupShader(gl, shader) {
     // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
     // uniforms
-    shader.uniforms.resolution = gl.getUniformLocation(shader.program, "u_resolution");
+    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
 }
 
 // =============================================================
@@ -139,22 +140,58 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
+function setupTriangle(gl, shader) {
+    triangle.shader = shader;
+
+    const positions = new Float32Array([
+        -0.7, 0.0,
+        -0.5, 0.5,
+        -0.3, 0.0
+    ]);
+
+    triangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.STATIC_DRAW
+    );
+
+    triangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(triangle.vao);
+
+    gl.enableVertexAttribArray(triangle.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+
+    gl.vertexAttribPointer(
+        triangle.shader.attributes.position,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0
+    );
+
+    triangle.drawMode = gl.TRIANGLES;
+    triangle.drawOffset = 0;
+    triangle.drawCount = 3;
+}
+
 function setupRectangle(gl, shader) {
     rectangle.shader = shader;
 
     const positions = new Float32Array([
-        20, 20,       // Left Bottom
-        200, 20,      // Right Bottom
-        20, 100,      // Left Top
+        0.2, -0.2,
+        0.2, 0.2,
+        0.6, -0.2,
 
-        20, 100,      // Left Top
-        200, 20,      // Right Bottom
-        200, 100      // Right Top
+        0.6, -0.2,
+        0.6, 0.2,
+        0.2, 0.2
     ]);
 
     rectangle.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
     gl.bufferData(
         gl.ARRAY_BUFFER,
         positions,
@@ -164,10 +201,7 @@ function setupRectangle(gl, shader) {
     rectangle.vao = gl.createVertexArray();
     gl.bindVertexArray(rectangle.vao);
 
-    gl.enableVertexAttribArray(
-        rectangle.shader.attributes.position
-    );
-
+    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
 
     gl.vertexAttribPointer(
@@ -194,13 +228,32 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(rectangle.shader.program);
+    gl.useProgram(shaderInfo.program);
 
-    // Pass canvas resolution to shader
-    gl.uniform2f(
-        rectangle.shader.uniforms.resolution,
-        gl.canvas.width,
-        gl.canvas.height
+    // ---------------------------------------------------------
+    // TRIANGLE
+    // ---------------------------------------------------------
+
+    gl.uniform3f(
+        shaderInfo.uniforms.color,
+        1.0, 0.0, 0.0   // Red
+    );
+
+    gl.bindVertexArray(triangle.vao);
+
+    gl.drawArrays(
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
+    );
+
+    // ---------------------------------------------------------
+    // RECTANGLE
+    // ---------------------------------------------------------
+
+    gl.uniform3f(
+        shaderInfo.uniforms.color,
+        0.0, 1.0, 0.0   // Green
     );
 
     gl.bindVertexArray(rectangle.vao);
@@ -229,6 +282,8 @@ function main() {
     }
 
     setupShader(gl, shaderInfo);
+
+    setupTriangle(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
 
 

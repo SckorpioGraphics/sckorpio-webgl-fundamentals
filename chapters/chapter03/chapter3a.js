@@ -1,8 +1,9 @@
 /* #############################################################
-CHAPTER 3a: Learning Topology — POINTS
+CHAPTER 3a: Creating Multiple Triangles
 
 Topics:
-- Making Points
+- Multiple triangles in a single draw call
+- drawArrays()
 ###############################################################
 */
 
@@ -14,17 +15,15 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const points = {
+const triangles = {
     shader: null,
 
     vao: null,
     vbo: null,
-    ibo: null,
 
     drawMode: null,
     drawOffset: 0,
-    drawCount: 0,
-    drawType: null
+    drawCount: 0
 };
 
 // =============================================================
@@ -37,7 +36,6 @@ const shaderInfo = {
 
     void main() {
         gl_Position = vec4(a_position, 0.0, 1.0);
-        gl_PointSize = 5.0;
     }
 `,
     fragmentShaderSource: `#version 300 es
@@ -123,62 +121,42 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupPoints(gl, shader) {
-    points.shader = shader;
+function setupTriangles(gl, shader) {
+    triangles.shader = shader;
 
-    // v0          v2          v4
-    //
-    //      v1          v3          v5
-
-    // ---------------------------------------------------------
-    // VERTEX BUFFER
-    // ---------------------------------------------------------
+    //     v1       v4       v7
+    //     /\       /\       /\
+    //    /  \     /  \     /  \
+    //   v0  v2   v3  v5   v6  v8
 
     const positions = new Float32Array([
-        -0.6,  0.2,   // v0
-        -0.4, -0.2,   // v1
-        -0.2,  0.2,   // v2
-         0.0, -0.2,   // v3
-         0.2,  0.2,   // v4
-         0.4, -0.2    // v5
+        -0.8, 0.0,  // v0
+        -0.6, 0.4,  // v1
+        -0.4, 0.0,  // v2
+
+        -0.3, 0.3,  // v3
+         0.0,-0.3,  // v4
+         0.3, 0.3,  // v5
+
+         0.4, 0.0,  // v6
+         0.6, 0.4,  // v7
+         0.8, 0.0   // v8
     ]);
 
-    points.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, points.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
+    // Vertex Buffer
+    triangles.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangles.vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 
-    // ---------------------------------------------------------
-    // INDEX BUFFER
-    // ---------------------------------------------------------
+    // Vertex Array
+    triangles.vao = gl.createVertexArray();
+    gl.bindVertexArray(triangles.vao);
 
-    const indices = new Uint16Array([
-        0, 1, 2, 3, 4, 5
-    ]);
-
-    points.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, points.ibo);
-    gl.bufferData(
-        gl.ELEMENT_ARRAY_BUFFER,
-        indices,
-        gl.STATIC_DRAW
-    );
-
-    // ---------------------------------------------------------
-    // VERTEX ARRAY
-    // ---------------------------------------------------------
-
-    points.vao = gl.createVertexArray();
-    gl.bindVertexArray(points.vao);
-
-    gl.enableVertexAttribArray(points.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, points.vbo);
+    gl.enableVertexAttribArray(triangles.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangles.vbo);
 
     gl.vertexAttribPointer(
-        points.shader.attributes.position,
+        triangles.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -186,14 +164,9 @@ function setupPoints(gl, shader) {
         0
     );
 
-    // Index buffer binding is stored inside the VAO.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, points.ibo);
-
-    // Draw data
-    points.drawMode = gl.POINTS;
-    points.drawOffset = 0;
-    points.drawCount = indices.length;
-    points.drawType = gl.UNSIGNED_SHORT;
+    triangles.drawMode = gl.TRIANGLES;
+    triangles.drawOffset = 0;
+    triangles.drawCount = 9;
 }
 
 // =============================================================
@@ -206,14 +179,13 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(points.shader.program);
-    gl.bindVertexArray(points.vao);
+    gl.useProgram(triangles.shader.program);
+    gl.bindVertexArray(triangles.vao);
 
-    gl.drawElements(
-        points.drawMode,
-        points.drawCount,
-        points.drawType,
-        points.drawOffset
+    gl.drawArrays(
+        triangles.drawMode,
+        triangles.drawOffset,
+        triangles.drawCount
     );
 }
 
@@ -236,7 +208,7 @@ function main() {
 
     // SETUP
     setupShader(gl, shaderInfo);
-    setupPoints(gl, shaderInfo);
+    setupTriangles(gl, shaderInfo);
 
     // RENDER
 

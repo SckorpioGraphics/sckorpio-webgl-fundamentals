@@ -1,5 +1,5 @@
 /* #############################################################
-CHAPTER 2: Render Loop
+SUPPLEMENTAL EXPERIMENT 1: Animated Line and Render Loop
 
 Topics:
 - Pixel-space geometry

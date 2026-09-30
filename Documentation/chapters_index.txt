@@ -2,353 +2,348 @@ SCKORPIO GRAPHICS — WEBGL FUNDAMENTALS
 IMPLEMENTED CHAPTER AND FILE INDEX
 ===================================
 
-Scope: 58 numbered lesson files in chapters 1–13, plus two supplemental files
-under chapterExtra. Chapter 1b is a blank template. The file path is the
-canonical lesson ID. Source comment headers sometimes have stale numbering;
-those mismatches are noted below.
+Scope: 59 numbered files in Chapters 0–14, plus two supplemental files
+under chapterExtra. Chapter 2a is a blank template. The file path is the
+canonical lesson ID, and numbered source comment titles match those IDs.
 
-CHAPTER 1 — WEBGL BASICS AND LESSON STRUCTURE
----------------------------------------------
+CHAPTER 0 — SERIES INTRODUCTION
+--------------------------------
+0 — Why this series
+File: chapters/chapter00/chapter0.js
+Introduces the series, explains why it focuses on WebGL, and previews what
+learners will cover.
+
+CHAPTER 1 — FIRST WEBGL DRAW
+----------------------------
 1a — Raw first triangle
 File: chapters/chapter01/chapter1a.js
-Walks through the first WebGL 2 triangle directly: canvas/context lookup,
-shader compilation and linking, position buffer, vertex array, viewport,
-clear, and drawArrays. It also contains legacy WebGL 1 shader strings for
-comparison; the active program uses WebGL 2 shader syntax. This is deliberately
-the least abstracted example.
+Walks through canvas/context lookup, shader compilation/linking, buffer and
+vertex-array setup, viewport/clear state, and drawArrays in one direct flow.
 
-1b — Blank lesson template
-File: chapters/chapter01/chapter1b.js
-An organizational scaffold rather than a rendering example. Its section
-placeholders reserve areas for global data, shader/camera/scene objects,
-helper categories, main, and startup/exports.
-
-1c — Template-based triangle
-File: chapters/chapter01/chapter1c.js
-Completes the triangle lesson using the template structure: shader metadata
-and GLSL strings, reusable shader helpers, resize helper, triangle buffer/VAO
-setup, top-level render(gl), local canvas/context initialization in main(),
-and DOM-ready startup.
-The source header incorrectly labels this file as 1b and calls it the template.
-
-CHAPTER 2 — GEOMETRY AND INDEXING
----------------------------------
-2a — Multiple triangles
+CHAPTER 2 — LESSON TEMPLATE AND STRUCTURED TRIANGLE
+----------------------------------------------------
+2a — Blank lesson template
 File: chapters/chapter02/chapter2a.js
+An organizational scaffold reserving sections for state, shader objects,
+helper categories, main, and startup/exports. It does not render.
+
+2b — Template-based triangle
+File: chapters/chapter02/chapter2b.js
+Completes the triangle lesson using the template, with shader metadata, setup
+helpers, top-level render(gl), local canvas/context initialization, and startup.
+
+CHAPTER 3 — GEOMETRY AND INDEXING
+---------------------------------
+3a — Multiple triangles
+File: chapters/chapter03/chapter3a.js
 Stores several triangles in one vertex array and renders them with a drawArrays
 call. Shows that a draw call can consume a longer sequential vertex list.
 
-2b — Rectangle from triangles
-File: chapters/chapter02/chapter2b.js
+3b — Rectangle from triangles
+File: chapters/chapter03/chapter3b.js
 Builds a rectangle from two triangles with explicit position data and
 drawArrays. Establishes that triangles are the basic building blocks for
 filled 2D shapes.
 
-2c — Indexed rectangle
-File: chapters/chapter02/chapter2c.js
+3c — Indexed rectangle
+File: chapters/chapter03/chapter3c.js
 Stores each rectangle corner once in a vertex buffer, references the corners
 through a Uint16 index buffer, and renders with drawElements.
 
-2d — Indexed letter F
-File: chapters/chapter02/chapter2d.js
+3d — Indexed letter F
+File: chapters/chapter03/chapter3d.js
 Constructs a block letter F from triangles and reuses vertex positions through
 indices. Extends indexed drawing from a simple rectangle to composed geometry.
 
-CHAPTER 3 — PRIMITIVE TOPOLOGIES
+CHAPTER 4 — PRIMITIVE TOPOLOGIES
 --------------------------------
-3a — POINTS
-File: chapters/chapter03/chapter3a.js
+4a — POINTS
+File: chapters/chapter04/chapter4a.js
 Sends point positions and assembles them with gl.POINTS.
 
-3b — LINES
-File: chapters/chapter03/chapter3b.js
+4b — LINES
+File: chapters/chapter04/chapter4b.js
 Uses gl.LINES, where each consecutive pair of vertices forms an independent
 line segment.
 
-3c — LINE_STRIP
-File: chapters/chapter03/chapter3c.js
+4c — LINE_STRIP
+File: chapters/chapter04/chapter4c.js
 Uses gl.LINE_STRIP to connect a sequence of vertices without closing the last
 point back to the first.
 
-3d — LINE_LOOP
-File: chapters/chapter03/chapter3d.js
+4d — LINE_LOOP
+File: chapters/chapter04/chapter4d.js
 Uses gl.LINE_LOOP to connect the sequence and close it automatically.
 
-3e — Hexagon outline
-File: chapters/chapter03/chapter3e.js
+4e — Hexagon outline
+File: chapters/chapter04/chapter4e.js
 Creates polygon vertices for a hexagon and draws the outline with line-loop
-topology. Its source header still names LINE_LOOP rather than the shape.
+topology.
 
-3f — TRIANGLES
-File: chapters/chapter03/chapter3f.js
+4f — TRIANGLES
+File: chapters/chapter04/chapter4f.js
 Uses gl.TRIANGLES to assemble independent groups of three vertices into
 filled triangles.
 
-3g — TRIANGLE_STRIP
-File: chapters/chapter03/chapter3g.js
+4g — TRIANGLE_STRIP
+File: chapters/chapter04/chapter4g.js
 Uses gl.TRIANGLE_STRIP so each additional vertex extends a connected triangle
 strip rather than repeating all three vertices for every triangle.
 
-3h — TRIANGLE_FAN
-File: chapters/chapter03/chapter3h.js
+4h — TRIANGLE_FAN
+File: chapters/chapter04/chapter4h.js
 Uses gl.TRIANGLE_FAN to fill a polygon around a shared center vertex; the
 example forms a filled hexagon.
 
-CHAPTER 4 — DYNAMIC BUFFERS AND EDITABLE GEOMETRY
+CHAPTER 5 — DYNAMIC BUFFERS AND EDITABLE GEOMETRY
 -------------------------------------------------
-4a — Dynamic triangle
-File: chapters/chapter04/chapter4a.js
+5a — Dynamic triangle
+File: chapters/chapter05/chapter5a.js
 Uses GUI-controlled vertex positions and updates triangle buffer data while
 rendering, introducing DYNAMIC_DRAW for changing geometry.
 
-4b — Dynamic rectangle
-File: chapters/chapter04/chapter4b.js
+5b — Dynamic rectangle
+File: chapters/chapter05/chapter5b.js
 Extends editable vertex data to a rectangle with controls for its corners.
 
-4c — Dynamic polygon outline
-File: chapters/chapter04/chapter4c.js
+5c — Dynamic polygon outline
+File: chapters/chapter05/chapter5c.js
 Builds a variable-point polygon from GUI-controlled center, radius, and point
 count. Recreates vertex and index arrays, uploads both with DYNAMIC_DRAW, and
 renders the outline with indexed LINE_LOOP topology.
 
-4d — Dynamic filled polygon
-File: chapters/chapter04/chapter4d.js
+5d — Dynamic filled polygon
+File: chapters/chapter05/chapter5d.js
 Builds a variable-point filled circle/polygon from GUI-controlled center,
 radius, and point count. Recreates and uploads vertex/index data, including a
 repeated first perimeter vertex, then draws an indexed TRIANGLE_FAN.
 
-CHAPTER 5 — VERTEX DATA AND COLOR FLOW
+CHAPTER 6 — VERTEX DATA AND COLOR FLOW
 --------------------------------------
-5a — Varying vertex color
-File: chapters/chapter05/chapter5a.js
+6a — Varying vertex color
+File: chapters/chapter06/chapter6a.js
 Introduces per-vertex color as shader input/output and interpolation across a
 triangle; includes controls for vertex data.
 
-5b — Separate buffers
-File: chapters/chapter05/chapter5b.js
+6b — Separate buffers
+File: chapters/chapter06/chapter6b.js
 Keeps position and color data in separate buffers/attribute streams.
 
-5c — Interleaved buffer
-File: chapters/chapter05/chapter5c.js
+6c — Interleaved buffer
+File: chapters/chapter06/chapter6c.js
 Packs position and color together per vertex and configures attribute stride
 and offsets to read the combined layout.
 
-5d — Gradient rectangle
-File: chapters/chapter05/chapter5d.js
+6d — Gradient rectangle
+File: chapters/chapter06/chapter6d.js
 Creates a rectangle from two colored triangles. Per-vertex colors interpolate
 through the triangles to produce a gradient; GUI controls adjust points and
-colors. The source header calls this 5e.
+colors.
 
-5e — Different colors per triangle
-File: chapters/chapter05/chapter5e.js
+6e — Different colors per triangle
+File: chapters/chapter06/chapter6e.js
 Assigns one color to each of the rectangle's two triangles. Shared corner
 positions are repeated with different color values to create a distinct color
-boundary. The source header calls this 5f.
+boundary.
 
-CHAPTER 6 — UNIFORMS
+CHAPTER 7 — UNIFORMS
 -------------------
-6a — Float uniform / brightness
-File: chapters/chapter06/chapter6a.js
+7a — Float uniform / brightness
+File: chapters/chapter07/chapter7a.js
 Controls a single floating-point brightness value through a uniform.
 
-6b — Separate RGB uniforms and brightness
-File: chapters/chapter06/chapter6b.js
+7b — Separate RGB uniforms and brightness
+File: chapters/chapter07/chapter7b.js
 Passes red, green, blue, and brightness as individual floating-point uniform
 values.
 
-6c — vec3 color and brightness
-File: chapters/chapter06/chapter6c.js
+7c — vec3 color and brightness
+File: chapters/chapter07/chapter7c.js
 Groups RGB into one vec3 uniform while keeping brightness as a separate float.
 
-6d — Varying and uniform together
-File: chapters/chapter06/chapter6d.js
+7d — Varying and uniform together
+File: chapters/chapter07/chapter7d.js
 Combines interpolated vertex data with a uniform color input and exposes the
 inputs through GUI controls.
 
-6e — Uniform types and upload APIs
-File: chapters/chapter06/chapter6e.js
+7e — Uniform types and upload APIs
+File: chapters/chapter07/chapter7e.js
 Controls a vec3 color and float intensity in the rendered example. Its in-file
 API survey also catalogs float/vector, mat2/mat3/mat4, signed integer and
 unsigned integer uniform uploads, plus sampler uniform assignment.
 
-CHAPTER 7 — MULTIPLE OBJECTS AND PROGRAMS
+CHAPTER 8 — MULTIPLE OBJECTS AND PROGRAMS
 -----------------------------------------
-7a — Triangle and rectangle, shared shader
-File: chapters/chapter07/chapter7a.js
+8a — Triangle and rectangle, shared shader
+File: chapters/chapter08/chapter8a.js
 Maintains a separate VAO/VBO and draw call per object while sharing one shader
 program.
 
-7b — Triangle and line-loop shape, shared shader
-File: chapters/chapter07/chapter7b.js
+8b — Triangle and line-loop shape, shared shader
+File: chapters/chapter08/chapter8b.js
 Combines different primitive topologies in one scene while reusing a shader.
 
-7c — Uniform-color and vertex-color programs
-File: chapters/chapter07/chapter7c.js
+8c — Uniform-color and vertex-color programs
+File: chapters/chapter08/chapter8c.js
 Uses one shader program for a uniformly colored triangle and another for a
 vertex-colored rectangle, switching program and VAO between draw calls.
 
-7d — Grid and triangle in clip space
-File: chapters/chapter07/chapter7d.js
+8d — Grid and triangle in clip space
+File: chapters/chapter08/chapter8d.js
 Draws line-based grid geometry and a triangle using their respective
 topologies, separate object data, and clip-space coordinates.
 
-CHAPTER 8 — PIXEL SPACE AND FIRST WORLD GEOMETRY
+CHAPTER 9 — PIXEL SPACE AND FIRST WORLD GEOMETRY
 ------------------------------------------------
-8a — Rectangle in pixel coordinates
-File: chapters/chapter08/chapter8a.js
+9a — Rectangle in pixel coordinates
+File: chapters/chapter09/chapter9a.js
 Defines a rectangle in pixel units and converts screen-related values into
 clip-space positions in the shader.
 
-8b — Matrix-based pixel-to-clip conversion
-File: chapters/chapter08/chapter8b.js
+9b — Matrix-based pixel-to-clip conversion
+File: chapters/chapter09/chapter9b.js
 Moves the pixel-to-clip conversion into a mat3 uniform and introduces inverted
-Y for top-left-origin pixel coordinates. Its source header calls this 8c.
+Y for top-left-origin pixel coordinates.
 
-8c — Random rectangles and buffer reuse
-File: chapters/chapter08/chapter8c.js
+9c — Random rectangles and buffer reuse
+File: chapters/chapter09/chapter9c.js
 Generates multiple random pixel-space rectangles, reuses a vertex buffer, and
-updates its contents between draw calls. Its source header calls this 8d.
+updates its contents between draw calls.
 
-8d — Pixel-space grid and rectangle
-File: chapters/chapter08/chapter8d.js
+9d — Pixel-space grid and rectangle
+File: chapters/chapter09/chapter9d.js
 Adds a large grid and rectangle using pixel-space geometry and projection.
-Its source header calls this 8e.
 
-8e — Grid, axes, and rectangle
-File: chapters/chapter08/chapter8e.js
+9e — Grid, axes, and rectangle
+File: chapters/chapter09/chapter9e.js
 Adds X/Y axes to the pixel-space grid scene and draws multiple objects through
-one projection matrix. Its source header calls this 8f.
+one projection matrix.
 
-CHAPTER 9 — 2D WORLD AND CAMERA
+CHAPTER 10 — 2D WORLD AND CAMERA
 -------------------------------
-9a — World grid and objects
-File: chapters/chapter09/chapter9a.js
+10a — World grid and objects
+File: chapters/chapter10/chapter10a.js
 Builds a large pixel-space world with a grid, axes, and rectangle, introducing
 world-space thinking beyond a single screen-sized shape.
 
-9b — Camera position as data
-File: chapters/chapter09/chapter9b.js
+10b — Camera position as data
+File: chapters/chapter10/chapter10b.js
 Stores camera position in JavaScript and passes it to the shader; includes
 GUI camera controls.
 
-9c — Camera zoom
-File: chapters/chapter09/chapter9c.js
+10c — Camera zoom
+File: chapters/chapter10/chapter10c.js
 Adds a camera zoom value and discrete zoom controls to the camera-as-data
 example.
 
-9d — View matrix
-File: chapters/chapter09/chapter9d.js
+10d — View matrix
+File: chapters/chapter10/chapter10d.js
 Moves camera translation and zoom into a mat3 view matrix and applies it before
 projection. GUI controls update camera movement and zoom.
 
-9e — Discrete keyboard camera controls
-File: chapters/chapter09/chapter9e.js
+10e — Discrete keyboard camera controls
+File: chapters/chapter10/chapter10e.js
 Tracks key states for camera panning/zooming and combines keyboard controls
 with GUI controls.
 
-9f — Continuous keyboard camera controls
-File: chapters/chapter09/chapter9f.js
+10f — Continuous keyboard camera controls
+File: chapters/chapter10/chapter10f.js
 Updates camera position while keys remain held, using a view matrix, keyboard
-state, GUI controls, and a requestAnimationFrame loop. The source header repeats
-the 9e label.
+state, GUI controls, and a requestAnimationFrame loop.
 
-CHAPTER 10 — 2D OBJECT TRANSFORMATIONS
+CHAPTER 11 — 2D OBJECT TRANSFORMATIONS
 --------------------------------------
-10a — Translation
-File: chapters/chapter10/chapter10a.js
+11a — Translation
+File: chapters/chapter11/chapter11a.js
 Applies object translation in the vertex shader through translation uniforms,
 alongside the existing world, projection, and camera pipeline.
 
-10b — Rotation
-File: chapters/chapter10/chapter10b.js
+11b — Rotation
+File: chapters/chapter11/chapter11b.js
 Adds object rotation to the translated 2D scene and exposes the transform to
-the GUI. Its source header still labels this 10a.
+the GUI.
 
-10c — Scale
-File: chapters/chapter10/chapter10c.js
-Adds independent X/Y scale values to the object-transform example. Its source
-header still labels this 10a.
+11c — Scale
+File: chapters/chapter11/chapter11c.js
+Adds independent X/Y scale values to the object-transform example.
 
-10d — Composed model matrix
-File: chapters/chapter10/chapter10d.js
+11d — Composed model matrix
+File: chapters/chapter11/chapter11d.js
 Builds a model matrix by applying translation, rotation, and scale, then
-composes model, view, and projection transforms for the rectangle. Its source
-header still labels this 10a.
+composes model, view, and projection transforms for the rectangle.
 
-CHAPTER 11 — 2D ROTATION
+CHAPTER 12 — 2D ROTATION
 ------------------------
-11a — Rotation with sine and cosine
-File: chapters/chapter11/chapter11a.js
+12a — Rotation with sine and cosine
+File: chapters/chapter12/chapter12a.js
 Rotates the letter F around the origin by calculating the rotated coordinates
 directly with sine and cosine.
 
-11b — Rotation matrix
-File: chapters/chapter11/chapter11b.js
+12b — Rotation matrix
+File: chapters/chapter12/chapter12b.js
 Builds a rotation matrix in the shader and applies it with translation.
 
-11c — Transform order
-File: chapters/chapter11/chapter11c.js
+12c — Transform order
+File: chapters/chapter12/chapter12c.js
 Changes the order of rotation and translation matrix multiplication to show
-how transformation order changes the result. Its source header repeats 11b.
+how transformation order changes the result.
 
-11d — Rotation around a pivot
-File: chapters/chapter11/chapter11d.js
+12d — Rotation around a pivot
+File: chapters/chapter12/chapter12d.js
 Translates a letter around a chosen pivot, rotates it, translates it back, and
 visualizes the pivot.
 
-CHAPTER 12 — 2D SCALE
+CHAPTER 13 — 2D SCALE
 ---------------------
-12a — Direct uniform scale
-File: chapters/chapter12/chapter12a.js
+13a — Direct uniform scale
+File: chapters/chapter13/chapter13a.js
 Scales letter-F coordinates directly in the shader before applying the other
 object transforms.
 
-12b — Scale matrix
-File: chapters/chapter12/chapter12b.js
+13b — Scale matrix
+File: chapters/chapter13/chapter13b.js
 Uses a scale matrix for uniform and non-uniform X/Y scaling.
 
-CHAPTER 13 — MODEL MATRICES
+CHAPTER 14 — MODEL MATRICES
 ---------------------------
-13a — Build the model matrix in the shader
-File: chapters/chapter13/chapter13a.js
+14a — Build the model matrix in the shader
+File: chapters/chapter14/chapter14a.js
 Combines translation, rotation, and scale in the vertex shader, then applies
 view and projection transforms.
 
-13b — Pass a model matrix as a uniform
-File: chapters/chapter13/chapter13b.js
+14b — Pass a model matrix as a uniform
+File: chapters/chapter14/chapter14b.js
 Builds the model matrix in JavaScript and passes it to the shader, separating
 model, view, and projection transformations.
 
-13c — Independent model matrices
-File: chapters/chapter13/chapter13c.js
+14c — Independent model matrices
+File: chapters/chapter14/chapter14c.js
 Gives multiple objects their own model matrices while sharing view and
-projection state. Its source header repeats 13b.
+projection state.
 
-13d — Transformation composition
-File: chapters/chapter13/chapter13d.js
+14d — Transformation composition
+File: chapters/chapter14/chapter14d.js
 Composes model, view, and projection transforms for multiple objects in the
-camera/world scene. Its source header says 13c.
+camera/world scene.
 
 SUPPLEMENTAL EXPERIMENTS
 -----------------------
 Extra 1 — Animated line and render loop
 File: chapters/chapterExtra/chapterExtra1.js
 Uses requestAnimationFrame, a dynamic line buffer, time-based rotation,
-pixel-space projection, and gl.LINES. This is an experiment outside the numbered
-chapter sequence; its header uses the old Chapter 2 label.
+pixel-space projection, and gl.LINES. This experiment is outside the numbered chapter sequence.
 
 Extra 2 — Random pixel-space rectangles
 File: chapters/chapterExtra/chapterExtra2.js
 Draws multiple randomly placed, randomly colored rectangles using a reused
-buffer and pixel-to-clip matrix. It overlaps conceptually with Chapter 8c and
-is retained as a separate experiment; its header calls it 8d.
+buffer and pixel-to-clip matrix. It overlaps conceptually with Chapter 9c and is retained as a separate experiment.
 
 LEARNING FLOW
 -------------
-Raw WebGL pipeline → structured lesson template → geometry and indices →
-primitive topology → dynamic geometry → vertex data and uniforms → multiple
-objects/programs → pixel and world coordinates → camera/view matrix/input →
-translation and rotation → scale → model-matrix composition.
+Series introduction → raw first draw → lesson template → geometry and
+indexing → primitive topology → dynamic geometry → vertex data and uniforms
+→ multiple objects/programs → pixel/world space → camera → translation →
+rotation → scale → model-matrix composition.
 
 ROADMAP AFTER THE IMPLEMENTED FILES
 -----------------------------------

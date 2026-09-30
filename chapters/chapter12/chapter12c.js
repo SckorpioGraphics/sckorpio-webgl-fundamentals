@@ -1,10 +1,11 @@
 /* #############################################################
-   CHAPTER 12a: 2D Transformations — Rotation with Sine and Cosine
+   CHAPTER 12c: 2D Transformations — Transform Order
 
    Topics:
    - Rotating a letterF around the origin
    - GUI camera controls
-   - Using Rotation with sin() and cos()
+   - Using Rotation Matrix
+   - BUT Changing order of Translation & rotation matrix
    - Object rotation
    #############################################################
 */
@@ -29,11 +30,11 @@ const shaderInfo = {
     void main() {
         vec3 localPosition = vec3(a_position, 1.0);
 
-        float c = cos(u_rotation);
-        float s = sin(u_rotation);
-        float rotatedX = localPosition.x * c - localPosition.y * s;
-        float rotatedY = localPosition.x * s + localPosition.y * c;
-        vec3 rotatedPosition = vec3(rotatedX, rotatedY, 1.0);
+        mat3 rotationMatrix = mat3(
+            cos(u_rotation),  sin(u_rotation), 0.0,
+           -sin(u_rotation),  cos(u_rotation), 0.0,
+            0.0,              0.0,             1.0
+        );
 
         mat3 translationMatrix = mat3(
             1.0,            0.0,            0.0,
@@ -41,7 +42,7 @@ const shaderInfo = {
             u_translationX, u_translationY, 1.0
         );
 
-        vec3 worldPosition = translationMatrix * rotatedPosition;
+        vec3 worldPosition = rotationMatrix * translationMatrix * localPosition;
         vec3 viewPosition = u_viewMatrix * worldPosition;
         vec3 clipPosition = u_projectionMatrix * viewPosition;
 

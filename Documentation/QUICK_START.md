@@ -1,32 +1,35 @@
 # WebGL Fundamentals: Quick Start
 
-This repository contains 58 numbered WebGL 2 lesson files across Chapters 1–13, plus two supplemental experiments. Chapter 1b is a blank template; the other files are runnable lessons.
+This repository contains 59 numbered WebGL 2 files across Chapters 0–14, plus two supplemental experiments. Chapter 2a is a blank template; the other files are lessons or the Chapter 0 introduction.
 
-## Start with Chapter 1
+## Start Here
 
-- **1a:** Raw first triangle; follow the WebGL setup and draw call end to end.
-- **1b:** Empty code-organization template.
-- **1c:** Completed triangle organized with the template. Its source header still says 1b.
+- **0:** Why this series, why WebGL, and what the lessons cover.
+- **1a:** Raw first triangle; follow WebGL setup and the draw call end to end.
+- **2a:** Blank code-organization template.
+- **2b:** Completed triangle organized with the template.
 
 ## Learning Path
 
-1. Chapter 1: WebGL basics and lesson structure.
-2. Chapter 2: Geometry and indexing.
-3. Chapter 3: Primitive topologies.
-4. Chapter 4: Dynamic buffers and editable geometry.
-5. Chapter 5: Vertex data and color flow.
-6. Chapter 6: Uniforms.
-7. Chapter 7: Multiple objects and programs.
-8. Chapter 8: Pixel space and first world geometry.
-9. Chapter 9: 2D world and camera.
-10. Chapter 10: 2D object transformations.
-11. Chapter 11: 2D rotation.
-12. Chapter 12: 2D scale.
-13. Chapter 13: Model matrices.
+0. Chapter 0: Series introduction.
+1. Chapter 1: Raw WebGL triangle.
+2. Chapter 2: Lesson template and structured triangle.
+3. Chapter 3: Geometry and indexing.
+4. Chapter 4: Primitive topologies.
+5. Chapter 5: Dynamic buffers and editable geometry.
+6. Chapter 6: Vertex data and color flow.
+7. Chapter 7: Uniforms.
+8. Chapter 8: Multiple objects and programs.
+9. Chapter 9: Pixel space and first world geometry.
+10. Chapter 10: 2D world and camera.
+11. Chapter 11: 2D translation.
+12. Chapter 12: 2D rotation.
+13. Chapter 13: 2D scale.
+14. Chapter 14: Model matrices.
 
 ## Lesson Structure
 
-Chapter 1a is intentionally a raw first-triangle walkthrough. From Chapter 1c onward, numbered lessons keep shader sources with their shader metadata in `shaderInfo`, create `canvas` and `gl` locally in `main()`, and pass `gl` to the top-level `render(gl)` function and callbacks.
+Chapter 1a is intentionally a raw first-triangle walkthrough. Chapter 2a is a blank organizational template, and 2b demonstrates the structured pattern: shader sources live in `shaderInfo`, `canvas` and `gl` are local to `main()`, and `gl` is passed to top-level `render(gl)` and its callbacks.
 
 ## Run
 
@@ -36,7 +39,7 @@ From the repository root:
 python3 -m http.server 8000
 ```
 
-Open `http://localhost:8000`. The page currently runs `chapters/chapter13/chapter13d.js`. Change the module path in `index.html` to select another lesson. WebGL 2 and network access for the CDN libraries are required.
+Open `http://localhost:8000`. The page currently runs `chapters/chapter14/chapter14d.js`. Change the module path in `index.html` to select another lesson. WebGL 2 and network access for the CDN libraries are required.
 
 ## More Detail
 
