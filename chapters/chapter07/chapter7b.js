@@ -221,9 +221,55 @@ function setupHexagon(gl, shader) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(shaderInfo.program);
+
+    // ---------------------------------------------------------
+    // TRIANGLE
+    // ---------------------------------------------------------
+
+    gl.uniform3f(
+        shaderInfo.uniforms.color,
+        1.0, 0.0, 0.0   // Red
+    );
+
+    gl.bindVertexArray(triangle.vao);
+
+    gl.drawArrays(
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
+    );
+
+    // ---------------------------------------------------------
+    // HEXAGON
+    // ---------------------------------------------------------
+
+    gl.uniform3f(
+        shaderInfo.uniforms.color,
+        1.0, 0.0, 1.0   // Magenta
+    );
+
+    gl.bindVertexArray(hexagon.vao);
+
+    gl.drawArrays(
+        hexagon.drawMode,
+        hexagon.drawOffset,
+        hexagon.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     canvas = document.querySelector("#c");
     if(!canvas) {
@@ -242,49 +288,7 @@ function main() {
     setupTriangle(gl, shaderInfo);
     setupHexagon(gl, shaderInfo);
 
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(shaderInfo.program);
-
-        // ---------------------------------------------------------
-        // TRIANGLE
-        // ---------------------------------------------------------
-
-        gl.uniform3f(
-            shaderInfo.uniforms.color,
-            1.0, 0.0, 0.0   // Red
-        );
-
-        gl.bindVertexArray(triangle.vao);
-
-        gl.drawArrays(
-            triangle.drawMode,
-            triangle.drawOffset,
-            triangle.drawCount
-        );
-
-        // ---------------------------------------------------------
-        // HEXAGON
-        // ---------------------------------------------------------
-
-        gl.uniform3f(
-            shaderInfo.uniforms.color,
-            1.0, 0.0, 1.0   // Magenta
-        );
-
-        gl.bindVertexArray(hexagon.vao);
-
-        gl.drawArrays(
-            hexagon.drawMode,
-            hexagon.drawOffset,
-            hexagon.drawCount
-        );
-    }
 
     render();
     window.addEventListener("resize", render);

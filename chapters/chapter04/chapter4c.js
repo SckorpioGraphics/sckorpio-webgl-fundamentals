@@ -200,9 +200,70 @@ function setupGUI(render) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(polygon.shader.program);
+    gl.bindVertexArray(polygon.vao);
+
+    // Vertex and index data CPU side
+    const positionsData = [];
+    const indicesData = [];
+
+    for(let i = 0; i < uiState.points; i++) {
+        const angle = (i / uiState.points) * (2 * Math.PI);
+
+        const x = uiState.centerX +
+                  Math.sin(angle) * uiState.radius;
+
+        const y = uiState.centerY +
+                  Math.cos(angle) * uiState.radius;
+
+        positionsData.push(x);
+        positionsData.push(y);
+
+        indicesData.push(i);
+    }
+
+    const positions = new Float32Array(positionsData);
+    const indices = new Uint16Array(indicesData);
+
+    // Update vertex data on the GPU
+    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.DYNAMIC_DRAW
+    );
+
+    // Update index data on the GPU
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        indices,
+        gl.DYNAMIC_DRAW
+    );
+
+    // Update draw data
+    polygon.drawCount = indices.length;
+
+    gl.drawElements(
+        polygon.drawMode,
+        polygon.drawCount,
+        polygon.drawType,
+        polygon.drawOffset
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     // WEBGL CANVAS
     canvas = document.querySelector("#c");
@@ -222,64 +283,7 @@ function main() {
     setupPolygon(gl, shaderInfo);
 
     // RENDER
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(polygon.shader.program);
-        gl.bindVertexArray(polygon.vao);
-
-        // Vertex and index data CPU side
-        const positionsData = [];
-        const indicesData = [];
-
-        for(let i = 0; i < uiState.points; i++) {
-            const angle = (i / uiState.points) * (2 * Math.PI);
-
-            const x = uiState.centerX +
-                      Math.sin(angle) * uiState.radius;
-
-            const y = uiState.centerY +
-                      Math.cos(angle) * uiState.radius;
-
-            positionsData.push(x);
-            positionsData.push(y);
-
-            indicesData.push(i);
-        }
-
-        const positions = new Float32Array(positionsData);
-        const indices = new Uint16Array(indicesData);
-
-        // Update vertex data on the GPU
-        gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            positions,
-            gl.DYNAMIC_DRAW
-        );
-
-        // Update index data on the GPU
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
-        gl.bufferData(
-            gl.ELEMENT_ARRAY_BUFFER,
-            indices,
-            gl.DYNAMIC_DRAW
-        );
-
-        // Update draw data
-        polygon.drawCount = indices.length;
-
-        gl.drawElements(
-            polygon.drawMode,
-            polygon.drawCount,
-            polygon.drawType,
-            polygon.drawOffset
-        );
-    }
 
     // UI
     setupGUI(render);

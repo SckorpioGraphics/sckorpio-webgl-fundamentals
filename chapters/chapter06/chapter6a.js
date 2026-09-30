@@ -183,9 +183,35 @@ function setupGUI(render) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(triangle.shader.program);
+
+    // Set uniform value from UI
+    gl.uniform1f(
+        triangle.shader.uniforms.intensity,
+        uiState.intensity
+    );
+
+    gl.bindVertexArray(triangle.vao);
+
+    gl.drawArrays(
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     canvas = document.querySelector("#c");
     if(!canvas) {
@@ -202,29 +228,7 @@ function main() {
     setupShader(gl, shaderInfo);
     setupTriangle(gl, shaderInfo);
 
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(triangle.shader.program);
-
-        // Set uniform value from UI
-        gl.uniform1f(
-            triangle.shader.uniforms.intensity,
-            uiState.intensity
-        );
-
-        gl.bindVertexArray(triangle.vao);
-
-        gl.drawArrays(
-            triangle.drawMode,
-            triangle.drawOffset,
-            triangle.drawCount
-        );
-    }
 
     setupGUI(render);
 

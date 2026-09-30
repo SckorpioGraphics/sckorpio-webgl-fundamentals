@@ -199,9 +199,29 @@ function setupPoints(gl, shader) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(points.shader.program);
+    gl.bindVertexArray(points.vao);
+
+    gl.drawElements(
+        points.drawMode,
+        points.drawCount,
+        points.drawType,
+        points.drawOffset
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     // WEBGL CANVAS
     canvas = document.querySelector("#c");
@@ -221,23 +241,7 @@ function main() {
     setupPoints(gl, shaderInfo);
 
     // RENDER
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(points.shader.program);
-        gl.bindVertexArray(points.vao);
-
-        gl.drawElements(
-            points.drawMode,
-            points.drawCount,
-            points.drawType,
-            points.drawOffset
-        );
-    }
 
     render();
     window.addEventListener("resize", render);

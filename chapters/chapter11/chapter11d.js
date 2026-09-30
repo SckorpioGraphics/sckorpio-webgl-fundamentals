@@ -512,9 +512,82 @@ window.addEventListener("keyup", event => {
 });
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    updateCamera();
+
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(shaderInfo.program);
+
+    // PROJECTION MATRIX
+    setupProjectionMatrix(gl);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.projectionMatrix, false, camera.projectionMatrix);
+
+    // VIEW MATRIX
+    setupViewMatrix();
+    gl.uniformMatrix3fv(shaderInfo.uniforms.viewMatrix, false, camera.viewMatrix);
+
+    // GRID
+    gl.bindVertexArray(grid.vao);
+    gl.uniform1f(shaderInfo.uniforms.translationX, 0);
+    gl.uniform1f(shaderInfo.uniforms.translationY, 0);
+    gl.uniform1f(shaderInfo.uniforms.rotation, 0);
+    gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
+    gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
+    gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
+    gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
+
+    // X AXIS
+    gl.bindVertexArray(xAxis.vao);
+    gl.uniform1f(shaderInfo.uniforms.translationX, 0);
+    gl.uniform1f(shaderInfo.uniforms.translationY, 0);
+    gl.uniform1f(shaderInfo.uniforms.rotation, 0);
+    gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
+    gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
+    gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
+    gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
+
+    // Y AXIS
+    gl.bindVertexArray(yAxis.vao);
+    gl.uniform1f(shaderInfo.uniforms.translationX, 0);
+    gl.uniform1f(shaderInfo.uniforms.translationY, 0);
+    gl.uniform1f(shaderInfo.uniforms.rotation, 0);
+    gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
+    gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
+    gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
+    gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
+
+    // LETTER-F
+    gl.bindVertexArray(letterF.vao);
+    gl.uniform1f(shaderInfo.uniforms.translationX, letterF.positionX);
+    gl.uniform1f(shaderInfo.uniforms.translationY, letterF.positionY);
+    gl.uniform1f(shaderInfo.uniforms.rotation, letterF.rotation);
+    gl.uniform1f(shaderInfo.uniforms.pivotX, letterF.pivotX);
+    gl.uniform1f(shaderInfo.uniforms.pivotY, letterF.pivotY);
+    gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
+    gl.drawElements(letterF.drawMode, letterF.drawCount, letterF.drawType, letterF.drawOffset);
+
+    // PIVOT
+    gl.bindVertexArray(pivot.vao);
+    gl.uniform1f(shaderInfo.uniforms.translationX, letterF.positionX + letterF.pivotX);
+    gl.uniform1f(shaderInfo.uniforms.translationY, letterF.positionY + letterF.pivotY);
+    gl.uniform1f(shaderInfo.uniforms.rotation, 0);
+    gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
+    gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
+    gl.uniform4f(shaderInfo.uniforms.color, 1.0, 1.0, 1.0, 1.0);
+    gl.drawArrays(pivot.drawMode, pivot.drawOffset, pivot.drawCount);
+
+    requestAnimationFrame(render);
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     canvas = document.querySelector("#c");
 
@@ -537,76 +610,7 @@ function main() {
     setupLetterF(gl, shaderInfo);
     setupPivot(gl, shaderInfo);
 
-    function render() {
-        updateCamera();
 
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.useProgram(shaderInfo.program);
-
-        // PROJECTION MATRIX
-        setupProjectionMatrix(gl);
-        gl.uniformMatrix3fv(shaderInfo.uniforms.projectionMatrix, false, camera.projectionMatrix);
-
-        // VIEW MATRIX
-        setupViewMatrix();
-        gl.uniformMatrix3fv(shaderInfo.uniforms.viewMatrix, false, camera.viewMatrix);
-
-        // GRID
-        gl.bindVertexArray(grid.vao);
-        gl.uniform1f(shaderInfo.uniforms.translationX, 0);
-        gl.uniform1f(shaderInfo.uniforms.translationY, 0);
-        gl.uniform1f(shaderInfo.uniforms.rotation, 0);
-        gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
-        gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
-        gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
-        gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
-
-        // X AXIS
-        gl.bindVertexArray(xAxis.vao);
-        gl.uniform1f(shaderInfo.uniforms.translationX, 0);
-        gl.uniform1f(shaderInfo.uniforms.translationY, 0);
-        gl.uniform1f(shaderInfo.uniforms.rotation, 0);
-        gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
-        gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
-        gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
-        gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
-
-        // Y AXIS
-        gl.bindVertexArray(yAxis.vao);
-        gl.uniform1f(shaderInfo.uniforms.translationX, 0);
-        gl.uniform1f(shaderInfo.uniforms.translationY, 0);
-        gl.uniform1f(shaderInfo.uniforms.rotation, 0);
-        gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
-        gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
-        gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
-        gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
-
-        // LETTER-F
-        gl.bindVertexArray(letterF.vao);
-        gl.uniform1f(shaderInfo.uniforms.translationX, letterF.positionX);
-        gl.uniform1f(shaderInfo.uniforms.translationY, letterF.positionY);
-        gl.uniform1f(shaderInfo.uniforms.rotation, letterF.rotation);
-        gl.uniform1f(shaderInfo.uniforms.pivotX, letterF.pivotX);
-        gl.uniform1f(shaderInfo.uniforms.pivotY, letterF.pivotY);
-        gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
-        gl.drawElements(letterF.drawMode, letterF.drawCount, letterF.drawType, letterF.drawOffset);
-
-        // PIVOT
-        gl.bindVertexArray(pivot.vao);
-        gl.uniform1f(shaderInfo.uniforms.translationX, letterF.positionX + letterF.pivotX);
-        gl.uniform1f(shaderInfo.uniforms.translationY, letterF.positionY + letterF.pivotY);
-        gl.uniform1f(shaderInfo.uniforms.rotation, 0);
-        gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
-        gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
-        gl.uniform4f(shaderInfo.uniforms.color, 1.0, 1.0, 1.0, 1.0);
-        gl.drawArrays(pivot.drawMode, pivot.drawOffset, pivot.drawCount);
-
-        requestAnimationFrame(render);
-    }
 
     setupGUI();
     render();

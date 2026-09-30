@@ -183,9 +183,124 @@ function setupGUI(render) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(triangle.shader.program);
+
+    // Set uniform color
+    gl.uniform3fv(
+        triangle.shader.uniforms.color,
+        [uiState.R, uiState.G, uiState.B]
+    );
+
+    // Set uniform intensity
+    gl.uniform1f(
+        triangle.shader.uniforms.intensity,
+        uiState.intensity
+    );
+
+    // ---------------------------------------------------------
+    // MORE WAYS OF PASSING UNIFORMS
+    // ---------------------------------------------------------
+
+    /*
+    // Float
+    gl.uniform1f(floatUniformLoc, v);
+    gl.uniform1fv(floatUniformLoc, [v]);
+
+    // vec2
+    gl.uniform2f(vec2UniformLoc, v0, v1);
+    gl.uniform2fv(vec2UniformLoc, [v0, v1]);
+
+    // vec3
+    gl.uniform3f(vec3UniformLoc, v0, v1, v2);
+    gl.uniform3fv(vec3UniformLoc, [v0, v1, v2]);
+
+    // vec4
+    gl.uniform4f(vec4UniformLoc, v0, v1, v2, v3);
+    gl.uniform4fv(vec4UniformLoc, [v0, v1, v2, v3]);
+
+    // mat2
+    gl.uniformMatrix2fv(
+        mat2UniformLoc,
+        false,
+        [4x element array]
+    );
+
+    // mat3
+    gl.uniformMatrix3fv(
+        mat3UniformLoc,
+        false,
+        [9x element array]
+    );
+
+    // mat4
+    gl.uniformMatrix4fv(
+        mat4UniformLoc,
+        false,
+        [16x element array]
+    );
+
+    // int
+    gl.uniform1i(intUniformLoc, v);
+    gl.uniform1iv(intUniformLoc, [v]);
+
+    // ivec2
+    gl.uniform2i(ivec2UniformLoc, v0, v1);
+    gl.uniform2iv(ivec2UniformLoc, [v0, v1]);
+
+    // ivec3
+    gl.uniform3i(ivec3UniformLoc, v0, v1, v2);
+    gl.uniform3iv(ivec3UniformLoc, [v0, v1, v2]);
+
+    // ivec4
+    gl.uniform4i(ivec4UniformLoc, v0, v1, v2, v3);
+    gl.uniform4iv(ivec4UniformLoc, [v0, v1, v2, v3]);
+
+    // uint
+    gl.uniform1ui(uintUniformLoc, v);
+    gl.uniform1uiv(uintUniformLoc, [v]);
+
+    // uvec2
+    gl.uniform2ui(uvec2UniformLoc, v0, v1);
+    gl.uniform2uiv(uvec2UniformLoc, [v0, v1]);
+
+    // uvec3
+    gl.uniform3ui(uvec3UniformLoc, v0, v1, v2);
+    gl.uniform3uiv(uvec3UniformLoc, [v0, v1, v2]);
+
+    // uvec4
+    gl.uniform4ui(uvec4UniformLoc, v0, v1, v2, v3);
+    gl.uniform4uiv(uvec4UniformLoc, [v0, v1, v2, v3]);
+
+    // Samplers:
+    // sampler2D, sampler3D, samplerCube,
+    // samplerCubeShadow, sampler2DShadow,
+    // sampler2DArray, sampler2DArrayShadow
+
+    gl.uniform1i(samplerUniformLoc, v);
+    gl.uniform1iv(samplerUniformLoc, [v]);
+    */
+
+    gl.bindVertexArray(triangle.vao);
+
+    gl.drawArrays(
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     canvas = document.querySelector("#c");
     if(!canvas) {
@@ -202,118 +317,7 @@ function main() {
     setupShader(gl, shaderInfo);
     setupTriangle(gl, shaderInfo);
 
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(triangle.shader.program);
-
-        // Set uniform color
-        gl.uniform3fv(
-            triangle.shader.uniforms.color,
-            [uiState.R, uiState.G, uiState.B]
-        );
-
-        // Set uniform intensity
-        gl.uniform1f(
-            triangle.shader.uniforms.intensity,
-            uiState.intensity
-        );
-
-        // ---------------------------------------------------------
-        // MORE WAYS OF PASSING UNIFORMS
-        // ---------------------------------------------------------
-
-        /*
-        // Float
-        gl.uniform1f(floatUniformLoc, v);
-        gl.uniform1fv(floatUniformLoc, [v]);
-
-        // vec2
-        gl.uniform2f(vec2UniformLoc, v0, v1);
-        gl.uniform2fv(vec2UniformLoc, [v0, v1]);
-
-        // vec3
-        gl.uniform3f(vec3UniformLoc, v0, v1, v2);
-        gl.uniform3fv(vec3UniformLoc, [v0, v1, v2]);
-
-        // vec4
-        gl.uniform4f(vec4UniformLoc, v0, v1, v2, v3);
-        gl.uniform4fv(vec4UniformLoc, [v0, v1, v2, v3]);
-
-        // mat2
-        gl.uniformMatrix2fv(
-            mat2UniformLoc,
-            false,
-            [4x element array]
-        );
-
-        // mat3
-        gl.uniformMatrix3fv(
-            mat3UniformLoc,
-            false,
-            [9x element array]
-        );
-
-        // mat4
-        gl.uniformMatrix4fv(
-            mat4UniformLoc,
-            false,
-            [16x element array]
-        );
-
-        // int
-        gl.uniform1i(intUniformLoc, v);
-        gl.uniform1iv(intUniformLoc, [v]);
-
-        // ivec2
-        gl.uniform2i(ivec2UniformLoc, v0, v1);
-        gl.uniform2iv(ivec2UniformLoc, [v0, v1]);
-
-        // ivec3
-        gl.uniform3i(ivec3UniformLoc, v0, v1, v2);
-        gl.uniform3iv(ivec3UniformLoc, [v0, v1, v2]);
-
-        // ivec4
-        gl.uniform4i(ivec4UniformLoc, v0, v1, v2, v3);
-        gl.uniform4iv(ivec4UniformLoc, [v0, v1, v2, v3]);
-
-        // uint
-        gl.uniform1ui(uintUniformLoc, v);
-        gl.uniform1uiv(uintUniformLoc, [v]);
-
-        // uvec2
-        gl.uniform2ui(uvec2UniformLoc, v0, v1);
-        gl.uniform2uiv(uvec2UniformLoc, [v0, v1]);
-
-        // uvec3
-        gl.uniform3ui(uvec3UniformLoc, v0, v1, v2);
-        gl.uniform3uiv(uvec3UniformLoc, [v0, v1, v2]);
-
-        // uvec4
-        gl.uniform4ui(uvec4UniformLoc, v0, v1, v2, v3);
-        gl.uniform4uiv(uvec4UniformLoc, [v0, v1, v2, v3]);
-
-        // Samplers:
-        // sampler2D, sampler3D, samplerCube,
-        // samplerCubeShadow, sampler2DShadow,
-        // sampler2DArray, sampler2DArrayShadow
-
-        gl.uniform1i(samplerUniformLoc, v);
-        gl.uniform1iv(samplerUniformLoc, [v]);
-        */
-
-        gl.bindVertexArray(triangle.vao);
-
-        gl.drawArrays(
-            triangle.drawMode,
-            triangle.drawOffset,
-            triangle.drawCount
-        );
-    }
 
     setupGUI(render);
 

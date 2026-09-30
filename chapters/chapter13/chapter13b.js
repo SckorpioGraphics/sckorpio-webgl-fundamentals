@@ -107,7 +107,7 @@ const yAxis = {
 
 const letterF = {
     shader: null,
-    
+
     vao: null,
     vbo: null,
     ibo: null,
@@ -116,7 +116,7 @@ const letterF = {
     drawOffset: 0,
     drawCount: 0,
     drawType: null,
-    
+
     positionX: 0,
     positionY: 0,
     rotation: 0,
@@ -493,9 +493,63 @@ window.addEventListener("keyup", event => {
 });
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    updateCamera();
+
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(shaderInfo.program);
+
+    // PROJECTION MATRIX
+    setupProjectionMatrix(gl);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.projectionMatrix, false, camera.projectionMatrix);
+
+    // VIEW MATRIX
+    setupViewMatrix();
+    gl.uniformMatrix3fv(shaderInfo.uniforms.viewMatrix, false, camera.viewMatrix);
+
+    // GRID
+    gl.bindVertexArray(grid.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
+    gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
+    gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
+
+    // X AXIS
+    gl.bindVertexArray(xAxis.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
+    gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
+    gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
+
+    // Y AXIS
+    gl.bindVertexArray(yAxis.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
+    gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
+    gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
+
+    // Letter F
+    setupModelMatrix(letterF);
+    gl.bindVertexArray(letterF.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, letterF.modelMatrix);
+    gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
+    //gl.drawArrays(letterF.drawMode, letterF.drawOffset, letterF.drawCount);
+    gl.drawElements(
+        letterF.drawMode,
+        letterF.drawCount,
+        letterF.drawType,
+        letterF.drawOffset
+    );
+
+    requestAnimationFrame(render);
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     canvas = document.querySelector("#c");
 
@@ -517,57 +571,7 @@ function main() {
     setupYAxis(gl, shaderInfo);
     setupLetterF(gl, shaderInfo);
 
-    function render() {
-        updateCamera();
 
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.useProgram(shaderInfo.program);
-
-        // PROJECTION MATRIX
-        setupProjectionMatrix(gl);
-        gl.uniformMatrix3fv(shaderInfo.uniforms.projectionMatrix, false, camera.projectionMatrix);
-
-        // VIEW MATRIX
-        setupViewMatrix();
-        gl.uniformMatrix3fv(shaderInfo.uniforms.viewMatrix, false, camera.viewMatrix);
-
-        // GRID
-        gl.bindVertexArray(grid.vao);
-        gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
-        gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
-        gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
-
-        // X AXIS
-        gl.bindVertexArray(xAxis.vao);
-        gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
-        gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
-        gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
-
-        // Y AXIS
-        gl.bindVertexArray(yAxis.vao);
-        gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
-        gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
-        gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
-
-        // Letter F
-        setupModelMatrix(letterF);
-        gl.bindVertexArray(letterF.vao);
-        gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, letterF.modelMatrix);
-        gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
-        //gl.drawArrays(letterF.drawMode, letterF.drawOffset, letterF.drawCount);
-        gl.drawElements(
-            letterF.drawMode,
-            letterF.drawCount,
-            letterF.drawType,
-            letterF.drawOffset
-        );
-
-        requestAnimationFrame(render);
-    }
 
     setupGUI();
     render();

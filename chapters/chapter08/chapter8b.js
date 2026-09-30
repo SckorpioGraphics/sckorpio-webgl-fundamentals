@@ -184,9 +184,61 @@ function setupRectangle(gl, shader) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(rectangle.shader.program);
+
+    // ---------------------------------------------------------
+    // PIXEL SPACE -> CLIP SPACE MATRIX
+    // ---------------------------------------------------------
+
+    const width = gl.canvas.width;
+    const height = gl.canvas.height;
+
+    /*
+        Pixel -> Clip:
+
+        x' = (2 * x / width) - 1
+        y' = (2 * y / height) - 1
+
+        Matrix:
+
+        |  2/w    0     -1 |
+        |   0    2/h    1 |
+        |   0     0      1 |
+    */
+
+    const projectionMatrix = mat3.fromValues(
+        2 / width,  0,           0,
+        0,          2 / height,  0,
+        -1,        -1,            1
+    );
+
+    gl.uniformMatrix3fv(
+        rectangle.shader.uniforms.projectionMatrix,
+        false,
+        projectionMatrix
+    );
+
+    gl.bindVertexArray(rectangle.vao);
+
+    gl.drawArrays(
+        rectangle.drawMode,
+        rectangle.drawOffset,
+        rectangle.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     canvas = document.querySelector("#c");
     if(!canvas) {
@@ -203,55 +255,7 @@ function main() {
     setupShader(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
 
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(rectangle.shader.program);
-
-        // ---------------------------------------------------------
-        // PIXEL SPACE -> CLIP SPACE MATRIX
-        // ---------------------------------------------------------
-
-        const width = gl.canvas.width;
-        const height = gl.canvas.height;
-
-        /*
-            Pixel -> Clip:
-
-            x' = (2 * x / width) - 1
-            y' = (2 * y / height) - 1
-
-            Matrix:
-
-            |  2/w    0     -1 |
-            |   0    2/h    1 |
-            |   0     0      1 |
-        */
-
-        const projectionMatrix = mat3.fromValues(
-            2 / width,  0,           0,
-            0,          2 / height,  0,
-            -1,        -1,            1
-        );
-
-        gl.uniformMatrix3fv(
-            rectangle.shader.uniforms.projectionMatrix,
-            false,
-            projectionMatrix
-        );
-
-        gl.bindVertexArray(rectangle.vao);
-
-        gl.drawArrays(
-            rectangle.drawMode,
-            rectangle.drawOffset,
-            rectangle.drawCount
-        );
-    }
 
     render();
     window.addEventListener("resize", render);

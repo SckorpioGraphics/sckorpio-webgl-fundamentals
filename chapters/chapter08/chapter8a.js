@@ -187,9 +187,36 @@ function setupRectangle(gl, shader) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(rectangle.shader.program);
+
+    // Pass canvas resolution to shader
+    gl.uniform2f(
+        rectangle.shader.uniforms.resolution,
+        gl.canvas.width,
+        gl.canvas.height
+    );
+
+    gl.bindVertexArray(rectangle.vao);
+
+    gl.drawArrays(
+        rectangle.drawMode,
+        rectangle.drawOffset,
+        rectangle.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     canvas = document.querySelector("#c");
     if(!canvas) {
@@ -206,30 +233,7 @@ function main() {
     setupShader(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
 
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(rectangle.shader.program);
-
-        // Pass canvas resolution to shader
-        gl.uniform2f(
-            rectangle.shader.uniforms.resolution,
-            gl.canvas.width,
-            gl.canvas.height
-        );
-
-        gl.bindVertexArray(rectangle.vao);
-
-        gl.drawArrays(
-            rectangle.drawMode,
-            rectangle.drawOffset,
-            rectangle.drawCount
-        );
-    }
 
     render();
     window.addEventListener("resize", render);

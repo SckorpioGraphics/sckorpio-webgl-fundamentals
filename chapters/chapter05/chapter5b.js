@@ -270,9 +270,62 @@ function setupGUI(render) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(triangle.shader.program);
+    gl.bindVertexArray(triangle.vao);
+
+    // -----------------------------------------------------
+    // UPDATE POSITIONS
+    // -----------------------------------------------------
+
+    const positions = new Float32Array([
+        uiState.aX, uiState.aY, // Point A
+        uiState.bX, uiState.bY, // Point B
+        uiState.cX, uiState.cY  // Point C
+    ]);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.positionVbo);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.DYNAMIC_DRAW
+    );
+
+    // -----------------------------------------------------
+    // UPDATE COLORS
+    // -----------------------------------------------------
+
+    const colors = new Float32Array([
+        uiState.aR, uiState.aG, uiState.aB, // Point A
+        uiState.bR, uiState.bG, uiState.bB, // Point B
+        uiState.cR, uiState.cG, uiState.cB  // Point C
+    ]);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.colorVbo);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        colors,
+        gl.DYNAMIC_DRAW
+    );
+
+    gl.drawArrays(
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     // WEBGL CANVAS
     canvas = document.querySelector("#c");
@@ -292,56 +345,7 @@ function main() {
     setupTriangle(gl, shaderInfo);
 
     // RENDER
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(triangle.shader.program);
-        gl.bindVertexArray(triangle.vao);
-
-        // -----------------------------------------------------
-        // UPDATE POSITIONS
-        // -----------------------------------------------------
-
-        const positions = new Float32Array([
-            uiState.aX, uiState.aY, // Point A
-            uiState.bX, uiState.bY, // Point B
-            uiState.cX, uiState.cY  // Point C
-        ]);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, triangle.positionVbo);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            positions,
-            gl.DYNAMIC_DRAW
-        );
-
-        // -----------------------------------------------------
-        // UPDATE COLORS
-        // -----------------------------------------------------
-
-        const colors = new Float32Array([
-            uiState.aR, uiState.aG, uiState.aB, // Point A
-            uiState.bR, uiState.bG, uiState.bB, // Point B
-            uiState.cR, uiState.cG, uiState.cB  // Point C
-        ]);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, triangle.colorVbo);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            colors,
-            gl.DYNAMIC_DRAW
-        );
-
-        gl.drawArrays(
-            triangle.drawMode,
-            triangle.drawOffset,
-            triangle.drawCount
-        );
-    }
 
     // UI
     setupGUI(render);

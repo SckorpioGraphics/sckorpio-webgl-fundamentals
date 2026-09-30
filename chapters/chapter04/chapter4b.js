@@ -188,9 +188,51 @@ function setupGUI(render) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(rectangle.shader.program);
+    gl.bindVertexArray(rectangle.vao);
+
+    // Vertex data CPU side
+    const positions = new Float32Array([
+        uiState.centerX - uiState.length / 2.0,
+        uiState.centerY + uiState.width / 2.0, // Point 0
+
+        uiState.centerX + uiState.length / 2.0,
+        uiState.centerY + uiState.width / 2.0, // Point 1
+
+        uiState.centerX - uiState.length / 2.0,
+        uiState.centerY - uiState.width / 2.0, // Point 2
+
+        uiState.centerX + uiState.length / 2.0,
+        uiState.centerY - uiState.width / 2.0  // Point 3
+    ]);
+
+    // Update vertex data on the GPU
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.DYNAMIC_DRAW
+    );
+
+    gl.drawArrays(
+        rectangle.drawMode,
+        rectangle.drawOffset,
+        rectangle.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     // WEBGL CANVAS
     canvas = document.querySelector("#c");
@@ -210,45 +252,7 @@ function main() {
     setupRectangle(gl, shaderInfo);
 
     // RENDER
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(rectangle.shader.program);
-        gl.bindVertexArray(rectangle.vao);
-
-        // Vertex data CPU side
-        const positions = new Float32Array([
-            uiState.centerX - uiState.length / 2.0,
-            uiState.centerY + uiState.width / 2.0, // Point 0
-
-            uiState.centerX + uiState.length / 2.0,
-            uiState.centerY + uiState.width / 2.0, // Point 1
-
-            uiState.centerX - uiState.length / 2.0,
-            uiState.centerY - uiState.width / 2.0, // Point 2
-
-            uiState.centerX + uiState.length / 2.0,
-            uiState.centerY - uiState.width / 2.0  // Point 3
-        ]);
-
-        // Update vertex data on the GPU
-        gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            positions,
-            gl.DYNAMIC_DRAW
-        );
-
-        gl.drawArrays(
-            rectangle.drawMode,
-            rectangle.drawOffset,
-            rectangle.drawCount
-        );
-    }
 
     // UI
     setupGUI(render);

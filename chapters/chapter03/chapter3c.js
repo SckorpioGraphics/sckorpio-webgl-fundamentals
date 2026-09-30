@@ -199,9 +199,29 @@ function setupLineStrip(gl, shader) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(lineStrip.shader.program);
+    gl.bindVertexArray(lineStrip.vao);
+
+    gl.drawElements(
+        lineStrip.drawMode,
+        lineStrip.drawCount,
+        lineStrip.drawType,
+        lineStrip.drawOffset
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     // WEBGL CANVAS
     canvas = document.querySelector("#c");
@@ -221,23 +241,7 @@ function main() {
     setupLineStrip(gl, shaderInfo);
 
     // RENDER
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(lineStrip.shader.program);
-        gl.bindVertexArray(lineStrip.vao);
-
-        gl.drawElements(
-            lineStrip.drawMode,
-            lineStrip.drawCount,
-            lineStrip.drawType,
-            lineStrip.drawOffset
-        );
-    }
 
     render();
     window.addEventListener("resize", render);

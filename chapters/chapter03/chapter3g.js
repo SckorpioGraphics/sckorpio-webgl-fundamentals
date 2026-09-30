@@ -202,9 +202,29 @@ function setupTriangleStrip(gl, shader) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(triangleStrip.shader.program);
+    gl.bindVertexArray(triangleStrip.vao);
+
+    gl.drawElements(
+        triangleStrip.drawMode,
+        triangleStrip.drawCount,
+        triangleStrip.drawType,
+        triangleStrip.drawOffset
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     // WEBGL CANVAS
     canvas = document.querySelector("#c");
@@ -224,23 +244,7 @@ function main() {
     setupTriangleStrip(gl, shaderInfo);
 
     // RENDER
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(triangleStrip.shader.program);
-        gl.bindVertexArray(triangleStrip.vao);
-
-        gl.drawElements(
-            triangleStrip.drawMode,
-            triangleStrip.drawCount,
-            triangleStrip.drawType,
-            triangleStrip.drawOffset
-        );
-    }
 
     render();
     window.addEventListener("resize", render);

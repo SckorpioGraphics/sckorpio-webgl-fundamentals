@@ -194,9 +194,43 @@ function setupGUI(render) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(triangle.shader.program);
+    gl.bindVertexArray(triangle.vao);
+
+    // Vertex data CPU side
+    const positions = new Float32Array([
+        uiState.aX, uiState.aY, // Point A
+        uiState.bX, uiState.bY, // Point B
+        uiState.cX, uiState.cY  // Point C
+    ]);
+
+    // Update vertex data on the GPU
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.DYNAMIC_DRAW
+    );
+
+    gl.drawArrays(
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     // WEBGL CANVAS
     canvas = document.querySelector("#c");
@@ -216,37 +250,7 @@ function main() {
     setupTriangle(gl, shaderInfo);
 
     // RENDER
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(triangle.shader.program);
-        gl.bindVertexArray(triangle.vao);
-
-        // Vertex data CPU side
-        const positions = new Float32Array([
-            uiState.aX, uiState.aY, // Point A
-            uiState.bX, uiState.bY, // Point B
-            uiState.cX, uiState.cY  // Point C
-        ]);
-
-        // Update vertex data on the GPU
-        gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            positions,
-            gl.DYNAMIC_DRAW
-        );
-
-        gl.drawArrays(
-            triangle.drawMode,
-            triangle.drawOffset,
-            triangle.drawCount
-        );
-    }
 
     // UI
     setupGUI(render);

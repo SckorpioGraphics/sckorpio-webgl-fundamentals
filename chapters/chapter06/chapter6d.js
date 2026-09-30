@@ -251,9 +251,59 @@ function setupGUI(render) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(triangle.shader.program);
+
+    // Set uniform color
+    gl.uniform4f(
+        triangle.shader.uniforms.color,
+        uiState.r,
+        uiState.g,
+        uiState.b,
+        1.0
+    );
+
+    gl.bindVertexArray(triangle.vao);
+
+    // Interleaved vertex data CPU side
+    // Each vertex = X, Y, R, G, B
+    const vertexData = new Float32Array([
+        uiState.aX, uiState.aY,
+        uiState.aR, uiState.aG, uiState.aB,
+
+        uiState.bX, uiState.bY,
+        uiState.bR, uiState.bG, uiState.bB,
+
+        uiState.cX, uiState.cY,
+        uiState.cR, uiState.cG, uiState.cB
+    ]);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        vertexData,
+        gl.DYNAMIC_DRAW
+    );
+
+    gl.drawArrays(
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     canvas = document.querySelector("#c");
     if(!canvas) {
@@ -270,53 +320,7 @@ function main() {
     setupShader(gl, shaderInfo);
     setupTriangle(gl, shaderInfo);
 
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(triangle.shader.program);
-
-        // Set uniform color
-        gl.uniform4f(
-            triangle.shader.uniforms.color,
-            uiState.r,
-            uiState.g,
-            uiState.b,
-            1.0
-        );
-
-        gl.bindVertexArray(triangle.vao);
-
-        // Interleaved vertex data CPU side
-        // Each vertex = X, Y, R, G, B
-        const vertexData = new Float32Array([
-            uiState.aX, uiState.aY,
-            uiState.aR, uiState.aG, uiState.aB,
-
-            uiState.bX, uiState.bY,
-            uiState.bR, uiState.bG, uiState.bB,
-
-            uiState.cX, uiState.cY,
-            uiState.cR, uiState.cG, uiState.cB
-        ]);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            vertexData,
-            gl.DYNAMIC_DRAW
-        );
-
-        gl.drawArrays(
-            triangle.drawMode,
-            triangle.drawOffset,
-            triangle.drawCount
-        );
-    }
 
     setupGUI(render);
 

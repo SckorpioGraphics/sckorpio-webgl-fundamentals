@@ -199,9 +199,29 @@ function setupLines(gl, shader) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(lines.shader.program);
+    gl.bindVertexArray(lines.vao);
+
+    gl.drawElements(
+        lines.drawMode,
+        lines.drawCount,
+        lines.drawType,
+        lines.drawOffset
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     // WEBGL CANVAS
     canvas = document.querySelector("#c");
@@ -221,23 +241,7 @@ function main() {
     setupLines(gl, shaderInfo);
 
     // RENDER
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(lines.shader.program);
-        gl.bindVertexArray(lines.vao);
-
-        gl.drawElements(
-            lines.drawMode,
-            lines.drawCount,
-            lines.drawType,
-            lines.drawOffset
-        );
-    }
 
     render();
     window.addEventListener("resize", render);

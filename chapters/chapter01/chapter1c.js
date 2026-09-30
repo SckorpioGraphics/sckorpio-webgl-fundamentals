@@ -183,6 +183,37 @@ function setupTriangle(gl, shader) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    // CANVAS
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(
+        0,
+        0,
+        gl.canvas.width,
+        gl.canvas.height
+    );
+
+    // BACKGROUND
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // SHADER
+    gl.useProgram(triangle.shader.program);
+
+    // OBJECT
+    gl.bindVertexArray(triangle.vao);
+
+    // DRAW CALL
+    gl.drawArrays(
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
 function main() {
@@ -212,33 +243,7 @@ function main() {
     // ---------------------------------------------------------
     // 3. RENDER
     // ---------------------------------------------------------
-    function render() {
-        // CANVAS
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(
-            0,
-            0,
-            gl.canvas.width,
-            gl.canvas.height
-        );
 
-        // BACKGROUND
-        gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        // SHADER
-        gl.useProgram(triangle.shader.program);
-
-        // OBJECT
-        gl.bindVertexArray(triangle.vao);
-
-        // DRAW CALL
-        gl.drawArrays(
-            triangle.drawMode,
-            triangle.drawOffset,
-            triangle.drawCount
-        );
-    }
 
     // First render
     render();

@@ -238,9 +238,55 @@ function setupTriangle(gl, shader) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(shaderInfo.program);
+
+    // ---------------------------------------------------------
+    // GRID
+    // ---------------------------------------------------------
+
+    gl.uniform3f(
+        shaderInfo.uniforms.color,
+        0.39, 0.33, 0.58
+    );
+
+    gl.bindVertexArray(grid.vao);
+
+    gl.drawArrays(
+        grid.drawMode,
+        grid.drawOffset,
+        grid.drawCount
+    );
+
+    // ---------------------------------------------------------
+    // TRIANGLE
+    // ---------------------------------------------------------
+
+    gl.uniform3f(
+        shaderInfo.uniforms.color,
+        1.0, 1.0, 0.0   // Red
+    );
+
+    gl.bindVertexArray(triangle.vao);
+
+    gl.drawArrays(
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     canvas = document.querySelector("#c");
     if(!canvas) {
@@ -258,49 +304,7 @@ function main() {
     setupGrid(gl, shaderInfo);
     setupTriangle(gl, shaderInfo);
 
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(shaderInfo.program);
-
-        // ---------------------------------------------------------
-        // GRID
-        // ---------------------------------------------------------
-
-        gl.uniform3f(
-            shaderInfo.uniforms.color,
-            0.39, 0.33, 0.58
-        );
-
-        gl.bindVertexArray(grid.vao);
-
-        gl.drawArrays(
-            grid.drawMode,
-            grid.drawOffset,
-            grid.drawCount
-        );
-
-        // ---------------------------------------------------------
-        // TRIANGLE
-        // ---------------------------------------------------------
-
-        gl.uniform3f(
-            shaderInfo.uniforms.color,
-            1.0, 1.0, 0.0   // Red
-        );
-
-        gl.bindVertexArray(triangle.vao);
-
-        gl.drawArrays(
-            triangle.drawMode,
-            triangle.drawOffset,
-            triangle.drawCount
-        );
-    }
 
     render();
     window.addEventListener("resize", render);

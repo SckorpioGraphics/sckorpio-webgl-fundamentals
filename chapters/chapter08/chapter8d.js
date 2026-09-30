@@ -254,9 +254,87 @@ function setupRectangle(gl, shader) {
 }
 
 // =============================================================
+// RENDER
+// =============================================================
+function render() {
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(shaderInfo.program);
+
+    // ---------------------------------------------------------
+    // PIXEL SPACE -> CLIP SPACE MATRIX
+    // ---------------------------------------------------------
+
+    const width = gl.canvas.width;
+    const height = gl.canvas.height;
+
+    /*
+        Pixel -> Clip:
+
+        x' = (2 * x / width) - 1
+        y' = (2 * y / height) - 1
+
+        Matrix:
+
+        |  2/w    0     -1 |
+        |   0    2/h    1 |
+        |   0     0      1 |
+    */
+
+    const projectionMatrix = mat3.fromValues(
+        2 / width,  0,           0,
+        0,          2 / height,  0,
+        -1,        -1,           1
+    );
+
+    gl.uniformMatrix3fv(
+        shaderInfo.uniforms.projectionMatrix,
+        false,
+        projectionMatrix
+    );
+
+    // ---------------------------------------------------------
+    // GRID
+    // ---------------------------------------------------------
+
+    gl.bindVertexArray(grid.vao);
+
+    gl.uniform4f(
+        shaderInfo.uniforms.color,
+        0.39, 0.33, 0.58, 1.0
+    );
+
+    gl.drawArrays(
+        grid.drawMode,
+        grid.drawOffset,
+        grid.drawCount
+    );
+
+    // ---------------------------------------------------------
+    // RECTANGLE
+    // ---------------------------------------------------------
+
+    gl.bindVertexArray(rectangle.vao);
+
+    gl.uniform4f(
+        shaderInfo.uniforms.color,
+        0.39, 0.33, 0.58, 1.0
+    );
+
+    gl.drawArrays(
+        rectangle.drawMode,
+        rectangle.drawOffset,
+        rectangle.drawCount
+    );
+}
+
+// =============================================================
 // MAIN
 // =============================================================
-
 function main() {
     canvas = document.querySelector("#c");
     if(!canvas) {
@@ -274,81 +352,7 @@ function main() {
     setupGrid(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
 
-    function render() {
-        resizeCanvasToDisplaySize(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.32, 0.63, 0.67, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(shaderInfo.program);
-
-        // ---------------------------------------------------------
-        // PIXEL SPACE -> CLIP SPACE MATRIX
-        // ---------------------------------------------------------
-
-        const width = gl.canvas.width;
-        const height = gl.canvas.height;
-
-        /*
-            Pixel -> Clip:
-
-            x' = (2 * x / width) - 1
-            y' = (2 * y / height) - 1
-
-            Matrix:
-
-            |  2/w    0     -1 |
-            |   0    2/h    1 |
-            |   0     0      1 |
-        */
-
-        const projectionMatrix = mat3.fromValues(
-            2 / width,  0,           0,
-            0,          2 / height,  0,
-            -1,        -1,           1
-        );
-
-        gl.uniformMatrix3fv(
-            shaderInfo.uniforms.projectionMatrix,
-            false,
-            projectionMatrix
-        );
-
-        // ---------------------------------------------------------
-        // GRID
-        // ---------------------------------------------------------
-
-        gl.bindVertexArray(grid.vao);
-
-        gl.uniform4f(
-            shaderInfo.uniforms.color,
-            0.39, 0.33, 0.58, 1.0
-        );
-
-        gl.drawArrays(
-            grid.drawMode,
-            grid.drawOffset,
-            grid.drawCount
-        );
-
-        // ---------------------------------------------------------
-        // RECTANGLE
-        // ---------------------------------------------------------
-
-        gl.bindVertexArray(rectangle.vao);
-
-        gl.uniform4f(
-            shaderInfo.uniforms.color,
-            0.39, 0.33, 0.58, 1.0
-        );
-
-        gl.drawArrays(
-            rectangle.drawMode,
-            rectangle.drawOffset,
-            rectangle.drawCount
-        );
-    }
 
     render();
     window.addEventListener("resize", render);
