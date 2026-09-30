@@ -1,7 +1,8 @@
 /* #############################################################
-CHAPTER 4c: Learning Topology LINE_LOOP
+CHAPTER 4c: Dynamic Buffer
 
 Topics:
+- Learning Topology LINE_LOOP
 - Making a Polygon to Circle
 ###############################################################
 */

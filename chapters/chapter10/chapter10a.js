@@ -2,14 +2,10 @@
    CHAPTER 10a: 2D Transformations — Translation
 
    Topics:
-   - Camera position
-   - Camera zoom
-   - View matrix
-   - Keyboard input
-   - Continuous camera movement
+   - Translating a rectangle
    - GUI camera controls
+   - Using Dynamic Buffer geometry
    - Object translation
-   - Translation uniforms
    #############################################################
 */
 
@@ -30,9 +26,7 @@ const shader = {
     uniforms: {
         viewMatrix: null,
         projectionMatrix: null,
-        color: null,
-        translationX: null,
-        translationY: null
+        color: null
     }
 };
 
@@ -91,8 +85,10 @@ const rectangle = {
     drawMode: null,
     drawOffset: 0,
     drawCount: 0,
-    translateX: 200,
-    translateY: 150
+    positionX: 200,
+    positionY: 150,
+    width: 200,
+    height: 150
 };
 
 // =============================================================
@@ -104,15 +100,9 @@ const vertexShaderSource = `#version 300 es
 
     uniform mat3 u_viewMatrix;
     uniform mat3 u_projectionMatrix;
-    uniform float u_translationX;
-    uniform float u_translationY;
 
     void main() {
-        vec2 position = a_position;
-        position.x += u_translationX;
-        position.y += u_translationY;
-
-        vec3 viewPosition = u_viewMatrix * vec3(position, 1.0);
+        vec3 viewPosition = u_viewMatrix * vec3(a_position, 1.0);
         vec3 clipPosition = u_projectionMatrix * viewPosition;
 
         gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
@@ -175,8 +165,6 @@ function setupShader(gl) {
     shader.uniforms.viewMatrix = gl.getUniformLocation(shader.program, "u_viewMatrix");
     shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
-    shader.uniforms.translationX = gl.getUniformLocation(shader.program, "u_translationX");
-    shader.uniforms.translationY = gl.getUniformLocation(shader.program, "u_translationY");
 }
 
 // =============================================================
@@ -208,9 +196,9 @@ function setupViewMatrix() {
 }
 
 function updateCamera() {
-    if(controls.panUp) camera.y -= camera.panSpeed;
+    if(controls.panUp) camera.y += camera.panSpeed;
     if(controls.panLeft) camera.x -= camera.panSpeed;
-    if(controls.panDown) camera.y += camera.panSpeed;
+    if(controls.panDown) camera.y -= camera.panSpeed;
     if(controls.panRight) camera.x += camera.panSpeed;
     if(controls.panZoomIn) camera.zoom += camera.zoomSpeed;
     if(controls.panZoomOut) camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
@@ -310,18 +298,9 @@ function setupYAxis(gl, shader) {
 function setupRectangle(gl, shader) {
     rectangle.shader = shader;
 
-    const positions = new Float32Array([
-        -100, -75,
-        100, -75,
-        -100,  75,
-        -100,  75,
-        100, -75,
-        100,  75
-    ]);
-
     rectangle.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+    // Vertex Data Filled Dynamically by updateRectangle()
 
     rectangle.vao = gl.createVertexArray();
     gl.bindVertexArray(rectangle.vao);
@@ -332,6 +311,26 @@ function setupRectangle(gl, shader) {
     rectangle.drawMode = gl.TRIANGLES;
     rectangle.drawOffset = 0;
     rectangle.drawCount = 6;
+}
+
+function updateRectangle() {
+    const halfWidth = rectangle.width / 2;
+    const halfHeight = rectangle.height / 2;
+
+    const x = rectangle.positionX;
+    const y = rectangle.positionY;
+
+    const positions = new Float32Array([
+        x - halfWidth, y - halfHeight,
+        x + halfWidth, y - halfHeight,
+        x - halfWidth, y + halfHeight,
+        x - halfWidth, y + halfHeight,
+        x + halfWidth, y - halfHeight,
+        x + halfWidth, y + halfHeight
+    ]);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
 }
 
 // =============================================================
@@ -349,9 +348,9 @@ function setupGUI() {
     cameraFolder.add(controls, "panZoomIn").name("Zoom In");
     cameraFolder.add(controls, "panZoomOut").name("Zoom Out");
 
-    const transformFolder = gui.addFolder("Rectangle");
-    transformFolder.add(rectangle, "translateX", -1000, 1000);
-    transformFolder.add(rectangle, "translateY", -1000, 1000);
+    const rectangleFolder = gui.addFolder("Rectangle");
+    rectangleFolder.add(rectangle, "positionX", -1000, 1000).name("positionX").onChange(updateRectangle);
+    rectangleFolder.add(rectangle, "positionY", -1000, 1000).name("positionY").onChange(updateRectangle);
 }
 
 // =============================================================
@@ -432,6 +431,7 @@ function main() {
     setupXAxis(gl, shader);
     setupYAxis(gl, shader);
     setupRectangle(gl, shader);
+    updateRectangle();
 
     function render() {
         updateCamera();
@@ -454,29 +454,21 @@ function main() {
         // GRID
         gl.bindVertexArray(grid.vao);
         gl.uniform4f(shader.uniforms.color, 0.39, 0.33, 0.58, 1.0);
-        gl.uniform1f(shader.uniforms.translationX, 0);
-        gl.uniform1f(shader.uniforms.translationY, 0);
         gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
 
         // X AXIS
         gl.bindVertexArray(xAxis.vao);
         gl.uniform4f(shader.uniforms.color, 1.0, 0.0, 0.0, 1.0);
-        gl.uniform1f(shader.uniforms.translationX, 0);
-        gl.uniform1f(shader.uniforms.translationY, 0);
         gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
 
         // Y AXIS
         gl.bindVertexArray(yAxis.vao);
         gl.uniform4f(shader.uniforms.color, 0.0, 1.0, 0.0, 1.0);
-        gl.uniform1f(shader.uniforms.translationX, 0);
-        gl.uniform1f(shader.uniforms.translationY, 0);
         gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
 
         // RECTANGLE
         gl.bindVertexArray(rectangle.vao);
         gl.uniform4f(shader.uniforms.color, 0.39, 0.33, 0.58, 1.0);
-        gl.uniform1f(shader.uniforms.translationX, rectangle.translateX);
-        gl.uniform1f(shader.uniforms.translationY, rectangle.translateY);
         gl.drawArrays(rectangle.drawMode, rectangle.drawOffset, rectangle.drawCount);
 
         requestAnimationFrame(render);
