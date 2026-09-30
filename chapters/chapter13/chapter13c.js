@@ -188,9 +188,9 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Camera / Matrix Functions
 // =============================================================
 function updateCamera() {
-    if(controls.panUp) camera.y -= camera.panSpeed;
+    if(controls.panUp) camera.y += camera.panSpeed;
     if(controls.panLeft) camera.x -= camera.panSpeed;
-    if(controls.panDown) camera.y += camera.panSpeed;
+    if(controls.panDown) camera.y -= camera.panSpeed;
     if(controls.panRight) camera.x += camera.panSpeed;
     if(controls.panZoomIn) camera.zoom += camera.zoomSpeed;
     if(controls.panZoomOut) camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
