@@ -230,9 +230,6 @@ function main() {
 
     setupShader(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
-
-
-
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

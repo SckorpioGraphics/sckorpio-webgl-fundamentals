@@ -344,9 +344,6 @@ function main() {
 
     setupTriangle(gl, basicShaderInfo);
     setupRectangle(gl, vertexColorShaderInfo);
-
-
-
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

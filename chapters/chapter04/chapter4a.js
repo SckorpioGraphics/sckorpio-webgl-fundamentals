@@ -239,8 +239,6 @@ function main() {
     setupPoints(gl, shaderInfo);
 
     // RENDER
-
-
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

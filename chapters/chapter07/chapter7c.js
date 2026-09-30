@@ -247,8 +247,6 @@ function main() {
     setupShader(gl, shaderInfo);
     setupTriangle(gl, shaderInfo);
 
-
-
     setupGUI(() => render(gl));
 
     render(gl);

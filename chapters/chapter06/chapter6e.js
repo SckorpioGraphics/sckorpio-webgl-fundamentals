@@ -304,9 +304,6 @@ function main() {
 
     setupShader(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
-
-
-
     setupGUI(() => render(gl));
 
     render(gl);

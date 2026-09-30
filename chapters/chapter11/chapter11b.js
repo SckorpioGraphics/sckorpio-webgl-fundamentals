@@ -497,9 +497,6 @@ function main() {
     setupYAxis(gl, shaderInfo);
     setupLetterF(gl, shaderInfo);
     updateLetterF(gl);
-
-
-
     setupGUI(gl);
     render(gl);
 }

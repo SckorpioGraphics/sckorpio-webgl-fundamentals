@@ -483,9 +483,6 @@ function main() {
     setupXAxis(gl, shaderInfo);
     setupYAxis(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
-
-
-
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

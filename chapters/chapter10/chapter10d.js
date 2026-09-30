@@ -424,9 +424,6 @@ function main() {
     setupXAxis(gl, shaderInfo);
     setupYAxis(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
-
-
-
     setupGUI(() => render(gl));
     render(gl);
 

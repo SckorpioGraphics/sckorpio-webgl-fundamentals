@@ -242,8 +242,6 @@ function main() {
     setupTriangleStrip(gl, shaderInfo);
 
     // RENDER
-
-
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

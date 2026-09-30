@@ -607,9 +607,6 @@ function main() {
     setupYAxis(gl, shaderInfo);
     setupLetterF(gl, shaderInfo);
     setupPivot(gl, shaderInfo);
-
-
-
     setupGUI();
     render(gl);
 }

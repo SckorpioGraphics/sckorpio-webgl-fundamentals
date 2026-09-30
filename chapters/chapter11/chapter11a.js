@@ -467,9 +467,6 @@ function main() {
     setupYAxis(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
     updateRectangle(gl);
-
-
-
     setupGUI(gl);
     render(gl);
 }

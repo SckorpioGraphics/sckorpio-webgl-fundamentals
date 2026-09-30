@@ -289,13 +289,9 @@ function main() {
     // SETUP
     setupShader(gl, shaderInfo);
     setupPolygon(gl, shaderInfo);
-
-    // RENDER
-
-
     // UI
     setupGUI(() => render(gl));
-
+    // RENDER
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

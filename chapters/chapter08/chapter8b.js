@@ -286,8 +286,6 @@ function main() {
     setupTriangle(gl, shaderInfo);
     setupHexagon(gl, shaderInfo);
 
-
-
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

@@ -243,8 +243,6 @@ function main() {
     setupHexagon(gl, shaderInfo);
 
     // RENDER
-
-
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

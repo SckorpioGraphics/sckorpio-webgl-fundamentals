@@ -568,9 +568,6 @@ function main() {
     setupXAxis(gl, shaderInfo);
     setupYAxis(gl, shaderInfo);
     setupLetterF(gl, shaderInfo);
-
-
-
     setupGUI();
     render(gl);
 }

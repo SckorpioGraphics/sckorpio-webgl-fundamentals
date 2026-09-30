@@ -349,9 +349,6 @@ function main() {
     setupShader(gl, shaderInfo);
     setupGrid(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
-
-
-
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

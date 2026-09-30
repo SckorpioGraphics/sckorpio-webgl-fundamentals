@@ -273,8 +273,6 @@ function main() {
     setupLetterF(gl, shaderInfo);
 
     // RENDER
-
-
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }
