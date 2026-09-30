@@ -28,7 +28,7 @@ const triangle = {
 // =============================================================
 // Shader Objects
 // =============================================================
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -206,8 +206,8 @@ function main() {
     // ---------------------------------------------------------
     // 2. SETUP
     // ---------------------------------------------------------
-    setupShader(gl, shader);
-    setupTriangle(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupTriangle(gl, shaderInfo);
 
     // ---------------------------------------------------------
     // 3. RENDER

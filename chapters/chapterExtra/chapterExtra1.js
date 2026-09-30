@@ -18,7 +18,7 @@ Topics:
 let canvas = null;
 let gl = null;
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
     uniform mat3 u_matrix;
@@ -202,13 +202,13 @@ function main() {
     const vertexShader = createShader(
         gl,
         gl.VERTEX_SHADER,
-        shader.vertexShaderSource
+        shaderInfo.vertexShaderSource
     );
 
     const fragmentShader = createShader(
         gl,
         gl.FRAGMENT_SHADER,
-        shader.fragmentShaderSource
+        shaderInfo.fragmentShaderSource
     );
 
     const program = createProgram(

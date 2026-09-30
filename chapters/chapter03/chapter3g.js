@@ -33,7 +33,7 @@ const triangleStrip = {
 // Shader Objects
 // =============================================================
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -220,8 +220,8 @@ function main() {
     }
 
     // SETUP
-    setupShader(gl, shader);
-    setupTriangleStrip(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupTriangleStrip(gl, shaderInfo);
 
     // RENDER
     function render() {

@@ -50,7 +50,7 @@ const rectangle = {
     independent objects with different shaders.
 */
 
-const basicShader = {
+const basicShaderInfo = {
     fragmentShaderSource: `#version 300 es
     precision mediump float;
 
@@ -78,7 +78,7 @@ const basicShader = {
     }
 };
 
-const colorVertexShader = {
+const vertexColorShaderInfo = {
     fragmentShaderSource: `#version 300 es
     precision highp float;
 
@@ -143,19 +143,19 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 function setupBasicShader(gl) {
-    const vertexShader = createShader(gl,gl.VERTEX_SHADER,basicShader.vertexShaderSource);
-    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,basicShader.fragmentShaderSource);
-    basicShader.program = createProgram(gl,vertexShader,fragmentShader);
-    basicShader.attributes.position = gl.getAttribLocation(basicShader.program,"a_position");
-    basicShader.uniforms.color = gl.getUniformLocation(basicShader.program,"u_color");
+    const vertexShader = createShader(gl,gl.VERTEX_SHADER,basicShaderInfo.vertexShaderSource);
+    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,basicShaderInfo.fragmentShaderSource);
+    basicShaderInfo.program = createProgram(gl,vertexShader,fragmentShader);
+    basicShaderInfo.attributes.position = gl.getAttribLocation(basicShaderInfo.program,"a_position");
+    basicShaderInfo.uniforms.color = gl.getUniformLocation(basicShaderInfo.program,"u_color");
 }
 
 function setupcolorVertexShader(gl) {
-    const vertexShader = createShader(gl,gl.VERTEX_SHADER,colorVertexShader.vertexShaderSource);
-    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,colorVertexShader.fragmentShaderSource);
-    colorVertexShader.program = createProgram(gl,vertexShader,fragmentShader);
-    colorVertexShader.attributes.position = gl.getAttribLocation(colorVertexShader.program,"a_position");
-    colorVertexShader.attributes.color = gl.getAttribLocation(colorVertexShader.program,"a_color");
+    const vertexShader = createShader(gl,gl.VERTEX_SHADER,vertexColorShaderInfo.vertexShaderSource);
+    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,vertexColorShaderInfo.fragmentShaderSource);
+    vertexColorShaderInfo.program = createProgram(gl,vertexShader,fragmentShader);
+    vertexColorShaderInfo.attributes.position = gl.getAttribLocation(vertexColorShaderInfo.program,"a_position");
+    vertexColorShaderInfo.attributes.color = gl.getAttribLocation(vertexColorShaderInfo.program,"a_color");
 }
 
 // =============================================================
@@ -301,8 +301,8 @@ function main() {
     setupBasicShader(gl);
     setupcolorVertexShader(gl);
 
-    setupTriangle(gl, basicShader);
-    setupRectangle(gl, colorVertexShader);
+    setupTriangle(gl, basicShaderInfo);
+    setupRectangle(gl, vertexColorShaderInfo);
 
     function render() {
         resizeCanvasToDisplaySize(gl.canvas);

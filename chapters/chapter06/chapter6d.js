@@ -61,7 +61,7 @@ const triangle = {
 // Shader Objects
 // =============================================================
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
     in vec3 a_color;
@@ -267,8 +267,8 @@ function main() {
         return;
     }
 
-    setupShader(gl, shader);
-    setupTriangle(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupTriangle(gl, shaderInfo);
 
     function render() {
         resizeCanvasToDisplaySize(gl.canvas);

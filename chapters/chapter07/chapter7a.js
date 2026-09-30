@@ -50,7 +50,7 @@ const rectangle = {
     independent objects.
 */
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -237,10 +237,10 @@ function main() {
         return;
     }
 
-    setupShader(gl, shader);
+    setupShader(gl, shaderInfo);
 
-    setupTriangle(gl, shader);
-    setupRectangle(gl, shader);
+    setupTriangle(gl, shaderInfo);
+    setupRectangle(gl, shaderInfo);
 
     function render() {
         resizeCanvasToDisplaySize(gl.canvas);
@@ -249,14 +249,14 @@ function main() {
         gl.clearColor(0.32, 0.63, 0.67, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        gl.useProgram(shader.program);
+        gl.useProgram(shaderInfo.program);
 
         // ---------------------------------------------------------
         // TRIANGLE
         // ---------------------------------------------------------
 
         gl.uniform3f(
-            shader.uniforms.color,
+            shaderInfo.uniforms.color,
             1.0, 0.0, 0.0   // Red
         );
 
@@ -273,7 +273,7 @@ function main() {
         // ---------------------------------------------------------
 
         gl.uniform3f(
-            shader.uniforms.color,
+            shaderInfo.uniforms.color,
             0.0, 1.0, 0.0   // Green
         );
 

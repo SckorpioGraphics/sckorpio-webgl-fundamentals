@@ -33,7 +33,7 @@ const lineStrip = {
 // Shader Objects
 // =============================================================
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -217,8 +217,8 @@ function main() {
     }
 
     // SETUP
-    setupShader(gl, shader);
-    setupLineStrip(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupLineStrip(gl, shaderInfo);
 
     // RENDER
     function render() {

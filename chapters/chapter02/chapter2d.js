@@ -36,7 +36,7 @@ const letterF = {
 // Shader Objects
 // =============================================================
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -251,8 +251,8 @@ function main() {
     }
 
     // SETUP
-    setupShader(gl, shader);
-    setupLetterF(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupLetterF(gl, shaderInfo);
 
     // RENDER
     function render() {

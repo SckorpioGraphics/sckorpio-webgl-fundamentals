@@ -77,7 +77,7 @@ const grid = {
 // The focus here is on using a matrix
 // to convert pixel space to clip space.
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
     uniform mat3 u_projectionMatrix;
@@ -334,11 +334,11 @@ function main() {
         return;
     }
 
-    setupShader(gl, shader);
-    setupGrid(gl, shader);
-    setupXAxis(gl, shader);
-    setupYAxis(gl, shader);
-    setupRectangle(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupGrid(gl, shaderInfo);
+    setupXAxis(gl, shaderInfo);
+    setupYAxis(gl, shaderInfo);
+    setupRectangle(gl, shaderInfo);
 
     function render() {
         resizeCanvasToDisplaySize(gl.canvas);
@@ -347,29 +347,29 @@ function main() {
         gl.clearColor(0.32, 0.63, 0.67, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        gl.useProgram(shader.program);
+        gl.useProgram(shaderInfo.program);
 
         setupProjectionMatrix(gl);
-        gl.uniformMatrix3fv(shader.uniforms.projectionMatrix, false, camera.projectionMatrix);
+        gl.uniformMatrix3fv(shaderInfo.uniforms.projectionMatrix, false, camera.projectionMatrix);
 
         // GRID
         gl.bindVertexArray(grid.vao);
-        gl.uniform4f(shader.uniforms.color, 0.39, 0.33, 0.58, 1.0);
+        gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
         gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
 
         // X AXIS
         gl.bindVertexArray(xAxis.vao);
-        gl.uniform4f(shader.uniforms.color, 1.0, 0.0, 0.0, 1.0);
+        gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
         gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
 
         // Y AXIS
         gl.bindVertexArray(yAxis.vao);
-        gl.uniform4f(shader.uniforms.color, 0.0, 1.0, 0.0, 1.0);
+        gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
         gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
 
         // RECTANGLE
         gl.bindVertexArray(rectangle.vao);
-        gl.uniform4f(shader.uniforms.color, 0.39, 0.33, 0.58, 1.0);
+        gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
         gl.drawArrays(rectangle.drawMode, rectangle.drawOffset, rectangle.drawCount);
     }
 

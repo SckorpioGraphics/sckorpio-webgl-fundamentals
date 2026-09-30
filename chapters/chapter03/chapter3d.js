@@ -33,7 +33,7 @@ const lineLoop = {
 // Shader Objects
 // =============================================================
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -217,8 +217,8 @@ function main() {
     }
 
     // SETUP
-    setupShader(gl, shader);
-    setupLineLoop(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupLineLoop(gl, shaderInfo);
 
     // RENDER
     function render() {

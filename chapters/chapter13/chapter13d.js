@@ -19,7 +19,7 @@ let canvas = null;
 let gl = null;
 
 // Shader Objects
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -514,12 +514,12 @@ function main() {
         return;
     }
 
-    setupShader(gl, shader);
-    setupGrid(gl, shader);
-    setupXAxis(gl, shader);
-    setupYAxis(gl, shader);
-    setupLetterF(gl, shader);
-    setupRectangle(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupGrid(gl, shaderInfo);
+    setupXAxis(gl, shaderInfo);
+    setupYAxis(gl, shaderInfo);
+    setupLetterF(gl, shaderInfo);
+    setupRectangle(gl, shaderInfo);
 
     function render() {
         updateCamera();
@@ -529,40 +529,40 @@ function main() {
 
         gl.clearColor(0.32, 0.63, 0.67, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.useProgram(shader.program);
+        gl.useProgram(shaderInfo.program);
 
         // PROJECTION MATRIX
         setupProjectionMatrix(gl);
-        gl.uniformMatrix3fv(shader.uniforms.projectionMatrix, false, camera.projectionMatrix);
+        gl.uniformMatrix3fv(shaderInfo.uniforms.projectionMatrix, false, camera.projectionMatrix);
 
         // VIEW MATRIX
         setupViewMatrix();
-        gl.uniformMatrix3fv(shader.uniforms.viewMatrix, false, camera.viewMatrix);
+        gl.uniformMatrix3fv(shaderInfo.uniforms.viewMatrix, false, camera.viewMatrix);
 
         // GRID
         gl.bindVertexArray(grid.vao);
-        gl.uniformMatrix3fv(shader.uniforms.modelMatrix, false, mat3.create());
-        gl.uniform4f(shader.uniforms.color, 0.39, 0.33, 0.58, 1.0);
+        gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
+        gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
         gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
 
         // X AXIS
         gl.bindVertexArray(xAxis.vao);
-        gl.uniformMatrix3fv(shader.uniforms.modelMatrix, false, mat3.create());
-        gl.uniform4f(shader.uniforms.color, 1.0, 0.0, 0.0, 1.0);
+        gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
+        gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
         gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
 
         // Y AXIS
         gl.bindVertexArray(yAxis.vao);
-        gl.uniformMatrix3fv(shader.uniforms.modelMatrix, false, mat3.create());
-        gl.uniform4f(shader.uniforms.color, 0.0, 1.0, 0.0, 1.0);
+        gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
+        gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
         gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
 
         // LETTER F
         setupModelMatrix(letterF);
 
         gl.bindVertexArray(letterF.vao);
-        gl.uniformMatrix3fv(shader.uniforms.modelMatrix, false, letterF.modelMatrix);
-        gl.uniform4f(shader.uniforms.color, 0.39, 0.33, 0.58, 1.0);
+        gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, letterF.modelMatrix);
+        gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
 
         gl.drawElements(
             letterF.drawMode,
@@ -575,8 +575,8 @@ function main() {
         setupModelMatrix(rectangle);
 
         gl.bindVertexArray(rectangle.vao);
-        gl.uniformMatrix3fv(shader.uniforms.modelMatrix, false, rectangle.modelMatrix);
-        gl.uniform4f(shader.uniforms.color, 1.0, 1.0, 0.0, 1.0);
+        gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, rectangle.modelMatrix);
+        gl.uniform4f(shaderInfo.uniforms.color, 1.0, 1.0, 0.0, 1.0);
 
         gl.drawArrays(
             rectangle.drawMode,

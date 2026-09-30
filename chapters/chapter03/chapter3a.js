@@ -33,7 +33,7 @@ const points = {
 // Shader Objects
 // =============================================================
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -217,8 +217,8 @@ function main() {
     }
 
     // SETUP
-    setupShader(gl, shader);
-    setupPoints(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupPoints(gl, shaderInfo);
 
     // RENDER
     function render() {

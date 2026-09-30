@@ -33,7 +33,7 @@ const lines = {
 // Shader Objects
 // =============================================================
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -217,8 +217,8 @@ function main() {
     }
 
     // SETUP
-    setupShader(gl, shader);
-    setupLines(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupLines(gl, shaderInfo);
 
     // RENDER
     function render() {

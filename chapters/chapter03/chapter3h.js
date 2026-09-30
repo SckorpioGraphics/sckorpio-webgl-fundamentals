@@ -33,7 +33,7 @@ const hexagon = {
 // Shader Objects
 // =============================================================
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -221,8 +221,8 @@ function main() {
     }
 
     // SETUP
-    setupShader(gl, shader);
-    setupHexagon(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupHexagon(gl, shaderInfo);
 
     // RENDER
     function render() {

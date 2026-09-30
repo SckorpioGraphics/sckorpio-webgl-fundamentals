@@ -39,7 +39,7 @@ const rectangle = {
 // Shader Objects
 // =============================================================
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -228,8 +228,8 @@ function main() {
     }
 
     // SETUP
-    setupShader(gl, shader);
-    setupRectangle(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupRectangle(gl, shaderInfo);
 
     // RENDER
     function render() {

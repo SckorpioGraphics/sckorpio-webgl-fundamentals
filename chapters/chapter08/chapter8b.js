@@ -40,7 +40,7 @@ const rectangle = {
     to convert pixel space to clip space.
 */
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -200,8 +200,8 @@ function main() {
         return;
     }
 
-    setupShader(gl, shader);
-    setupRectangle(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupRectangle(gl, shaderInfo);
 
     function render() {
         resizeCanvasToDisplaySize(gl.canvas);

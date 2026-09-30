@@ -51,7 +51,7 @@ const rectangle = {
     to convert pixel space to clip space.
 */
 
-const shader = {
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -270,9 +270,9 @@ function main() {
         return;
     }
 
-    setupShader(gl, shader);
-    setupGrid(gl, shader);
-    setupRectangle(gl, shader);
+    setupShader(gl, shaderInfo);
+    setupGrid(gl, shaderInfo);
+    setupRectangle(gl, shaderInfo);
 
     function render() {
         resizeCanvasToDisplaySize(gl.canvas);
@@ -281,7 +281,7 @@ function main() {
         gl.clearColor(0.32, 0.63, 0.67, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        gl.useProgram(shader.program);
+        gl.useProgram(shaderInfo.program);
 
         // ---------------------------------------------------------
         // PIXEL SPACE -> CLIP SPACE MATRIX
@@ -310,7 +310,7 @@ function main() {
         );
 
         gl.uniformMatrix3fv(
-            shader.uniforms.projectionMatrix,
+            shaderInfo.uniforms.projectionMatrix,
             false,
             projectionMatrix
         );
@@ -322,7 +322,7 @@ function main() {
         gl.bindVertexArray(grid.vao);
 
         gl.uniform4f(
-            shader.uniforms.color,
+            shaderInfo.uniforms.color,
             0.39, 0.33, 0.58, 1.0
         );
 
@@ -339,7 +339,7 @@ function main() {
         gl.bindVertexArray(rectangle.vao);
 
         gl.uniform4f(
-            shader.uniforms.color,
+            shaderInfo.uniforms.color,
             0.39, 0.33, 0.58, 1.0
         );
 
