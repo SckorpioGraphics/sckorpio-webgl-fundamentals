@@ -86,6 +86,26 @@ const controls = {
 // =============================================================
 
 const shader = {
+    vertexShaderSource: `#version 300 es
+    in vec2 a_position;
+    uniform mat3 u_viewMatrix;
+    uniform mat3 u_projectionMatrix;
+
+    void main() {
+        vec3 viewPosition = u_viewMatrix * vec3(a_position, 1.0);
+        vec3 clipPosition = u_projectionMatrix * viewPosition;
+        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
+    }
+`,
+    fragmentShaderSource: `#version 300 es
+    precision mediump float;
+    uniform vec4 u_color;
+    out vec4 out_color;
+
+    void main() {
+        out_color = u_color;
+    }
+`,
     program: null,
     attributes: {
         position: null
@@ -96,32 +116,6 @@ const shader = {
         color: null
     }
 };
-
-// =============================================================
-// SHADER STRINGS
-// =============================================================
-
-const vertexShaderSource = `#version 300 es
-    in vec2 a_position;
-    uniform mat3 u_viewMatrix;
-    uniform mat3 u_projectionMatrix;
-
-    void main() {
-        vec3 viewPosition = u_viewMatrix * vec3(a_position, 1.0);
-        vec3 clipPosition = u_projectionMatrix * viewPosition;
-        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
-    }
-`;
-
-const fragmentShaderSource = `#version 300 es
-    precision mediump float;
-    uniform vec4 u_color;
-    out vec4 out_color;
-
-    void main() {
-        out_color = u_color;
-    }
-`;
 
 // =============================================================
 // FUNCTIONS
@@ -156,10 +150,10 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
-function setupShader(gl) {
+function setupShader(gl, shader) {
     // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
 
     // Program
     shader.program = createProgram(gl, vertexShader, fragmentShader);
@@ -440,7 +434,7 @@ function main() {
         return;
     }
 
-    setupShader(gl);
+    setupShader(gl, shader);
     setupGrid(gl, shader);
     setupXAxis(gl, shader);
     setupYAxis(gl, shader);

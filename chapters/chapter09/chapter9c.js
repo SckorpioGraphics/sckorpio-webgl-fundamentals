@@ -78,23 +78,7 @@ const camera = {
 // =============================================================
 
 const shader = {
-    program: null,
-    attributes: {
-        position: null
-    },
-    uniforms: {
-        camera: null,
-        zoom: null,
-        projectionMatrix: null,
-        color: null
-    }
-};
-
-// =============================================================
-// SHADER STRINGS
-// =============================================================
-
-const vertexShaderSource = `#version 300 es
+    vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
     uniform vec2 u_cameraPosition;
@@ -115,9 +99,8 @@ const vertexShaderSource = `#version 300 es
 
         gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
     }
-`;
-
-const fragmentShaderSource = `#version 300 es
+`,
+    fragmentShaderSource: `#version 300 es
     precision mediump float;
 
     uniform vec4 u_color;
@@ -127,7 +110,18 @@ const fragmentShaderSource = `#version 300 es
     void main() {
         out_color = u_color;
     }
-`;
+`,
+    program: null,
+    attributes: {
+        position: null
+    },
+    uniforms: {
+        camera: null,
+        zoom: null,
+        projectionMatrix: null,
+        color: null
+    }
+};
 
 // =============================================================
 // FUNCTIONS
@@ -162,10 +156,10 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
-function setupShader(gl) {
+function setupShader(gl, shader) {
     // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
 
     // Program
     shader.program = createProgram(gl, vertexShader, fragmentShader);
@@ -401,7 +395,7 @@ function main() {
         return;
     }
 
-    setupShader(gl);
+    setupShader(gl, shader);
     setupGrid(gl, shader);
     setupXAxis(gl, shader);
     setupYAxis(gl, shader);

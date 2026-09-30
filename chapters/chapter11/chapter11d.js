@@ -19,6 +19,68 @@ let gl = null;
 
 // Shader Objects
 const shader = {
+    vertexShaderSource: `#version 300 es
+    in vec2 a_position;
+
+    uniform mat3 u_viewMatrix;
+    uniform mat3 u_projectionMatrix;
+    uniform float u_translationX;
+    uniform float u_translationY;
+    uniform float u_rotation;
+    uniform float u_pivotX;
+    uniform float u_pivotY;
+
+    void main() {
+        vec3 localPosition = vec3(a_position, 1.0);
+
+        mat3 translateToPivot = mat3(
+            1.0,       0.0,       0.0,
+            0.0,       1.0,       0.0,
+            -u_pivotX, -u_pivotY, 1.0
+        );
+
+        mat3 rotationMatrix = mat3(
+            cos(u_rotation),  sin(u_rotation), 0.0,
+           -sin(u_rotation),  cos(u_rotation), 0.0,
+            0.0,              0.0,             1.0
+        );
+
+        mat3 translateBack = mat3(
+            1.0,       0.0,       0.0,
+            0.0,       1.0,       0.0,
+            u_pivotX,   u_pivotY, 1.0
+        );
+
+        mat3 translationMatrix = mat3(
+            1.0,            0.0,            0.0,
+            0.0,            1.0,            0.0,
+            u_translationX, u_translationY, 1.0
+        );
+
+        vec3 worldPosition =
+            translationMatrix *
+            translateBack *
+            rotationMatrix *
+            translateToPivot *
+            localPosition;
+
+        vec3 viewPosition = u_viewMatrix * worldPosition;
+        vec3 clipPosition = u_projectionMatrix * viewPosition;
+
+        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
+    }
+`,
+    fragmentShaderSource: `#version 300 es
+    precision mediump float;
+
+    uniform vec4 u_color;
+
+    out vec4 out_color;
+
+    void main() {
+        out_color = u_color;
+    }
+`,
     program: null,
     attributes: {
         position: null
@@ -108,74 +170,6 @@ const pivot = {
 };
 
 // =============================================================
-// SHADER STRINGS
-// =============================================================
-
-const vertexShaderSource = `#version 300 es
-    in vec2 a_position;
-
-    uniform mat3 u_viewMatrix;
-    uniform mat3 u_projectionMatrix;
-    uniform float u_translationX;
-    uniform float u_translationY;
-    uniform float u_rotation;
-    uniform float u_pivotX;
-    uniform float u_pivotY;
-
-    void main() {
-        vec3 localPosition = vec3(a_position, 1.0);
-
-        mat3 translateToPivot = mat3(
-            1.0,       0.0,       0.0,
-            0.0,       1.0,       0.0,
-            -u_pivotX, -u_pivotY, 1.0
-        );
-
-        mat3 rotationMatrix = mat3(
-            cos(u_rotation),  sin(u_rotation), 0.0,
-           -sin(u_rotation),  cos(u_rotation), 0.0,
-            0.0,              0.0,             1.0
-        );
-
-        mat3 translateBack = mat3(
-            1.0,       0.0,       0.0,
-            0.0,       1.0,       0.0,
-            u_pivotX,   u_pivotY, 1.0
-        );
-
-        mat3 translationMatrix = mat3(
-            1.0,            0.0,            0.0,
-            0.0,            1.0,            0.0,
-            u_translationX, u_translationY, 1.0
-        );
-
-        vec3 worldPosition =
-            translationMatrix *
-            translateBack *
-            rotationMatrix *
-            translateToPivot *
-            localPosition;
-
-        vec3 viewPosition = u_viewMatrix * worldPosition;
-        vec3 clipPosition = u_projectionMatrix * viewPosition;
-
-        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
-    }
-`;
-
-const fragmentShaderSource = `#version 300 es
-    precision mediump float;
-
-    uniform vec4 u_color;
-
-    out vec4 out_color;
-
-    void main() {
-        out_color = u_color;
-    }
-`;
-
-// =============================================================
 // FUNCTIONS
 // =============================================================
 
@@ -208,9 +202,9 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
-function setupShader(gl) {
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+function setupShader(gl, shader) {
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
 
     shader.program = createProgram(gl, vertexShader, fragmentShader);
 
@@ -536,7 +530,7 @@ function main() {
         return;
     }
 
-    setupShader(gl);
+    setupShader(gl, shader);
     setupGrid(gl, shader);
     setupXAxis(gl, shader);
     setupYAxis(gl, shader);

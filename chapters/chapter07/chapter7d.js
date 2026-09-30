@@ -51,28 +51,14 @@ const triangle = {
 */
 
 const shader = {
-    program: null,
-    attributes: {
-        position: null
-    },
-    uniforms: {
-        color: null
-    }
-};
-
-// =============================================================
-// SHADER STRINGS
-// =============================================================
-
-const vertexShaderSource = `#version 300 es
+    vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
     void main() {
         gl_Position = vec4(a_position, 0.0, 1.0);
     }
-`;
-
-const fragmentShaderSource = `#version 300 es
+`,
+    fragmentShaderSource: `#version 300 es
     precision mediump float;
 
     uniform vec3 u_color;
@@ -82,7 +68,15 @@ const fragmentShaderSource = `#version 300 es
     void main() {
         out_color = vec4(u_color, 1.0);
     }
-`;
+`,
+    program: null,
+    attributes: {
+        position: null
+    },
+    uniforms: {
+        color: null
+    }
+};
 
 // =============================================================
 // FUNCTIONS
@@ -117,9 +111,9 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
-function setupShader(gl) {
-    const vertexShader = createShader(gl,gl.VERTEX_SHADER,vertexShaderSource);
-    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,fragmentShaderSource);
+function setupShader(gl, shader) {
+    const vertexShader = createShader(gl,gl.VERTEX_SHADER,shader.vertexShaderSource);
+    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,shader.fragmentShaderSource);
     shader.program = createProgram(gl,vertexShader,fragmentShader);
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
@@ -260,7 +254,7 @@ function main() {
         return;
     }
 
-    setupShader(gl);
+    setupShader(gl, shader);
     setupGrid(gl, shader);
     setupTriangle(gl, shader);
 

@@ -57,21 +57,7 @@ const triangle = {
 // =============================================================
 
 const shader = {
-    program: null,
-
-    attributes: {
-        position: null,
-        color: null
-    },
-
-    uniforms: {}
-};
-
-// =============================================================
-// SHADER STRINGS
-// =============================================================
-
-const vertexShaderSource = `#version 300 es
+    vertexShaderSource: `#version 300 es
     in vec2 a_position;
     in vec3 a_color;
 
@@ -81,9 +67,8 @@ const vertexShaderSource = `#version 300 es
         gl_Position = vec4(a_position, 0.0, 1.0);
         v_color = vec4(a_color, 1.0);
     }
-`;
-
-const fragmentShaderSource = `#version 300 es
+`,
+    fragmentShaderSource: `#version 300 es
     precision highp float;
 
     in vec4 v_color;
@@ -92,7 +77,16 @@ const fragmentShaderSource = `#version 300 es
     void main() {
         out_color = v_color;
     }
-`;
+`,
+    program: null,
+
+    attributes: {
+        position: null,
+        color: null
+    },
+
+    uniforms: {}
+};
 
 // =============================================================
 // FUNCTIONS
@@ -127,10 +121,10 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
-function setupShader(gl) {
+function setupShader(gl, shader) {
     // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
     // Program
     shader.program = createProgram(gl, vertexShader, fragmentShader);
     // Attributes
@@ -283,7 +277,7 @@ function main() {
     }
 
     // SETUP
-    setupShader(gl);
+    setupShader(gl, shader);
     setupTriangle(gl, shader);
 
     // RENDER

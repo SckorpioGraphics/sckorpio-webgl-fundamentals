@@ -18,11 +18,8 @@ Topics:
 let canvas = null;
 let gl = null;
 
-// =============================================================
-// SHADER STRINGS
-// =============================================================
-
-const vertexShaderSource = `#version 300 es
+const shader = {
+    vertexShaderSource: `#version 300 es
     in vec2 a_position;
     uniform mat3 u_matrix;
 
@@ -34,9 +31,9 @@ const vertexShaderSource = `#version 300 es
             1.0
         );
     }
-`;
+`,
 
-const fragmentShaderSource = `#version 300 es
+    fragmentShaderSource: `#version 300 es
     precision mediump float;
 
     uniform vec4 u_color;
@@ -47,7 +44,8 @@ const fragmentShaderSource = `#version 300 es
         // Set line color
         out_color = u_color;
     }
-`;
+`
+};
 
 // =============================================================
 // FUNCTIONS
@@ -204,13 +202,13 @@ function main() {
     const vertexShader = createShader(
         gl,
         gl.VERTEX_SHADER,
-        vertexShaderSource
+        shader.vertexShaderSource
     );
 
     const fragmentShader = createShader(
         gl,
         gl.FRAGMENT_SHADER,
-        fragmentShaderSource
+        shader.fragmentShaderSource
     );
 
     const program = createProgram(

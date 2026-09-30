@@ -51,6 +51,24 @@ const rectangle = {
 */
 
 const basicShader = {
+    fragmentShaderSource: `#version 300 es
+    precision mediump float;
+
+    uniform vec3 u_color;
+
+    out vec4 out_color;
+
+    void main() {
+        out_color = vec4(u_color, 1.0);
+    }
+`,
+    vertexShaderSource: `#version 300 es
+    in vec2 a_position;
+
+    void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+    }
+`,
     program: null,
     attributes: {
         position: null
@@ -61,51 +79,7 @@ const basicShader = {
 };
 
 const colorVertexShader = {
-    program: null,
-    attributes: {
-        position: null,
-        color: null
-    },
-    uniforms: {}
-};
-
-// =============================================================
-// SHADER STRINGS
-// =============================================================
-
-const basicVertexShaderSource = `#version 300 es
-    in vec2 a_position;
-
-    void main() {
-        gl_Position = vec4(a_position, 0.0, 1.0);
-    }
-`;
-
-const basicFragmentShaderSource = `#version 300 es
-    precision mediump float;
-
-    uniform vec3 u_color;
-
-    out vec4 out_color;
-
-    void main() {
-        out_color = vec4(u_color, 1.0);
-    }
-`;
-
-const colorVertexShaderSource = `#version 300 es
-    in vec2 a_position;
-    in vec3 a_color;
-
-    out vec4 v_color;
-
-    void main() {
-        gl_Position = vec4(a_position, 0.0, 1.0);
-        v_color = vec4(a_color, 1.0);
-    }
-`;
-
-const colorFragmentShaderSource = `#version 300 es
+    fragmentShaderSource: `#version 300 es
     precision highp float;
 
     in vec4 v_color;
@@ -115,7 +89,25 @@ const colorFragmentShaderSource = `#version 300 es
     void main() {
         out_color = v_color;
     }
-`;
+`,
+    vertexShaderSource: `#version 300 es
+    in vec2 a_position;
+    in vec3 a_color;
+
+    out vec4 v_color;
+
+    void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+        v_color = vec4(a_color, 1.0);
+    }
+`,
+    program: null,
+    attributes: {
+        position: null,
+        color: null
+    },
+    uniforms: {}
+};
 
 // =============================================================
 // FUNCTIONS
@@ -151,16 +143,16 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 function setupBasicShader(gl) {
-    const vertexShader = createShader(gl,gl.VERTEX_SHADER,basicVertexShaderSource);
-    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,basicFragmentShaderSource);
+    const vertexShader = createShader(gl,gl.VERTEX_SHADER,basicShader.vertexShaderSource);
+    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,basicShader.fragmentShaderSource);
     basicShader.program = createProgram(gl,vertexShader,fragmentShader);
     basicShader.attributes.position = gl.getAttribLocation(basicShader.program,"a_position");
     basicShader.uniforms.color = gl.getUniformLocation(basicShader.program,"u_color");
 }
 
 function setupcolorVertexShader(gl) {
-    const vertexShader = createShader(gl,gl.VERTEX_SHADER,colorVertexShaderSource);
-    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,colorFragmentShaderSource);
+    const vertexShader = createShader(gl,gl.VERTEX_SHADER,colorVertexShader.vertexShaderSource);
+    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,colorVertexShader.fragmentShaderSource);
     colorVertexShader.program = createProgram(gl,vertexShader,fragmentShader);
     colorVertexShader.attributes.position = gl.getAttribLocation(colorVertexShader.program,"a_position");
     colorVertexShader.attributes.color = gl.getAttribLocation(colorVertexShader.program,"a_color");
