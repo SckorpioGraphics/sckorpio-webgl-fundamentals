@@ -1,0 +1,45 @@
+PHASE 1 — FOUNDATIONS
+Ch 0: Introduction
+Ch 1: First Draw
+Ch 2: Structure
+Ch 3: Geometry
+Ch 4: Topologies I
+Ch 5: Topologies II
+Ch 6: Dynamic Buffers
+Ch 7: Vertex Color
+Ch 8: Uniforms
+Ch 9: Objects
+
+PHASE 2 — TRANSFORMATIONS
+Ch 10: 2D Camera
+Ch 11: Projection
+Ch 12: View Matrix
+Ch 13: Translation
+Ch 14: Rotation
+Ch 15: Scale
+Ch 16: Model Matrix
+
+PHASE 3 — RENDERING
+Ch 17: Textures I
+Ch 18: Textures II
+Ch 19: Texture Sampling
+Ch 20: Blending
+Ch 21: Render Order
+
+PHASE 4 — ANIMATION
+Ch 22: Time & Animation
+Ch 23: Transform Animation
+Ch 24: Color & Alpha
+Ch 25: Texture Animation
+
+PHASE 5 — INTERACTION
+Ch 26: Interaction
+Ch 27: Physics
+Ch 28: Collision
+Ch 29: Collision Response
+
+PHASE 6 — WORLD
+Ch 30: 2D World
+
+SPECIAL
+🦂 Sckorpio Game
