@@ -5,12 +5,12 @@ EPISODE PLAN AND IMPLEMENTATION STATUS
 PURPOSE
 -------
 This file connects the planned teaching sequence to the code that actually
-exists. Chapters 0–14 below are implemented in this repository. Chapters
+exists - Chapters 0–14 below are implemented in this repository - Chapters
 15–24 are the forward plan and do not yet have lesson source files here.
 
 The repository's implemented grouping is canonical: pixel/world work is
 Chapter 9, camera is Chapter 10, and 2D object transformations continue through
-Chapters 11–14 (translation, rotation, scale, and model matrices). Future
+Chapters 11–14 (translation, rotation, scale, and model matrices) - Future
 episode numbers continue from the implemented repository sequence.
 
 IMPLEMENTED SERIES
@@ -18,203 +18,260 @@ IMPLEMENTED SERIES
 
 CHAPTER 0 — SERIES INTRODUCTION
 --------------------------------
-0. Why this series, why WebGL, and what the course will cover.
+0 - Why this series, why WebGL, and what the course will cover.
 
 CHAPTER 1 — FIRST WEBGL DRAW
 ----------------------------
-1a. Raw first triangle: trace context, shaders, buffers, VAO, viewport, clear,
+1a - Raw first triangle: trace context, shaders, buffers, VAO, viewport, clear,
 	and drawArrays directly.
 
 CHAPTER 2 — LESSON TEMPLATE AND STRUCTURED TRIANGLE
 ----------------------------------------------------
-2a. Blank code-organization template; no rendering.
-2b. Complete a working triangle using the structured lesson template.
+2a - Blank code-organization template; no rendering.
+2b - Complete a working triangle using the structured lesson template.
 
 CHAPTER 3 — GEOMETRY AND INDEXING
 ---------------------------------
-3a. Multiple triangles in one sequential vertex list and one draw call.
-3b. Build a rectangle from two triangles with drawArrays.
-3c. Store rectangle corners once and render them with an index buffer.
-3d. Build a letter F from indexed triangles to practice vertex reuse.
+3a - Multiple triangles in one sequential vertex list and one draw call.
+3b - Build a rectangle from two triangles with drawArrays.
+3c - Store rectangle corners once and render them with an index buffer.
+3d - Build a letter F from indexed triangles to practice vertex reuse.
 
 CHAPTER 4 — PRIMITIVE TOPOLOGIES
 --------------------------------
-4a. POINTS: render independent point positions.
-4b. LINES: pair vertices into independent line segments.
-4c. LINE_STRIP: connect adjacent vertices without closing the path.
-4d. LINE_LOOP: connect and close the path.
-4e. Construct a hexagon outline using line-loop topology.
-4f. TRIANGLES: assemble independent groups of three vertices.
-4g. TRIANGLE_STRIP: extend connected triangles while reusing vertices.
-4h. TRIANGLE_FAN: fill a polygon around a shared center.
+4a - POINTS: render independent point positions.
+4b - LINES: pair vertices into independent line segments.
+4c - LINE_STRIP: connect adjacent vertices without closing the path.
+4d - LINE_LOOP: connect and close the path.
+4e - Construct a hexagon outline using line-loop topology.
+4f - TRIANGLES: assemble independent groups of three vertices.
+4g - TRIANGLE_STRIP: extend connected triangles while reusing vertices.
+4h - TRIANGLE_FAN: fill a polygon around a shared center.
 
 CHAPTER 5 — DYNAMIC BUFFERS
 ---------------------------
-5a. Change triangle vertex positions through GUI state and dynamic buffer data.
-5b. Apply the same editable-geometry idea to a rectangle.
-5c. Generate an editable polygon/circle outline with LINE_LOOP.
-5d. Generate an editable filled polygon/circle with TRIANGLE_FAN.
+5a - Change triangle vertex positions through GUI state and dynamic buffer data.
+5b - Apply the same editable-geometry idea to a rectangle.
+5c - Generate an editable polygon/circle outline with LINE_LOOP.
+5d - Generate an editable filled polygon/circle with TRIANGLE_FAN.
 
 CHAPTER 6 — VERTEX DATA AND COLOR
 ---------------------------------
-6a. Send vertex colors through shader varyings and observe interpolation.
-6b. Keep position and color in separate attribute buffers.
-6c. Interleave position and color in one buffer; configure stride and offsets.
-6d. Color two rectangle triangles independently at their vertices to produce
+6a - Send vertex colors through shader varyings and observe interpolation.
+6b - Keep position and color in separate attribute buffers.
+6c - Interleave position and color in one buffer; configure stride and offsets.
+6d - Color two rectangle triangles independently at their vertices to produce
 	interpolated gradients across the shape.
-6e. Give each triangle its own uniform per-triangle vertex color, repeating
+6e - Give each triangle its own uniform per-triangle vertex color, repeating
 	shared corner positions when the colors differ.
 
 CHAPTER 7 — UNIFORMS
 --------------------
-7a. Control brightness with one float uniform.
-7b. Pass RGB as separate float uniforms and control brightness.
-7c. Pack RGB into a vec3 uniform with brightness as a separate float.
-7d. Combine vertex-varying color and uniform color in one shader flow.
-7e. Survey the uniform types and WebGL upload calls used by the example.
+7a - Control brightness with one float uniform.
+7b - Pass RGB as separate float uniforms and control brightness.
+7c - Pack RGB into a vec3 uniform with brightness as a separate float.
+7d - Combine vertex-varying color and uniform color in one shader flow.
+7e - Survey the uniform types and WebGL upload calls used by the example.
 
 CHAPTER 8 — MULTIPLE OBJECTS
 ----------------------------
-8a. Draw a triangle and rectangle with separate VAO/VBO state and one shader.
-8b. Draw objects with different primitive topologies using the same shader.
-8c. Switch between a uniform-color program and a vertex-color program.
-8d. Combine a line grid and triangle in clip space with separate draw calls.
+8a - Draw a triangle and rectangle with separate VAO/VBO state and one shader.
+8b - Draw objects with different primitive topologies using the same shader.
+8c - Switch between a uniform-color program and a vertex-color program.
+8d - Combine a line grid and triangle in clip space with separate draw calls.
 
 CHAPTER 9 — PIXEL SPACE AND WORLD GEOMETRY
 ------------------------------------------
-9a. Define a rectangle in pixel units and map it to clip space.
-9b. Move pixel-to-clip conversion into a mat3 uniform and invert screen Y.
-9c. Generate random rectangles and reuse/update the same vertex buffer.
-9d. Add a large grid and rectangle in pixel-space coordinates.
-9e. Add X/Y axes and multiple objects under the same projection.
+9a - Define a rectangle in pixel units and map it to clip space.
+9b - Move pixel-to-clip conversion into a mat3 uniform and invert screen Y.
+9c - Generate random rectangles and reuse/update the same vertex buffer.
+9d - Add a large grid and rectangle in pixel-space coordinates.
+9e - Add X/Y axes and multiple objects under the same projection.
 
 CHAPTER 10 — 2D CAMERA
 ---------------------
-10a. Establish a large world grid, axes, and drawable objects.
-10b. Represent camera position as JavaScript state and send it to the shader.
-10c. Add camera zoom and discrete controls.
-10d. Encapsulate camera translation/zoom in a view matrix.
-10e. Add key-state-driven discrete camera movement alongside GUI controls.
-10f. Update movement continuously while keys are held using a render loop.
+10a - Establish a large world grid, axes, and drawable objects.
+10b - Represent camera position as JavaScript state and send it to the shader.
+10c - Add camera zoom and discrete controls.
+10d - Encapsulate camera translation/zoom in a view matrix.
+10e - Add key-state-driven discrete camera movement alongside GUI controls.
+10f - Update movement continuously while keys are held using a render loop.
 
 CHAPTER 11 — 2D OBJECT TRANSFORMATIONS
 --------------------------------------
-11a. Translate object vertices with uniform values.
-11b. Add object rotation to the translated scene.
-11c. Add independent X/Y scale values.
-11d. Compose translation, rotation, and scale into a model matrix.
+11a - Translate object vertices with uniform values.
+11b - Add object rotation to the translated scene.
+11c - Add independent X/Y scale values.
+11d - Compose translation, rotation, and scale into a model matrix.
 
 CHAPTER 12 — 2D ROTATION
 ------------------------
-12a. Rotate an object with sine and cosine.
-12b. Represent rotation with a matrix.
-12c. Compare the results of changing translation/rotation order.
-12d. Rotate around and visualize a pivot.
+12a - Rotate an object with sine and cosine.
+12b - Represent rotation with a matrix.
+12c - Compare the results of changing translation/rotation order.
+12d - Rotate around and visualize a pivot.
 
 CHAPTER 13 — 2D SCALE
 ---------------------
-13a. Apply uniform scale directly to vertex coordinates.
-13b. Use a scale matrix for uniform and non-uniform scaling.
+13a - Apply uniform scale directly to vertex coordinates.
+13b - Use a scale matrix for uniform and non-uniform scaling.
 
 CHAPTER 14 — MODEL MATRICES
 ---------------------------
-14a. Compose translation, rotation, and scale in the shader.
-14b. Build a model matrix in JavaScript and pass it as a uniform.
-14c. Give multiple objects independent model matrices.
-14d. Compose model, view, and projection transforms across a scene.
+14a - Compose translation, rotation, and scale in the shader.
+14b - Build a model matrix in JavaScript and pass it as a uniform.
+14c - Give multiple objects independent model matrices.
+14d - Compose model, view, and projection transforms across a scene.
 
 The file-by-file paths and implementation details are in chapters_index.txt.
 
 PLANNED CONTINUATION
 ====================
 
-CHAPTER 15 — 2D TEXTURES
-------------------------
-15a. Create a texture object and understand texture unit/state.
-15b. Upload image or generated pixel data and configure texture parameters.
-15c. Add UV coordinates to geometry and define texture orientation.
-15d. Sample textures in a fragment shader; compare filtering and wrapping.
-15e. Render a textured rectangle.
-15f. Combine a texture with the existing 2D transform pipeline.
-15g. Render multiple textured objects with independent texture state.
+CHAPTER 15 — Animation & Interaction
+---------------------------
+15a — Animation Basics & Time
+15b — Translation Animation
+15c — Rotation Animation
+15d — Scale Animation
+15e — Color Animation
+15f — Keyboard Interaction
+15g — Combining Input + Animation
 
-CHAPTER 16 — 2D SPRITES AND SCENES
-----------------------------------
-16a. Represent a sprite as textured geometry plus transform/state.
-16b. Read sprite frames from a sprite sheet.
-16c. Select UV sub-rectangles for individual frames.
-16d. Animate frame selection over time.
-16e. Flip sprite UVs or geometry for orientation changes.
-16f. Draw multiple sprites with shared rendering resources.
-16g. Assemble a small 2D scene from reusable sprites.
+CHAPTER 16 — Textures
+---------------------------
+16a - Create a texture object and understand texture unit/state.
+16b - Upload image or generated pixel data and configure texture parameters.
+16c - Add UV coordinates to geometry and define texture orientation.
+16d - Sample textures in a fragment shader; compare filtering and wrapping.
+16e - Render a textured rectangle.
+16f - Combine a texture with the existing 2D transform pipeline.
+16g - Render multiple textured objects with independent texture state.
 
-CHAPTER 17 — 3D WORLD AND DEPTH
+CHAPTER 17 — Texture Animation
+---------------------------
+17a — Changing Textures Over Time
+17b — Texture Flipping
+17c — UV Region / Frame Selection
+17d — Time-Based Texture Animation
+17e — Animated Textured Objects
+
+CHAPTER 18 — Alpha Blending & Ordering
+---------------------------
+18a — Alpha
+18b — Transparency
+18c — Blending
+18d — Blend Functions
+18e — Draw Order
+18f — Alpha Animation / Fading
+
+CHAPTER 19 — Bounding Boxes & Collision Basics
+---------------------------
+19a — Bounding Boxes
+19b — AABB
+19c — Point vs Rectangle
+19d — Rectangle vs Rectangle
+19e — Collision Detection
+19f — Basic Collision Response
+
+CHAPTER 20 — Complete 2D Scene
+---------------------------
+20a — 2D World
+20b — Background & Foreground
+20c — Multiple Objects & Layers
+20d — Camera + World
+20e — Scrolling
+20f — Putting Everything Together
+
+
+🦂 SPECIAL EPISODE — Sckorpio: The 2D Game
+---------------------------
+
+Use everything from Chapters 1–20:
+
+Keyboard-controlled Sckorpio
+Movement
+Jumping / gravity
+Ground & platforms
+AABB collision
+Texture animation
+Flipping
+Alpha / transparency
+Camera follow
+Desert/night environment
+Collectibles / objectives
+Crab enemy
+Stinger attack
+Simple enemy interaction
+Game goal / ending
+
+CHAPTER 21 — 3D WORLD AND DEPTH
 -------------------------------
-17a. Introduce XYZ coordinates and 3D vertex data.
-17b. Build basic 3D geometry and a triangle/cube example.
-17c. Draw multiple 3D objects.
-17d. Explain depth values and depth testing.
-17e. Enable and inspect the depth buffer.
-17f. Combine geometry into a simple 3D world.
+21a - Introduce XYZ coordinates and 3D vertex data.
+21b - Build basic 3D geometry and a triangle/cube example.
+21c - Draw multiple 3D objects.
+21d - Explain depth values and depth testing.
+21e - Enable and inspect the depth buffer.
+21f - Combine geometry into a simple 3D world.
 
-CHAPTER 18 — 3D CAMERA
+CHAPTER 22 — 3D CAMERA
 ----------------------
-18a. Camera position and orientation.
-18b. View matrix and look-at construction.
-18c. Camera movement in 3D.
-18d. First-person camera controls.
-18e. Mouse and keyboard camera input.
+22a - Camera position and orientation.
+22b - View matrix and look-at construction.
+22c - Camera movement in 3D.
+22d - First-person camera controls.
+22e - Mouse and keyboard camera input.
 
-CHAPTER 19 — 3D PROJECTION
+CHAPTER 23 — 3D PROJECTION
 --------------------------
-19a. Orthographic projection.
-19b. Perspective projection.
-19c. Field of view and aspect ratio.
-19d. Near and far clipping planes.
-19e. Perspective depth and the projection pipeline.
+23a - Orthographic projection.
+23b - Perspective projection.
+23c - Field of view and aspect ratio.
+23d - Near and far clipping planes.
+23e - Perspective depth and the projection pipeline.
 
-CHAPTER 20 — 3D TRANSFORMATIONS
+CHAPTER 24 — 3D TRANSFORMATIONS
 -------------------------------
-20a. mat4 and homogeneous 3D coordinates.
-20b. Translation and scale.
-20c. Rotation around X, Y, and Z.
-20d. Transformation composition and order.
-20e. Model matrices for independent objects.
+24a - mat4 and homogeneous 3D coordinates.
+24b - Translation and scale.
+24c - Rotation around X, Y, and Z.
+24d - Transformation composition and order.
+24e - Model matrices for independent objects.
 
-CHAPTER 21 — 3D TEXTURES
+CHAPTER 25 — 3D TEXTURES
 ------------------------
-21a. Textured cube and 3D UV coordinates.
-21b. Texture filtering and wrapping.
-21c. Multiple textured 3D objects.
+25a - Textured cube and 3D UV coordinates.
+25b - Texture filtering and wrapping.
+25c - Multiple textured 3D objects.
 
-CHAPTER 22 — LIGHTING FUNDAMENTALS
+CHAPTER 26 — LIGHTING FUNDAMENTALS
 ----------------------------------
-22a. Surface normals and normal attributes.
-22b. Diffuse lighting and light position.
-22c. Ambient plus diffuse contribution.
-22d. Specular lighting and view direction.
-22e. Combine components into a Phong-style lighting model.
+26a - Surface normals and normal attributes.
+26b - Diffuse lighting and light position.
+26c - Ambient plus diffuse contribution.
+26d - Specular lighting and view direction.
+26e - Combine components into a Phong-style lighting model.
 
-CHAPTER 23 — MATERIALS AND MULTIPLE LIGHTS
+CHAPTER 27 — MATERIALS AND MULTIPLE LIGHTS
 -------------------------------------------
-23a. Material color and properties.
-23b. Combine one light with a material.
-23c. Add multiple lights and compare materials.
-23d. Combine textures, lighting, and multiple objects.
-23e. Assemble a small lit scene.
+27a - Material color and properties.
+27b - Combine one light with a material.
+27c - Add multiple lights and compare materials.
+27d - Combine textures, lighting, and multiple objects.
+27e - Assemble a small lit scene.
 
-CHAPTER 24 — COMPLETE WEBGL PIPELINE
+CHAPTER 28 — COMPLETE WEBGL PIPELINE
 -------------------------------------
-24a. Multiple meshes and draw calls.
-24b. Model/view/projection integration.
-24c. Combine textures, normals, materials, lighting, and depth.
-24d. Add camera control and render a complete scene.
+28a - Multiple meshes and draw calls.
+28b - Model/view/projection integration.
+28c - Combine textures, normals, materials, lighting, and depth.
+28d - Add camera control and render a complete scene.
 
 SERIES RELATIONSHIP
 ===================
 
 CG Fundamentals is the conceptual, visual series; WebGL Fundamentals is the
-implementation series. A reusable resource should flow from the concept to
+implementation series - A reusable resource should flow from the concept to
 both episodes:
 
 CG concept → master diagram/animation → CG Fundamentals explanation →
@@ -222,6 +279,9 @@ WebGL Fundamentals implementation.
 
 Core conceptual subjects include the GPU, shaders, rasterization, vertices,
 vectors, matrices, coordinate spaces, cameras, projection, textures, UVs,
-depth, normals, lighting, materials, and the rendering pipeline. Keep those
+depth, normals, lighting, materials, and the rendering pipeline - Keep those
 conceptual episodes API-independent; introduce WebGL calls in the coding
 series.
+
+
+FUTURE ADVANCED 2D CONCEPTS
