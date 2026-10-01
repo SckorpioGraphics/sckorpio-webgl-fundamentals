@@ -1,9 +1,8 @@
 /* #############################################################
-CHAPTER 5a: Dynamic Triangle
+CHAPTER 5a: Learning Topology — TRIANGLES
 
 Topics:
-- Adding a basic UI to manipulate
-- Vertex positions
+- Making Multiple Triangles
 ###############################################################
 */
 
@@ -15,24 +14,17 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const uiState = {
-    aX: -0.5,
-    aY: 0.0,
-    bX: 0.5,
-    bY: 0.0,
-    cX: 0.0,
-    cY: 0.5
-};
-
-const triangle = {
+const triangles = {
     shader: null,
 
     vao: null,
     vbo: null,
+    ibo: null,
 
     drawMode: null,
     drawOffset: 0,
-    drawCount: 0
+    drawCount: 0,
+    drawType: null
 };
 
 // =============================================================
@@ -130,30 +122,67 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupTriangle(gl, shader) {
-    triangle.shader = shader;
+function setupTriangles(gl, shader) {
+    triangles.shader = shader;
+
+    /*
+        v0 ---- v2         v4
+          \    /          / \
+           \  /          /   \
+            v1         v3-----v5
+    */
 
     // ---------------------------------------------------------
     // VERTEX BUFFER
     // ---------------------------------------------------------
 
-    triangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+    const positions = new Float32Array([
+        -0.6,  0.2,   // v0
+        -0.4, -0.2,   // v1
+        -0.2,  0.2,   // v2
 
-    // Vertex data will be updated from the UI during rendering.
+         0.0, -0.2,   // v3
+         0.2,  0.2,   // v4
+         0.4, -0.2    // v5
+    ]);
+
+    triangles.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangles.vbo);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.STATIC_DRAW
+    );
+
+    // ---------------------------------------------------------
+    // INDEX BUFFER
+    // ---------------------------------------------------------
+
+    const indices = new Uint16Array([
+        0, 1, 2,
+        3, 4, 5
+    ]);
+
+    triangles.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangles.ibo);
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        indices,
+        gl.STATIC_DRAW
+    );
 
     // ---------------------------------------------------------
     // VERTEX ARRAY
     // ---------------------------------------------------------
 
-    triangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(triangle.vao);
+    triangles.vao = gl.createVertexArray();
+    gl.bindVertexArray(triangles.vao);
 
-    gl.enableVertexAttribArray(triangle.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+    gl.enableVertexAttribArray(triangles.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangles.vbo);
 
     gl.vertexAttribPointer(
-        triangle.shader.attributes.position,
+        triangles.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -161,34 +190,14 @@ function setupTriangle(gl, shader) {
         0
     );
 
+    // Index buffer binding is stored inside the VAO.
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangles.ibo);
+
     // Draw data
-    triangle.drawMode = gl.TRIANGLES;
-    triangle.drawOffset = 0;
-    triangle.drawCount = 3;
-}
-
-// =============================================================
-// GUI Setup Functions
-// =============================================================
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-    const vertexFolder = gui.addFolder("Vertex Positions");
-
-    // Point A
-    const pointAFolder = vertexFolder.addFolder("Point A");
-    pointAFolder.add(uiState, "aX", -1, 1).name("X").onChange(render);
-    pointAFolder.add(uiState, "aY", -1, 1).name("Y").onChange(render);
-
-    // Point B
-    const pointBFolder = vertexFolder.addFolder("Point B");
-    pointBFolder.add(uiState, "bX", -1, 1).name("X").onChange(render);
-    pointBFolder.add(uiState, "bY", -1, 1).name("Y").onChange(render);
-
-    // Point C
-    const pointCFolder = vertexFolder.addFolder("Point C");
-    pointCFolder.add(uiState, "cX", -1, 1).name("X").onChange(render);
-    pointCFolder.add(uiState, "cY", -1, 1).name("Y").onChange(render);
+    triangles.drawMode = gl.TRIANGLES;
+    triangles.drawOffset = 0;
+    triangles.drawCount = indices.length;
+    triangles.drawType = gl.UNSIGNED_SHORT;
 }
 
 // =============================================================
@@ -201,28 +210,14 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(triangle.shader.program);
-    gl.bindVertexArray(triangle.vao);
+    gl.useProgram(triangles.shader.program);
+    gl.bindVertexArray(triangles.vao);
 
-    // Vertex data CPU side
-    const positions = new Float32Array([
-        uiState.aX, uiState.aY, // Point A
-        uiState.bX, uiState.bY, // Point B
-        uiState.cX, uiState.cY  // Point C
-    ]);
-
-    // Update vertex data on the GPU
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.DYNAMIC_DRAW
-    );
-
-    gl.drawArrays(
-        triangle.drawMode,
-        triangle.drawOffset,
-        triangle.drawCount
+    gl.drawElements(
+        triangles.drawMode,
+        triangles.drawCount,
+        triangles.drawType,
+        triangles.drawOffset
     );
 }
 
@@ -245,9 +240,8 @@ function main() {
 
     // SETUP
     setupShader(gl, shaderInfo);
-    setupTriangle(gl, shaderInfo);
-    // UI
-    setupGUI(() => render(gl));
+    setupTriangles(gl, shaderInfo);
+
     // RENDER
     render(gl);
     window.addEventListener("resize", () => render(gl));

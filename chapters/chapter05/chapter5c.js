@@ -1,9 +1,8 @@
 /* #############################################################
-CHAPTER 5c: Dynamic Polygon Outline
+CHAPTER 5c: Learning Topology — TRIANGLE_FAN
 
 Topics:
-- Learning Topology LINE_LOOP
-- Making a Polygon to Circle
+- Making a Filled Polygon — Hexagon
 ###############################################################
 */
 
@@ -15,14 +14,7 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const uiState = {
-    centerX: 0.0,
-    centerY: 0.0,
-    radius: 0.5,
-    points: 5
-};
-
-const polygon = {
+const hexagon = {
     shader: null,
 
     vao: null,
@@ -130,37 +122,67 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupPolygon(gl, shader) {
-    polygon.shader = shader;
+function setupHexagon(gl, shader) {
+    hexagon.shader = shader;
+
+    /*
+             v6---v5
+           /   \ /   \
+         v1     v0    v4
+           \         /
+             v2---v3
+    */
 
     // ---------------------------------------------------------
     // VERTEX BUFFER
     // ---------------------------------------------------------
 
-    polygon.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
+    const positions = new Float32Array([
+         0.0,  0.0,   // v0 - Center
+        -0.6,  0.0,   // v1
+        -0.3, -0.6,   // v2
+         0.3, -0.6,   // v3
+         0.6,  0.0,   // v4
+         0.3,  0.6,   // v5
+        -0.3,  0.6    // v6
+    ]);
 
-    // Vertex data will be generated from the UI during rendering.
+    hexagon.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, hexagon.vbo);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        positions,
+        gl.STATIC_DRAW
+    );
 
     // ---------------------------------------------------------
     // INDEX BUFFER
     // ---------------------------------------------------------
 
-    polygon.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
+    const indices = new Uint16Array([
+        0, 1, 2, 3, 4, 5, 6, 1
+    ]);
+
+    hexagon.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, hexagon.ibo);
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        indices,
+        gl.STATIC_DRAW
+    );
 
     // ---------------------------------------------------------
     // VERTEX ARRAY
     // ---------------------------------------------------------
 
-    polygon.vao = gl.createVertexArray();
-    gl.bindVertexArray(polygon.vao);
+    hexagon.vao = gl.createVertexArray();
+    gl.bindVertexArray(hexagon.vao);
 
-    gl.enableVertexAttribArray(polygon.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
+    gl.enableVertexAttribArray(hexagon.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, hexagon.vbo);
 
     gl.vertexAttribPointer(
-        polygon.shader.attributes.position,
+        hexagon.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -169,32 +191,13 @@ function setupPolygon(gl, shader) {
     );
 
     // Index buffer binding is stored inside the VAO.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, hexagon.ibo);
 
     // Draw data
-    polygon.drawMode = gl.LINE_LOOP;
-    polygon.drawOffset = 0;
-    polygon.drawCount = 0;
-    polygon.drawType = gl.UNSIGNED_SHORT;
-}
-
-// =============================================================
-// GUI Setup Functions
-// =============================================================
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-    const polygonFolder = gui.addFolder("Polygon");
-
-    // Center
-    const centerFolder = polygonFolder.addFolder("Center");
-    centerFolder.add(uiState, "centerX", -1, 1).name("centerX").onChange(render);
-    centerFolder.add(uiState, "centerY", -1, 1).name("centerY").onChange(render);
-
-    // Dimension
-    const dimFolder = polygonFolder.addFolder("Dimensions");
-    dimFolder.add(uiState, "radius", 0, 1).name("radius").onChange(render);
-    dimFolder.add(uiState, "points", 3, 20, 1).name("points").onChange(render);
+    hexagon.drawMode = gl.TRIANGLE_FAN;
+    hexagon.drawOffset = 0;
+    hexagon.drawCount = indices.length;
+    hexagon.drawType = gl.UNSIGNED_SHORT;
 }
 
 // =============================================================
@@ -207,55 +210,14 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(polygon.shader.program);
-    gl.bindVertexArray(polygon.vao);
-
-    // Vertex and index data CPU side
-    const positionsData = [];
-    const indicesData = [];
-
-    for(let i = 0; i < uiState.points; i++) {
-        const angle = (i / uiState.points) * (2 * Math.PI);
-
-        const x = uiState.centerX +
-                  Math.sin(angle) * uiState.radius;
-
-        const y = uiState.centerY +
-                  Math.cos(angle) * uiState.radius;
-
-        positionsData.push(x);
-        positionsData.push(y);
-
-        indicesData.push(i);
-    }
-
-    const positions = new Float32Array(positionsData);
-    const indices = new Uint16Array(indicesData);
-
-    // Update vertex data on the GPU
-    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.DYNAMIC_DRAW
-    );
-
-    // Update index data on the GPU
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
-    gl.bufferData(
-        gl.ELEMENT_ARRAY_BUFFER,
-        indices,
-        gl.DYNAMIC_DRAW
-    );
-
-    // Update draw data
-    polygon.drawCount = indices.length;
+    gl.useProgram(hexagon.shader.program);
+    gl.bindVertexArray(hexagon.vao);
 
     gl.drawElements(
-        polygon.drawMode,
-        polygon.drawCount,
-        polygon.drawType,
-        polygon.drawOffset
+        hexagon.drawMode,
+        hexagon.drawCount,
+        hexagon.drawType,
+        hexagon.drawOffset
     );
 }
 
@@ -278,9 +240,8 @@ function main() {
 
     // SETUP
     setupShader(gl, shaderInfo);
-    setupPolygon(gl, shaderInfo);
-    // UI
-    setupGUI(() => render(gl));
+    setupHexagon(gl, shaderInfo);
+
     // RENDER
     render(gl);
     window.addEventListener("resize", () => render(gl));

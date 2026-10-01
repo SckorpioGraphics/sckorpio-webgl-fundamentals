@@ -1,10 +1,8 @@
 /* #############################################################
-CHAPTER 6d: Rectangle with Two Triangles and Vertex Colors
+CHAPTER 6d: Dynamic Filled Polygon
 
 Topics:
-- Making a rectangle with 2 different triangles
-- Observe how interpolation works between these triangles
-- Create the gradient effect
+- Making a Polygon to Circle
 ###############################################################
 */
 
@@ -17,38 +15,23 @@ Topics:
 // =============================================================
 
 const uiState = {
-    // Vertex Positions
-    aX: -0.5,
-    aY: -0.5,
-    bX: 0.5,
-    bY: -0.5,
-    cX: 0.5,
-    cY: 0.5,
-    dX: -0.5,
-    dY: 0.5,
-
-    // Vertex Colors
-    aR: 1.0,
-    aG: 0.0,
-    aB: 0.0,
-    bR: 0.0,
-    bG: 1.0,
-    bB: 0.0,
-    cR: 0.0,
-    cG: 0.0,
-    cB: 1.0,
-    dR: 1.0,
-    dG: 1.0,
-    dB: 0.0
+    centerX: 0.0,
+    centerY: 0.0,
+    radius: 0.5,
+    points: 5
 };
 
-const rectangle = {
+const polygon = {
     shader: null,
+
     vao: null,
     vbo: null,
+    ibo: null,
+
     drawMode: null,
     drawOffset: 0,
-    drawCount: 0
+    drawCount: 0,
+    drawType: null
 };
 
 // =============================================================
@@ -58,30 +41,26 @@ const rectangle = {
 const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
-    in vec3 a_color;
-
-    out vec4 v_color;
 
     void main() {
         gl_Position = vec4(a_position, 0.0, 1.0);
-        v_color = vec4(a_color, 1.0);
     }
 `,
     fragmentShaderSource: `#version 300 es
-    precision highp float;
-
-    in vec4 v_color;
-    out vec4 out_color;
+    precision mediump float;
+    out vec4 out_Color;
 
     void main() {
-        out_color = v_color;
+        // out_Color = vec4(0.0, 1.0, 1.0, 1.0); // Cyan
+        out_Color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio Purple
     }
 `,
     program: null,
+
     attributes: {
-        position: null,
-        color: null
+        position: null
     },
+
     uniforms: {}
 };
 
@@ -126,7 +105,6 @@ function setupShader(gl, shader) {
     shader.program = createProgram(gl, vertexShader, fragmentShader);
     // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    shader.attributes.color = gl.getAttribLocation(shader.program, "a_color");
     // Future uniforms
 }
 
@@ -151,42 +129,52 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupRectangle(gl, shader) {
-    rectangle.shader = shader;
+function setupPolygon(gl, shader) {
+    polygon.shader = shader;
 
-    rectangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    // ---------------------------------------------------------
+    // VERTEX BUFFER
+    // ---------------------------------------------------------
 
-    rectangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(rectangle.vao);
+    polygon.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    // Vertex data will be generated from the UI during rendering.
 
-    // Vertex positions
-    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
+    // ---------------------------------------------------------
+    // INDEX BUFFER
+    // ---------------------------------------------------------
+
+    polygon.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
+
+    // ---------------------------------------------------------
+    // VERTEX ARRAY
+    // ---------------------------------------------------------
+
+    polygon.vao = gl.createVertexArray();
+    gl.bindVertexArray(polygon.vao);
+
+    gl.enableVertexAttribArray(polygon.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
+
     gl.vertexAttribPointer(
-        rectangle.shader.attributes.position,
+        polygon.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        0 * Float32Array.BYTES_PER_ELEMENT
+        0,
+        0
     );
 
-    // Vertex colors
-    gl.enableVertexAttribArray(rectangle.shader.attributes.color);
-    gl.vertexAttribPointer(
-        rectangle.shader.attributes.color,
-        3,
-        gl.FLOAT,
-        false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        2 * Float32Array.BYTES_PER_ELEMENT
-    );
+    // Index buffer binding is stored inside the VAO.
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
 
-    rectangle.drawMode = gl.TRIANGLES;
-    rectangle.drawOffset = 0;
-    rectangle.drawCount = 6;
+    // Draw data
+    polygon.drawMode = gl.TRIANGLE_FAN;
+    polygon.drawOffset = 0;
+    polygon.drawCount = 0;
+    polygon.drawType = gl.UNSIGNED_SHORT;
 }
 
 // =============================================================
@@ -195,54 +183,17 @@ function setupRectangle(gl, shader) {
 
 function setupGUI(render) {
     const gui = new lil.GUI();
+    const polygonFolder = gui.addFolder("Polygon");
 
-    const verticesFolder = gui.addFolder("Vertices");
+    // Center
+    const centerFolder = polygonFolder.addFolder("Center");
+    centerFolder.add(uiState, "centerX", -1, 1).name("centerX").onChange(render);
+    centerFolder.add(uiState, "centerY", -1, 1).name("centerY").onChange(render);
 
-    // Point A
-    const pointAFolder = verticesFolder.addFolder("Point A");
-    pointAFolder.add(uiState, "aX", -1, 1).name("X").onChange(render);
-    pointAFolder.add(uiState, "aY", -1, 1).name("Y").onChange(render);
-
-    // Point B
-    const pointBFolder = verticesFolder.addFolder("Point B");
-    pointBFolder.add(uiState, "bX", -1, 1).name("X").onChange(render);
-    pointBFolder.add(uiState, "bY", -1, 1).name("Y").onChange(render);
-
-    // Point C
-    const pointCFolder = verticesFolder.addFolder("Point C");
-    pointCFolder.add(uiState, "cX", -1, 1).name("X").onChange(render);
-    pointCFolder.add(uiState, "cY", -1, 1).name("Y").onChange(render);
-
-    // Point D
-    const pointDFolder = verticesFolder.addFolder("Point D");
-    pointDFolder.add(uiState, "dX", -1, 1).name("X").onChange(render);
-    pointDFolder.add(uiState, "dY", -1, 1).name("Y").onChange(render);
-
-    const colorFolder = gui.addFolder("Color");
-
-    // Point A
-    const pointAColorFolder = colorFolder.addFolder("Point A");
-    pointAColorFolder.add(uiState, "aR", 0, 1).name("R").onChange(render);
-    pointAColorFolder.add(uiState, "aG", 0, 1).name("G").onChange(render);
-    pointAColorFolder.add(uiState, "aB", 0, 1).name("B").onChange(render);
-
-    // Point B
-    const pointBColorFolder = colorFolder.addFolder("Point B");
-    pointBColorFolder.add(uiState, "bR", 0, 1).name("R").onChange(render);
-    pointBColorFolder.add(uiState, "bG", 0, 1).name("G").onChange(render);
-    pointBColorFolder.add(uiState, "bB", 0, 1).name("B").onChange(render);
-
-    // Point C
-    const pointCColorFolder = colorFolder.addFolder("Point C");
-    pointCColorFolder.add(uiState, "cR", 0, 1).name("R").onChange(render);
-    pointCColorFolder.add(uiState, "cG", 0, 1).name("G").onChange(render);
-    pointCColorFolder.add(uiState, "cB", 0, 1).name("B").onChange(render);
-
-    // Point D
-    const pointDColorFolder = colorFolder.addFolder("Point D");
-    pointDColorFolder.add(uiState, "dR", 0, 1).name("R").onChange(render);
-    pointDColorFolder.add(uiState, "dG", 0, 1).name("G").onChange(render);
-    pointDColorFolder.add(uiState, "dB", 0, 1).name("B").onChange(render);
+    // Dimension
+    const dimFolder = polygonFolder.addFolder("Dimensions");
+    dimFolder.add(uiState, "radius", 0, 1).name("radius").onChange(render);
+    dimFolder.add(uiState, "points", 3, 20, 1).name("points").onChange(render);
 }
 
 // =============================================================
@@ -252,50 +203,69 @@ function render(gl) {
     resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(rectangle.shader.program);
-    gl.bindVertexArray(rectangle.vao);
+    gl.useProgram(polygon.shader.program);
+    gl.bindVertexArray(polygon.vao);
 
-    // Interleaved vertex data CPU side
-    // Each vertex = X, Y, R, G, B
-    //
-    // Triangle 1: A -> B -> C
-    // Triangle 2: A -> C -> D
-    const vertexData = new Float32Array([
-        // Triangle 1
-        uiState.aX, uiState.aY,
-        uiState.aR, uiState.aG, uiState.aB,
+    // Vertex and index data CPU side
+    const positionsData = [];
+    const indicesData = [];
 
-        uiState.bX, uiState.bY,
-        uiState.bR, uiState.bG, uiState.bB,
+    // Center
+    positionsData.push(uiState.centerX);
+    positionsData.push(uiState.centerY);
+    indicesData.push(0);
 
-        uiState.cX, uiState.cY,
-        uiState.cR, uiState.cG, uiState.cB,
+    // Circle Points
+    for(let i = 0; i < uiState.points; i++) {
+        const angle = (i / uiState.points) * (2 * Math.PI);
 
-        // Triangle 2
-        uiState.aX, uiState.aY,
-        uiState.aR, uiState.aG, uiState.aB,
+        const x = uiState.centerX +
+                  Math.cos(angle) * uiState.radius;
 
-        uiState.cX, uiState.cY,
-        uiState.cR, uiState.cG, uiState.cB,
+        const y = uiState.centerY +
+                  Math.sin(angle) * uiState.radius;
 
-        uiState.dX, uiState.dY,
-        uiState.dR, uiState.dG, uiState.dB
-    ]);
+        positionsData.push(x);
+        positionsData.push(y);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+        indicesData.push(i + 1);
+    }
+
+    // First point repeat
+    positionsData.push(positionsData[2]);
+    positionsData.push(positionsData[3]);
+    indicesData.push(indicesData[1]);
+
+    const positions = new Float32Array(positionsData);
+    const indices = new Uint16Array(indicesData);
+
+    // Update vertex data on the GPU
+    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
     gl.bufferData(
         gl.ARRAY_BUFFER,
-        vertexData,
+        positions,
         gl.DYNAMIC_DRAW
     );
 
-    gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
+    // Update index data on the GPU
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        indices,
+        gl.DYNAMIC_DRAW
+    );
+
+    // Update draw data
+    polygon.drawCount = indices.length;
+
+    gl.drawElements(
+        polygon.drawMode,
+        polygon.drawCount,
+        polygon.drawType,
+        polygon.drawOffset
     );
 }
 
@@ -303,6 +273,7 @@ function render(gl) {
 // MAIN
 // =============================================================
 function main() {
+    // WEBGL CANVAS
     const canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
@@ -315,10 +286,12 @@ function main() {
         return;
     }
 
+    // SETUP
     setupShader(gl, shaderInfo);
-    setupRectangle(gl, shaderInfo);
+    setupPolygon(gl, shaderInfo);
+    // UI
     setupGUI(() => render(gl));
-
+    // RENDER
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

@@ -1,14 +1,10 @@
 /* #############################################################
-CHAPTER 8c: Multiple Objects
+CHAPTER 8c: Uniform
 
 Topics:
-- Rendering multiple objects
-- A Triangle and a Rectangle
-- Separate VAO/VBO for each object
-- Different shaders
-- Different colors
-- Multiple draw calls
-- Using vertex colors and uniform colors
+- Adding a basic UI to manipulate
+- R, G, B colors of the triangle (as a single vec3)
+- Brightness of the triangle (as a single float)
 ###############################################################
 */
 
@@ -20,16 +16,17 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const triangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
+const uiState = {
+    // Color
+    r: 0.39,
+    g: 0.33,
+    b: 0.58,
+
+    // Intensity
+    intensity: 1.0
 };
 
-const rectangle = {
+const triangle = {
     shader: null,
     vao: null,
     vbo: null,
@@ -42,29 +39,24 @@ const rectangle = {
 // Shader Objects
 // =============================================================
 
-/*
-    No UI in this chapter yet.
-    The focus here is on rendering multiple
-    independent objects with different shaders.
-*/
-
-const basicShaderInfo = {
-    fragmentShaderSource: `#version 300 es
-    precision mediump float;
-
-    uniform vec3 u_color;
-
-    out vec4 out_color;
-
-    void main() {
-        out_color = vec4(u_color, 1.0);
-    }
-`,
+const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
     void main() {
         gl_Position = vec4(a_position, 0.0, 1.0);
+    }
+`,
+    fragmentShaderSource: `#version 300 es
+    precision mediump float;
+
+    uniform vec3 u_color;
+    uniform float u_intensity;
+
+    out vec4 out_color;
+
+    void main() {
+        out_color = vec4(u_color, 1.0) * u_intensity;
     }
 `,
     program: null,
@@ -72,39 +64,9 @@ const basicShaderInfo = {
         position: null
     },
     uniforms: {
-        color: null
+        color: null,
+        intensity: null
     }
-};
-
-const vertexColorShaderInfo = {
-    fragmentShaderSource: `#version 300 es
-    precision highp float;
-
-    in vec4 v_color;
-
-    out vec4 out_color;
-
-    void main() {
-        out_color = v_color;
-    }
-`,
-    vertexShaderSource: `#version 300 es
-    in vec2 a_position;
-    in vec3 a_color;
-
-    out vec4 v_color;
-
-    void main() {
-        gl_Position = vec4(a_position, 0.0, 1.0);
-        v_color = vec4(a_color, 1.0);
-    }
-`,
-    program: null,
-    attributes: {
-        position: null,
-        color: null
-    },
-    uniforms: {}
 };
 
 // =============================================================
@@ -140,20 +102,17 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
-function setupBasicShader(gl) {
-    const vertexShader = createShader(gl,gl.VERTEX_SHADER,basicShaderInfo.vertexShaderSource);
-    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,basicShaderInfo.fragmentShaderSource);
-    basicShaderInfo.program = createProgram(gl,vertexShader,fragmentShader);
-    basicShaderInfo.attributes.position = gl.getAttribLocation(basicShaderInfo.program,"a_position");
-    basicShaderInfo.uniforms.color = gl.getUniformLocation(basicShaderInfo.program,"u_color");
-}
-
-function setupcolorVertexShader(gl) {
-    const vertexShader = createShader(gl,gl.VERTEX_SHADER,vertexColorShaderInfo.vertexShaderSource);
-    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,vertexColorShaderInfo.fragmentShaderSource);
-    vertexColorShaderInfo.program = createProgram(gl,vertexShader,fragmentShader);
-    vertexColorShaderInfo.attributes.position = gl.getAttribLocation(vertexColorShaderInfo.program,"a_position");
-    vertexColorShaderInfo.attributes.color = gl.getAttribLocation(vertexColorShaderInfo.program,"a_color");
+function setupShader(gl, shader) {
+    // Shaders
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
+    // Program
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
+    // Attributes
+    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+    // uniforms
+    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
+    shader.uniforms.intensity = gl.getUniformLocation(shader.program, "u_intensity");
 }
 
 // =============================================================
@@ -180,29 +139,27 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 function setupTriangle(gl, shader) {
     triangle.shader = shader;
 
-    const positions = new Float32Array([
-        -0.7, 0.0,
-        -0.5, 0.5,
-        -0.3, 0.0
-    ]);
-
     triangle.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+
+    const positions = new Float32Array([
+        -0.5, 0.0,
+         0.0, 0.5,
+         0.5, 0.0
+    ]);
 
     gl.bufferData(
         gl.ARRAY_BUFFER,
         positions,
-        gl.STATIC_DRAW
+        gl.DYNAMIC_DRAW
     );
 
     triangle.vao = gl.createVertexArray();
     gl.bindVertexArray(triangle.vao);
 
-    gl.enableVertexAttribArray(
-        triangle.shader.attributes.position
-    );
-
     gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+
+    gl.enableVertexAttribArray(triangle.shader.attributes.position);
 
     gl.vertexAttribPointer(
         triangle.shader.attributes.position,
@@ -218,65 +175,24 @@ function setupTriangle(gl, shader) {
     triangle.drawCount = 3;
 }
 
-function setupRectangle(gl, shader) {
-    rectangle.shader = shader;
+// =============================================================
+// GUI Setup Functions
+// =============================================================
 
-    // X, Y, R, G, B
-    const vertexData = new Float32Array([
-        0.2, -0.2,  1.0, 0.0, 0.0,
-        0.2,  0.2,  0.0, 1.0, 0.0,
-        0.6, -0.2,  0.0, 0.0, 1.0,
+function setupGUI(render) {
+    const gui = new lil.GUI();
 
-        0.6, -0.2,  0.0, 0.0, 1.0,
-        0.6,  0.2,  1.0, 1.0, 0.0,
-        0.2,  0.2,  0.0, 1.0, 0.0
-    ]);
+    const uniformFolder = gui.addFolder("Uniforms");
 
-    rectangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
+    const colorFolder = uniformFolder.addFolder("Color");
+    colorFolder.add(uiState, "r", 0, 1).name("R").onChange(render);
+    colorFolder.add(uiState, "g", 0, 1).name("G").onChange(render);
+    colorFolder.add(uiState, "b", 0, 1).name("B").onChange(render);
 
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        vertexData,
-        gl.STATIC_DRAW
-    );
-
-    rectangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(rectangle.vao);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
-    // Vertex positions
-    gl.enableVertexAttribArray(
-        rectangle.shader.attributes.position
-    );
-
-    gl.vertexAttribPointer(
-        rectangle.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        0
-    );
-
-    // Vertex colors
-    gl.enableVertexAttribArray(
-        rectangle.shader.attributes.color
-    );
-
-    gl.vertexAttribPointer(
-        rectangle.shader.attributes.color,
-        3,
-        gl.FLOAT,
-        false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        2 * Float32Array.BYTES_PER_ELEMENT
-    );
-
-    rectangle.drawMode = gl.TRIANGLES;
-    rectangle.drawOffset = 0;
-    rectangle.drawCount = 6;
+    const intensityFolder = uniformFolder.addFolder("Intensity");
+    intensityFolder.add(uiState, "intensity", 0, 1)
+        .name("Intensity")
+        .onChange(render);
 }
 
 // =============================================================
@@ -289,15 +205,18 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // ---------------------------------------------------------
-    // TRIANGLE
-    // ---------------------------------------------------------
-
     gl.useProgram(triangle.shader.program);
 
-    gl.uniform3f(
+    // Set vec3 color uniform
+    gl.uniform3fv(
         triangle.shader.uniforms.color,
-        1.0, 0.0, 0.0   // Red
+        [uiState.r, uiState.g, uiState.b]
+    );
+
+    // Set intensity uniform
+    gl.uniform1f(
+        triangle.shader.uniforms.intensity,
+        uiState.intensity
     );
 
     gl.bindVertexArray(triangle.vao);
@@ -306,20 +225,6 @@ function render(gl) {
         triangle.drawMode,
         triangle.drawOffset,
         triangle.drawCount
-    );
-
-    // ---------------------------------------------------------
-    // RECTANGLE
-    // ---------------------------------------------------------
-
-    gl.useProgram(rectangle.shader.program);
-
-    gl.bindVertexArray(rectangle.vao);
-
-    gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
     );
 }
 
@@ -339,11 +244,11 @@ function main() {
         return;
     }
 
-    setupBasicShader(gl);
-    setupcolorVertexShader(gl);
+    setupShader(gl, shaderInfo);
+    setupTriangle(gl, shaderInfo);
 
-    setupTriangle(gl, basicShaderInfo);
-    setupRectangle(gl, vertexColorShaderInfo);
+    setupGUI(() => render(gl));
+
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

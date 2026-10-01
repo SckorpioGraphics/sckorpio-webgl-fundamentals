@@ -1,8 +1,8 @@
 /* #############################################################
-CHAPTER 5d: Dynamic Filled Polygon
+CHAPTER 8e: All Types of Uniforms
 
 Topics:
-- Making a Polygon to Circle
+- Just showing all types of Uniforms passing ways
 ###############################################################
 */
 
@@ -15,23 +15,22 @@ Topics:
 // =============================================================
 
 const uiState = {
-    centerX: 0.0,
-    centerY: 0.0,
-    radius: 0.5,
-    points: 5
+    // Color
+    R: 0.39,
+    G: 0.33,
+    B: 0.58,
+
+    // Intensity
+    intensity: 1.0
 };
 
-const polygon = {
+const triangle = {
     shader: null,
-
     vao: null,
     vbo: null,
-    ibo: null,
-
     drawMode: null,
     drawOffset: 0,
-    drawCount: 0,
-    drawType: null
+    drawCount: 0
 };
 
 // =============================================================
@@ -48,20 +47,24 @@ const shaderInfo = {
 `,
     fragmentShaderSource: `#version 300 es
     precision mediump float;
-    out vec4 out_Color;
+
+    uniform vec3 u_color;
+    uniform float u_intensity;
+
+    out vec4 out_color;
 
     void main() {
-        // out_Color = vec4(0.0, 1.0, 1.0, 1.0); // Cyan
-        out_Color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio Purple
+        out_color = vec4(u_color, 1.0) * u_intensity;
     }
 `,
     program: null,
-
     attributes: {
         position: null
     },
-
-    uniforms: {}
+    uniforms: {
+        color: null,
+        intensity: null
+    }
 };
 
 // =============================================================
@@ -105,7 +108,9 @@ function setupShader(gl, shader) {
     shader.program = createProgram(gl, vertexShader, fragmentShader);
     // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    // Future uniforms
+    // uniforms
+    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
+    shader.uniforms.intensity = gl.getUniformLocation(shader.program, "u_intensity");
 }
 
 // =============================================================
@@ -129,37 +134,20 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupPolygon(gl, shader) {
-    polygon.shader = shader;
+function setupTriangle(gl, shader) {
+    triangle.shader = shader;
 
-    // ---------------------------------------------------------
-    // VERTEX BUFFER
-    // ---------------------------------------------------------
+    triangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
 
-    polygon.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
+    triangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(triangle.vao);
 
-    // Vertex data will be generated from the UI during rendering.
-
-    // ---------------------------------------------------------
-    // INDEX BUFFER
-    // ---------------------------------------------------------
-
-    polygon.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
-
-    // ---------------------------------------------------------
-    // VERTEX ARRAY
-    // ---------------------------------------------------------
-
-    polygon.vao = gl.createVertexArray();
-    gl.bindVertexArray(polygon.vao);
-
-    gl.enableVertexAttribArray(polygon.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
+    gl.enableVertexAttribArray(triangle.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
 
     gl.vertexAttribPointer(
-        polygon.shader.attributes.position,
+        triangle.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
@@ -167,14 +155,9 @@ function setupPolygon(gl, shader) {
         0
     );
 
-    // Index buffer binding is stored inside the VAO.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
-
-    // Draw data
-    polygon.drawMode = gl.TRIANGLE_FAN;
-    polygon.drawOffset = 0;
-    polygon.drawCount = 0;
-    polygon.drawType = gl.UNSIGNED_SHORT;
+    triangle.drawMode = gl.TRIANGLES;
+    triangle.drawOffset = 0;
+    triangle.drawCount = 3;
 }
 
 // =============================================================
@@ -183,17 +166,18 @@ function setupPolygon(gl, shader) {
 
 function setupGUI(render) {
     const gui = new lil.GUI();
-    const polygonFolder = gui.addFolder("Polygon");
 
-    // Center
-    const centerFolder = polygonFolder.addFolder("Center");
-    centerFolder.add(uiState, "centerX", -1, 1).name("centerX").onChange(render);
-    centerFolder.add(uiState, "centerY", -1, 1).name("centerY").onChange(render);
+    const uniformFolder = gui.addFolder("Uniforms");
 
-    // Dimension
-    const dimFolder = polygonFolder.addFolder("Dimensions");
-    dimFolder.add(uiState, "radius", 0, 1).name("radius").onChange(render);
-    dimFolder.add(uiState, "points", 3, 20, 1).name("points").onChange(render);
+    // Color
+    const colorFolder = uniformFolder.addFolder("Color");
+    colorFolder.add(uiState, "R", 0, 1).name("R").onChange(render);
+    colorFolder.add(uiState, "G", 0, 1).name("G").onChange(render);
+    colorFolder.add(uiState, "B", 0, 1).name("B").onChange(render);
+
+    // Intensity
+    const intensityFolder = uniformFolder.addFolder("Intensity");
+    intensityFolder.add(uiState, "intensity", 0, 1).name("Intensity").onChange(render);
 }
 
 // =============================================================
@@ -203,69 +187,112 @@ function render(gl) {
     resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
+    gl.clearColor(0.32, 0.63, 0.67, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(polygon.shader.program);
-    gl.bindVertexArray(polygon.vao);
+    gl.useProgram(triangle.shader.program);
 
-    // Vertex and index data CPU side
-    const positionsData = [];
-    const indicesData = [];
-
-    // Center
-    positionsData.push(uiState.centerX);
-    positionsData.push(uiState.centerY);
-    indicesData.push(0);
-
-    // Circle Points
-    for(let i = 0; i < uiState.points; i++) {
-        const angle = (i / uiState.points) * (2 * Math.PI);
-
-        const x = uiState.centerX +
-                  Math.cos(angle) * uiState.radius;
-
-        const y = uiState.centerY +
-                  Math.sin(angle) * uiState.radius;
-
-        positionsData.push(x);
-        positionsData.push(y);
-
-        indicesData.push(i + 1);
-    }
-
-    // First point repeat
-    positionsData.push(positionsData[2]);
-    positionsData.push(positionsData[3]);
-    indicesData.push(indicesData[1]);
-
-    const positions = new Float32Array(positionsData);
-    const indices = new Uint16Array(indicesData);
-
-    // Update vertex data on the GPU
-    gl.bindBuffer(gl.ARRAY_BUFFER, polygon.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.DYNAMIC_DRAW
+    // Set uniform color
+    gl.uniform3fv(
+        triangle.shader.uniforms.color,
+        [uiState.R, uiState.G, uiState.B]
     );
 
-    // Update index data on the GPU
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, polygon.ibo);
-    gl.bufferData(
-        gl.ELEMENT_ARRAY_BUFFER,
-        indices,
-        gl.DYNAMIC_DRAW
+    // Set uniform intensity
+    gl.uniform1f(
+        triangle.shader.uniforms.intensity,
+        uiState.intensity
     );
 
-    // Update draw data
-    polygon.drawCount = indices.length;
+    // ---------------------------------------------------------
+    // MORE WAYS OF PASSING UNIFORMS
+    // ---------------------------------------------------------
 
-    gl.drawElements(
-        polygon.drawMode,
-        polygon.drawCount,
-        polygon.drawType,
-        polygon.drawOffset
+    /*
+    // Float
+    gl.uniform1f(floatUniformLoc, v);
+    gl.uniform1fv(floatUniformLoc, [v]);
+
+    // vec2
+    gl.uniform2f(vec2UniformLoc, v0, v1);
+    gl.uniform2fv(vec2UniformLoc, [v0, v1]);
+
+    // vec3
+    gl.uniform3f(vec3UniformLoc, v0, v1, v2);
+    gl.uniform3fv(vec3UniformLoc, [v0, v1, v2]);
+
+    // vec4
+    gl.uniform4f(vec4UniformLoc, v0, v1, v2, v3);
+    gl.uniform4fv(vec4UniformLoc, [v0, v1, v2, v3]);
+
+    // mat2
+    gl.uniformMatrix2fv(
+        mat2UniformLoc,
+        false,
+        [4x element array]
+    );
+
+    // mat3
+    gl.uniformMatrix3fv(
+        mat3UniformLoc,
+        false,
+        [9x element array]
+    );
+
+    // mat4
+    gl.uniformMatrix4fv(
+        mat4UniformLoc,
+        false,
+        [16x element array]
+    );
+
+    // int
+    gl.uniform1i(intUniformLoc, v);
+    gl.uniform1iv(intUniformLoc, [v]);
+
+    // ivec2
+    gl.uniform2i(ivec2UniformLoc, v0, v1);
+    gl.uniform2iv(ivec2UniformLoc, [v0, v1]);
+
+    // ivec3
+    gl.uniform3i(ivec3UniformLoc, v0, v1, v2);
+    gl.uniform3iv(ivec3UniformLoc, [v0, v1, v2]);
+
+    // ivec4
+    gl.uniform4i(ivec4UniformLoc, v0, v1, v2, v3);
+    gl.uniform4iv(ivec4UniformLoc, [v0, v1, v2, v3]);
+
+    // uint
+    gl.uniform1ui(uintUniformLoc, v);
+    gl.uniform1uiv(uintUniformLoc, [v]);
+
+    // uvec2
+    gl.uniform2ui(uvec2UniformLoc, v0, v1);
+    gl.uniform2uiv(uvec2UniformLoc, [v0, v1]);
+
+    // uvec3
+    gl.uniform3ui(uvec3UniformLoc, v0, v1, v2);
+    gl.uniform3uiv(uvec3UniformLoc, [v0, v1, v2]);
+
+    // uvec4
+    gl.uniform4ui(uvec4UniformLoc, v0, v1, v2, v3);
+    gl.uniform4uiv(uvec4UniformLoc, [v0, v1, v2, v3]);
+
+    // Samplers:
+    // sampler2D, sampler3D, samplerCube,
+    // samplerCubeShadow, sampler2DShadow,
+    // sampler2DArray, sampler2DArrayShadow
+
+    gl.uniform1i(samplerUniformLoc, v);
+    gl.uniform1iv(samplerUniformLoc, [v]);
+    */
+
+    gl.bindVertexArray(triangle.vao);
+
+    gl.drawArrays(
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
     );
 }
 
@@ -273,7 +300,6 @@ function render(gl) {
 // MAIN
 // =============================================================
 function main() {
-    // WEBGL CANVAS
     const canvas = document.querySelector("#c");
     if(!canvas) {
         console.error("Canvas element not found");
@@ -286,12 +312,11 @@ function main() {
         return;
     }
 
-    // SETUP
     setupShader(gl, shaderInfo);
-    setupPolygon(gl, shaderInfo);
-    // UI
+    setupTriangle(gl, shaderInfo);
+
     setupGUI(() => render(gl));
-    // RENDER
+
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

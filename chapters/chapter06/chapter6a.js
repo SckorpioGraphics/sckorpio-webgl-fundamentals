@@ -1,8 +1,7 @@
 /* #############################################################
-CHAPTER 6a: Varying Vertex Color
+CHAPTER 6a: Dynamic Triangle
 
 Topics:
-- Using Vertex data itself for Vertex Color
 - Adding a basic UI to manipulate
 - Vertex positions
 ###############################################################
@@ -17,7 +16,6 @@ Topics:
 // =============================================================
 
 const uiState = {
-    // Vertices
     aX: -0.5,
     aY: 0.0,
     bX: 0.5,
@@ -44,21 +42,18 @@ const triangle = {
 const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
-    out vec4 v_color;
 
     void main() {
         gl_Position = vec4(a_position, 0.0, 1.0);
-        v_color = gl_Position * 0.5 + 0.5;
     }
 `,
     fragmentShaderSource: `#version 300 es
-    precision highp float;
-
-    in vec4 v_color;
-    out vec4 out_color;
+    precision mediump float;
+    out vec4 out_Color;
 
     void main() {
-        out_color = v_color;
+        // out_Color = vec4(0.0, 1.0, 1.0, 1.0); // Cyan
+        out_Color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio Purple
     }
 `,
     program: null,

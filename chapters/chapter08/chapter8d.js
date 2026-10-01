@@ -1,14 +1,14 @@
 /* #############################################################
-CHAPTER 8d: Multiple Objects
+CHAPTER 8d: Varying and Uniform Together
 
 Topics:
-- Rendering multiple objects
-- A Grid and a Triangle
-- Separate VAO/VBO for each object
-- Using GL_LINES for the grid
-- Using GL_TRIANGLES for the triangle
-- Multiple draw calls
-- Clip space coordinates [-1, +1]
+- Using Combined Buffer for Vertex Color
+- Also use uniform color
+- Final color as mixed colors
+- Adding a basic UI to manipulate
+- Vertex positions
+- Vertex color
+- Uniform color
 ###############################################################
 */
 
@@ -20,13 +20,30 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const grid = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
+const uiState = {
+    // Vertex Positions
+    aX: -0.5,
+    aY: 0.0,
+    bX: 0.5,
+    bY: 0.0,
+    cX: 0.0,
+    cY: 0.5,
+
+    // Vertex Colors
+    aR: 1.0,
+    aG: 0.0,
+    aB: 0.0,
+    bR: 0.0,
+    bG: 1.0,
+    bB: 0.0,
+    cR: 0.0,
+    cG: 0.0,
+    cB: 1.0,
+
+    // Uniform Color
+    r: 0.0,
+    g: 0.0,
+    b: 0.0
 };
 
 const triangle = {
@@ -42,34 +59,34 @@ const triangle = {
 // Shader Objects
 // =============================================================
 
-/*
-    No UI in this chapter yet.
-    The focus here is on rendering multiple
-    independent objects in clip space.
-*/
-
 const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
+    in vec3 a_color;
+
+    out vec4 v_color;
 
     void main() {
         gl_Position = vec4(a_position, 0.0, 1.0);
+        v_color = vec4(a_color, 1.0);
     }
 `,
     fragmentShaderSource: `#version 300 es
-    precision mediump float;
+    precision highp float;
 
-    uniform vec3 u_color;
-
+    in vec4 v_color;
     out vec4 out_color;
 
+    uniform vec4 u_color;
+
     void main() {
-        out_color = vec4(u_color, 1.0);
+        out_color = mix(v_color, u_color, 0.5);
     }
 `,
     program: null,
     attributes: {
-        position: null
+        position: null,
+        color: null
     },
     uniforms: {
         color: null
@@ -110,10 +127,15 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 function setupShader(gl, shader) {
-    const vertexShader = createShader(gl,gl.VERTEX_SHADER,shader.vertexShaderSource);
-    const fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,shader.fragmentShaderSource);
-    shader.program = createProgram(gl,vertexShader,fragmentShader);
+    // Shaders
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
+    // Program
+    shader.program = createProgram(gl, vertexShader, fragmentShader);
+    // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+    shader.attributes.color = gl.getAttribLocation(shader.program, "a_color");
+    // uniforms
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
 }
 
@@ -138,101 +160,92 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 // Scene Objects Creation Functions
 // =============================================================
 
-function setupGrid(gl, shader) {
-    grid.shader = shader;
-
-    const positions = new Float32Array([
-        // Vertical lines
-        -0.8, -1.0,  -0.8, 1.0,
-        -0.6, -1.0,  -0.6, 1.0,
-        -0.4, -1.0,  -0.4, 1.0,
-        -0.2, -1.0,  -0.2, 1.0,
-         0.0, -1.0,   0.0, 1.0,
-         0.2, -1.0,   0.2, 1.0,
-         0.4, -1.0,   0.4, 1.0,
-         0.6, -1.0,   0.6, 1.0,
-         0.8, -1.0,   0.8, 1.0,
-
-        // Horizontal lines
-        -1.0, -0.8,   1.0, -0.8,
-        -1.0, -0.6,   1.0, -0.6,
-        -1.0, -0.4,   1.0, -0.4,
-        -1.0, -0.2,   1.0, -0.2,
-        -1.0,  0.0,   1.0,  0.0,
-        -1.0,  0.2,   1.0,  0.2,
-        -1.0,  0.4,   1.0,  0.4,
-        -1.0,  0.6,   1.0,  0.6,
-        -1.0,  0.8,   1.0,  0.8
-    ]);
-
-    grid.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, grid.vbo);
-
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
-
-    grid.vao = gl.createVertexArray();
-    gl.bindVertexArray(grid.vao);
-
-    gl.enableVertexAttribArray(grid.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, grid.vbo);
-
-    gl.vertexAttribPointer(
-        grid.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
-
-    grid.drawMode = gl.LINES;
-    grid.drawOffset = 0;
-    grid.drawCount = positions.length / 2;
-}
-
 function setupTriangle(gl, shader) {
     triangle.shader = shader;
-
-    const positions = new Float32Array([
-        -0.4, -0.3,
-         0.0,  0.5,
-         0.4, -0.3
-    ]);
 
     triangle.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
 
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
-
     triangle.vao = gl.createVertexArray();
     gl.bindVertexArray(triangle.vao);
 
-    gl.enableVertexAttribArray(
-        triangle.shader.attributes.position
-    );
-
     gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
 
+    // Vertex positions
+    gl.enableVertexAttribArray(triangle.shader.attributes.position);
     gl.vertexAttribPointer(
         triangle.shader.attributes.position,
         2,
         gl.FLOAT,
         false,
-        0,
-        0
+        5 * Float32Array.BYTES_PER_ELEMENT,
+        0 * Float32Array.BYTES_PER_ELEMENT
+    );
+
+    // Vertex colors
+    gl.enableVertexAttribArray(triangle.shader.attributes.color);
+    gl.vertexAttribPointer(
+        triangle.shader.attributes.color,
+        3,
+        gl.FLOAT,
+        false,
+        5 * Float32Array.BYTES_PER_ELEMENT,
+        2 * Float32Array.BYTES_PER_ELEMENT
     );
 
     triangle.drawMode = gl.TRIANGLES;
     triangle.drawOffset = 0;
     triangle.drawCount = 3;
+}
+
+// =============================================================
+// GUI Setup Functions
+// =============================================================
+
+function setupGUI(render) {
+    const gui = new lil.GUI();
+
+    const verticesFolder = gui.addFolder("Vertices");
+
+    // Point A
+    const pointAFolder = verticesFolder.addFolder("Point A");
+    pointAFolder.add(uiState, "aX", -1, 1).name("X").onChange(render);
+    pointAFolder.add(uiState, "aY", -1, 1).name("Y").onChange(render);
+
+    // Point B
+    const pointBFolder = verticesFolder.addFolder("Point B");
+    pointBFolder.add(uiState, "bX", -1, 1).name("X").onChange(render);
+    pointBFolder.add(uiState, "bY", -1, 1).name("Y").onChange(render);
+
+    // Point C
+    const pointCFolder = verticesFolder.addFolder("Point C");
+    pointCFolder.add(uiState, "cX", -1, 1).name("X").onChange(render);
+    pointCFolder.add(uiState, "cY", -1, 1).name("Y").onChange(render);
+
+    const colorFolder = gui.addFolder("Color");
+
+    // Point A
+    const pointAColorFolder = colorFolder.addFolder("Point A");
+    pointAColorFolder.add(uiState, "aR", 0, 1).name("R").onChange(render);
+    pointAColorFolder.add(uiState, "aG", 0, 1).name("G").onChange(render);
+    pointAColorFolder.add(uiState, "aB", 0, 1).name("B").onChange(render);
+
+    // Point B
+    const pointBColorFolder = colorFolder.addFolder("Point B");
+    pointBColorFolder.add(uiState, "bR", 0, 1).name("R").onChange(render);
+    pointBColorFolder.add(uiState, "bG", 0, 1).name("G").onChange(render);
+    pointBColorFolder.add(uiState, "bB", 0, 1).name("B").onChange(render);
+
+    // Point C
+    const pointCColorFolder = colorFolder.addFolder("Point C");
+    pointCColorFolder.add(uiState, "cR", 0, 1).name("R").onChange(render);
+    pointCColorFolder.add(uiState, "cG", 0, 1).name("G").onChange(render);
+    pointCColorFolder.add(uiState, "cB", 0, 1).name("B").onChange(render);
+
+    const uniformColorFolder = gui.addFolder("Uniform Color");
+    uniformColorFolder.add(uiState, "r", 0, 1).name("R").onChange(render);
+    uniformColorFolder.add(uiState, "g", 0, 1).name("G").onChange(render);
+    uniformColorFolder.add(uiState, "b", 0, 1).name("B").onChange(render);
 }
 
 // =============================================================
@@ -245,35 +258,39 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(shaderInfo.program);
+    gl.useProgram(triangle.shader.program);
 
-    // ---------------------------------------------------------
-    // GRID
-    // ---------------------------------------------------------
-
-    gl.uniform3f(
-        shaderInfo.uniforms.color,
-        0.39, 0.33, 0.58
-    );
-
-    gl.bindVertexArray(grid.vao);
-
-    gl.drawArrays(
-        grid.drawMode,
-        grid.drawOffset,
-        grid.drawCount
-    );
-
-    // ---------------------------------------------------------
-    // TRIANGLE
-    // ---------------------------------------------------------
-
-    gl.uniform3f(
-        shaderInfo.uniforms.color,
-        1.0, 1.0, 0.0   // Red
+    // Set uniform color
+    gl.uniform4f(
+        triangle.shader.uniforms.color,
+        uiState.r,
+        uiState.g,
+        uiState.b,
+        1.0
     );
 
     gl.bindVertexArray(triangle.vao);
+
+    // Interleaved vertex data CPU side
+    // Each vertex = X, Y, R, G, B
+    const vertexData = new Float32Array([
+        uiState.aX, uiState.aY,
+        uiState.aR, uiState.aG, uiState.aB,
+
+        uiState.bX, uiState.bY,
+        uiState.bR, uiState.bG, uiState.bB,
+
+        uiState.cX, uiState.cY,
+        uiState.cR, uiState.cG, uiState.cB
+    ]);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        vertexData,
+        gl.DYNAMIC_DRAW
+    );
 
     gl.drawArrays(
         triangle.drawMode,
@@ -299,8 +316,10 @@ function main() {
     }
 
     setupShader(gl, shaderInfo);
-    setupGrid(gl, shaderInfo);
     setupTriangle(gl, shaderInfo);
+
+    setupGUI(() => render(gl));
+
     render(gl);
     window.addEventListener("resize", () => render(gl));
 }

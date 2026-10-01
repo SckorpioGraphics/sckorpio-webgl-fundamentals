@@ -1,25 +1,87 @@
 /* #############################################################
-   CHAPTER 10f: 2D Camera — Continuous Keyboard Controls
+   CHAPTER 23e: Multiple Animation Instances
 
    Topics:
-   - Camera position
-   - Camera zoom
-   - View matrix
-   - Keyboard input
-   - Continuous camera movement
-   - Key states
-   - GUI camera controls
+   - Multiple animation instances
+   - Multiple objects
+   - Independent animation behavior
+   - Base object position
    #############################################################
 */
 
 // =============================================================
-// GLOBAL OBJECTS
+// GLOBAL DATA
 // =============================================================
 
-// =============================================================
-// Scene Objects
-// =============================================================
+// Canvas / WebGL Context
 
+// Shader Objects
+const shaderInfo = {
+    vertexShaderSource: `#version 300 es
+    in vec2 a_position;
+
+    uniform mat3 u_modelMatrix;
+    uniform mat3 u_viewMatrix;
+    uniform mat3 u_projectionMatrix;
+
+    void main() {
+        vec3 localPosition = vec3(a_position, 1.0);
+        vec3 clipPosition = u_projectionMatrix * u_viewMatrix * u_modelMatrix * localPosition;
+        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
+    }
+`,
+
+    fragmentShaderSource: `#version 300 es
+    precision mediump float;
+
+    uniform vec4 u_color;
+
+    out vec4 out_color;
+
+    void main() {
+        out_color = u_color;
+    }
+`,
+
+    program: null,
+
+    attributes: {
+        position: null
+    },
+
+    uniforms: {
+        viewMatrix: null,
+        projectionMatrix: null,
+        modelMatrix: null,
+        color: null
+    }
+};
+
+// =============================================================
+// CAMERA
+// =============================================================
+const camera = {
+    x: -300,
+    y: -200,
+    zoom: 1.0,
+    panSpeed: 10,
+    zoomSpeed: 0.1,
+    viewMatrix: null,
+    projectionMatrix: null
+};
+
+const controls = {
+    panUp: false,
+    panLeft: false,
+    panDown: false,
+    panRight: false,
+    panZoomIn: false,
+    panZoomOut: false
+};
+
+// =============================================================
+// SCENE OBJECTS
+// =============================================================
 const grid = {
     shader: null,
     vao: null,
@@ -47,73 +109,152 @@ const yAxis = {
     drawCount: 0
 };
 
-const rectangle = {
-    shader: null,
+const square = {
+    baseX: 200,
+    baseY: 0,
+    positionX: 200,
+    positionY: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+    color: [1.0, 0.0, 0.0],
     vao: null,
-    vbo: null,
     drawMode: null,
     drawOffset: 0,
-    drawCount: 0
+    drawCount: 6,
+    modelMatrix: null
+};
+
+const rectangle = {
+    baseX: 0,
+    baseY: 200,
+    positionX: 0,
+    positionY: 200,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+    color: [0.0, 1.0, 0.0],
+    vao: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 6,
+    modelMatrix: null
+};
+
+const triangle = {
+    baseX: -200,
+    baseY: 0,
+    positionX: -200,
+    positionY: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+    color: [0.0, 0.0, 1.0],
+    vao: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 3,
+    modelMatrix: null
 };
 
 // =============================================================
-// Camera Objects
+// ANIMATION 1 — SQUARE
 // =============================================================
+const animation1Info = {
+    startTime: 0,
+    elapsedTime: 0,
 
-const camera = {
-    x: -300,
-    y: -200,
-    zoom: 1.0,
-    panSpeed: 10,
-    zoomSpeed: 0.1,
-    viewMatrix: null,
-    projectionMatrix: null
-};
+    positionX: 0,
+    positionY: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
 
-const controls = {
-    panUp: false,
-    panLeft: false,
-    panDown: false,
-    panRight: false,
-    panZoomIn: false,
-    panZoomOut: false
-};
+    update(time) {
+        if(this.startTime === 0) {
+            this.startTime = time;
+        }
 
-// =============================================================
-// Shader Objects
-// =============================================================
+        this.elapsedTime = (time - this.startTime) * 0.001;
 
-const shaderInfo = {
-    vertexShaderSource: `#version 300 es
-    in vec2 a_position;
-    uniform mat3 u_viewMatrix;
-    uniform mat3 u_projectionMatrix;
-
-    void main() {
-        vec3 viewPosition = u_viewMatrix * vec3(a_position, 1.0);
-        vec3 clipPosition = u_projectionMatrix * viewPosition;
-        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
+        // Oscillating X
+        this.positionX = Math.sin(this.elapsedTime) * 150;
     }
-`,
-    fragmentShaderSource: `#version 300 es
-    precision mediump float;
-    uniform vec4 u_color;
-    out vec4 out_color;
+};
 
-    void main() {
-        out_color = u_color;
-    }
-`,
-    program: null,
-    attributes: {
-        position: null
-    },
-    uniforms: {
-        viewMatrix: null,
-        projectionMatrix: null,
-        color: null
+// =============================================================
+// ANIMATION 2 — RECTANGLE
+// =============================================================
+const animation2Info = {
+    startTime: 0,
+    elapsedTime: 0,
+
+    positionX: 0,
+    positionY: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+
+    update(time) {
+        if(this.startTime === 0) {
+            this.startTime = time;
+        }
+
+        this.elapsedTime = (time - this.startTime) * 0.001;
+
+        // Continuous rotation
+        this.rotation = this.elapsedTime;
     }
 };
+
+// =============================================================
+// ANIMATION 3 — TRIANGLE
+// =============================================================
+const animation3Info = {
+    startTime: 0,
+    elapsedTime: 0,
+
+    positionX: 0,
+    positionY: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+
+    update(time) {
+        if(this.startTime === 0) {
+            this.startTime = time;
+        }
+
+        this.elapsedTime = (time - this.startTime) * 0.001;
+
+        // Pulsing scale
+        const scale = 1 + Math.sin(this.elapsedTime * 2) * 0.5;
+
+        this.scaleX = scale;
+        this.scaleY = scale;
+    }
+};
+
+// =============================================================
+// ANIMATIONS
+// =============================================================
+function applyAnimation(animation, object) {
+    object.positionX = object.baseX + animation.positionX;
+    object.positionY = object.baseY + animation.positionY;
+    object.rotation = animation.rotation;
+    object.scaleX = animation.scaleX;
+    object.scaleY = animation.scaleY;
+}
+
+function updateAnimations(time) {
+    animation1Info.update(time);
+    animation2Info.update(time);
+    animation3Info.update(time);
+
+    applyAnimation(animation1Info, square);
+    applyAnimation(animation2Info, rectangle);
+    applyAnimation(animation3Info, triangle);
+}
 
 // =============================================================
 // FUNCTIONS
@@ -122,7 +263,6 @@ const shaderInfo = {
 // =============================================================
 // Shader Creating Functions
 // =============================================================
-
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -149,26 +289,22 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 function setupShader(gl, shader) {
-    // Shaders
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
 
-    // Program
     shader.program = createProgram(gl, vertexShader, fragmentShader);
 
-    // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
 
-    // Uniforms
     shader.uniforms.viewMatrix = gl.getUniformLocation(shader.program, "u_viewMatrix");
     shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
+    shader.uniforms.modelMatrix = gl.getUniformLocation(shader.program, "u_modelMatrix");
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
 }
 
 // =============================================================
 // Helper Functions
 // =============================================================
-
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     const width = (canvas.clientWidth * multiplier) | 0;
     const height = (canvas.clientHeight * multiplier) | 0;
@@ -183,23 +319,8 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// Camera-Related Matrix Functions
+// Camera / Matrix Functions
 // =============================================================
-
-function createViewMatrix(camera) {
-    const matrix = mat3.create();
-    mat3.fromTranslation(matrix, [-camera.x, -camera.y]);
-    mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
-    return matrix;
-}
-
-function setupViewMatrix() {
-    const matrix = mat3.create();
-    mat3.fromTranslation(matrix, [-camera.x, -camera.y]);
-    mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
-    camera.viewMatrix = matrix;
-}
-
 function updateCamera() {
     if(controls.panUp) camera.y += camera.panSpeed;
     if(controls.panLeft) camera.x -= camera.panSpeed;
@@ -209,35 +330,39 @@ function updateCamera() {
     if(controls.panZoomOut) camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
 }
 
-function setupProjectionMatrix(gl){
-    // PIXEL SPACE -> CLIP SPACE MATRIX
+function setupProjectionMatrix(gl) {
     const width = gl.canvas.width;
     const height = gl.canvas.height;
 
-    /*
-        Pixel -> Clip:
-
-        x' = (2 * x / width) - 1
-        y' = (2 * y / height) - 1
-
-        Matrix:
-
-        |  2/w    0    -1  |
-        |   0    2/h    1  |
-        |   0     0     1  |
-    */
-
     camera.projectionMatrix = mat3.fromValues(
-        2 / width,  0,           0,
-        0,          2 / height,  0,
-        -1,        -1,           1
+        2 / width, 0, 0,
+        0, 2 / height, 0,
+        -1, -1, 1
     );
 }
 
-// =============================================================
-// Scene Objects Creation Functions
-// =============================================================
+function setupViewMatrix() {
+    const matrix = mat3.create();
 
+    mat3.fromTranslation(matrix, [-camera.x, -camera.y]);
+    mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
+
+    camera.viewMatrix = matrix;
+}
+
+function setupModelMatrix(object) {
+    const matrix = mat3.create();
+
+    mat3.translate(matrix, matrix, [object.positionX, object.positionY]);
+    mat3.rotate(matrix, matrix, object.rotation);
+    mat3.scale(matrix, matrix, [object.scaleX, object.scaleY]);
+
+    object.modelMatrix = matrix;
+}
+
+// =============================================================
+// Scene Object Creation Functions
+// =============================================================
 function setupGrid(gl, shader) {
     grid.shader = shader;
 
@@ -314,16 +439,45 @@ function setupYAxis(gl, shader) {
     yAxis.drawCount = 2;
 }
 
+function setupSquare(gl, shader) {
+    square.shader = shader;
+
+    const positions = new Float32Array([
+        -50, -50,
+         50, -50,
+        -50,  50,
+
+        -50,  50,
+         50, -50,
+         50,  50
+    ]);
+
+    square.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, square.vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+    square.vao = gl.createVertexArray();
+    gl.bindVertexArray(square.vao);
+    gl.enableVertexAttribArray(square.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, square.vbo);
+    gl.vertexAttribPointer(square.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
+
+    square.drawMode = gl.TRIANGLES;
+    square.drawOffset = 0;
+    square.drawCount = 6;
+}
+
 function setupRectangle(gl, shader) {
     rectangle.shader = shader;
 
     const positions = new Float32Array([
-        200, 150,
-        400, 150,
-        200, 300,
-        200, 300,
-        400, 150,
-        400, 300
+        -75, -40,
+         75, -40,
+        -75,  40,
+
+        -75,  40,
+         75, -40,
+         75,  40
     ]);
 
     rectangle.vbo = gl.createBuffer();
@@ -341,14 +495,37 @@ function setupRectangle(gl, shader) {
     rectangle.drawCount = 6;
 }
 
+function setupTriangle(gl, shader) {
+    triangle.shader = shader;
+
+    const positions = new Float32Array([
+         0,  60,
+        -60, -40,
+         60, -40
+    ]);
+
+    triangle.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+    triangle.vao = gl.createVertexArray();
+    gl.bindVertexArray(triangle.vao);
+    gl.enableVertexAttribArray(triangle.shader.attributes.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+    gl.vertexAttribPointer(triangle.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
+
+    triangle.drawMode = gl.TRIANGLES;
+    triangle.drawOffset = 0;
+    triangle.drawCount = 3;
+}
+
 // =============================================================
 // GUI Setup Functions
 // =============================================================
-
 function setupGUI() {
     const gui = new lil.GUI();
-    const cameraFolder = gui.addFolder("Camera");
 
+    const cameraFolder = gui.addFolder("Camera");
     cameraFolder.add(controls, "panUp").name("↑ Up");
     cameraFolder.add(controls, "panLeft").name("← Left");
     cameraFolder.add(controls, "panDown").name("↓ Down");
@@ -358,9 +535,8 @@ function setupGUI() {
 }
 
 // =============================================================
-// Key Event Functions
+// Input / Event Functions
 // =============================================================
-
 window.addEventListener("keydown", event => {
     switch(event.key) {
         case "ArrowUp":
@@ -383,7 +559,6 @@ window.addEventListener("keydown", event => {
         case "o":
             controls.panZoomOut = true;
             break;
-        default:
     }
 });
 
@@ -409,14 +584,16 @@ window.addEventListener("keyup", event => {
         case "o":
             controls.panZoomOut = false;
             break;
-        default:
     }
 });
 
 // =============================================================
 // RENDER
 // =============================================================
-function render(gl) {
+function render(gl, time) {
+    // Animations First
+    updateAnimations(time);
+
     updateCamera();
 
     resizeCanvasToDisplaySize(gl.canvas);
@@ -434,23 +611,46 @@ function render(gl) {
     setupViewMatrix();
     gl.uniformMatrix3fv(shaderInfo.uniforms.viewMatrix, false, camera.viewMatrix);
 
+    // GRID
     gl.bindVertexArray(grid.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
     gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
 
+    // X AXIS
     gl.bindVertexArray(xAxis.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
     gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
     gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
 
+    // Y AXIS
     gl.bindVertexArray(yAxis.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
     gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
     gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
 
+    // SQUARE
+    setupModelMatrix(square);
+    gl.bindVertexArray(square.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, square.modelMatrix);
+    gl.uniform4f(shaderInfo.uniforms.color, square.color[0], square.color[1], square.color[2], 1.0);
+    gl.drawArrays(square.drawMode, square.drawOffset, square.drawCount);
+
+    // RECTANGLE
+    setupModelMatrix(rectangle);
     gl.bindVertexArray(rectangle.vao);
-    gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, rectangle.modelMatrix);
+    gl.uniform4f(shaderInfo.uniforms.color, rectangle.color[0], rectangle.color[1], rectangle.color[2], 1.0);
     gl.drawArrays(rectangle.drawMode, rectangle.drawOffset, rectangle.drawCount);
 
-    requestAnimationFrame(() => render(gl));
+    // TRIANGLE
+    setupModelMatrix(triangle);
+    gl.bindVertexArray(triangle.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, triangle.modelMatrix);
+    gl.uniform4f(shaderInfo.uniforms.color, triangle.color[0], triangle.color[1], triangle.color[2], 1.0);
+    gl.drawArrays(triangle.drawMode, triangle.drawOffset, triangle.drawCount);
+
+    requestAnimationFrame((time) => render(gl, time));
 }
 
 // =============================================================
@@ -475,15 +675,17 @@ function main() {
     setupGrid(gl, shaderInfo);
     setupXAxis(gl, shaderInfo);
     setupYAxis(gl, shaderInfo);
+    setupSquare(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
+    setupTriangle(gl, shaderInfo);
     setupGUI();
-    render(gl);
+
+    render(gl, 0);
 }
 
 // =============================================================
 // STARTUP AND EXPORTS
 // =============================================================
-
 window.addEventListener("DOMContentLoaded", main);
 
 export {

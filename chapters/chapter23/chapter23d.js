@@ -1,27 +1,77 @@
 /* #############################################################
-   CHAPTER 10c: 2D Camera — Zoom
+    CHAPTER 23d: Animation Mixed
 
    Topics:
-   - Camera position
-   - Camera zoom
-   - Uniform vec2
-   - Passing camera data from JavaScript
-   - Discrete zoom controls
-
-   No keyboard yet.
-   No smooth movement yet.
-   No view matrix yet.
+   - Animation loop
+   - Translate + Rotation + Scale
    #############################################################
 */
 
 // =============================================================
-// GLOBAL OBJECTS
+// GLOBAL DATA
 // =============================================================
 
-// =============================================================
+// Canvas / WebGL Context
+
+// Shader Objects
+const shaderInfo = {
+    vertexShaderSource: `#version 300 es
+    in vec2 a_position;
+
+    uniform mat3 u_modelMatrix;
+    uniform mat3 u_viewMatrix;
+    uniform mat3 u_projectionMatrix;
+
+    void main() {
+        vec3 localPosition = vec3(a_position, 1.0);
+        vec3 clipPosition = u_projectionMatrix * u_viewMatrix * u_modelMatrix * localPosition;
+        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
+    }
+`,
+    fragmentShaderSource: `#version 300 es
+    precision mediump float;
+
+    uniform vec4 u_color;
+
+    out vec4 out_color;
+
+    void main() {
+        out_color = u_color;
+    }
+`,
+    program: null,
+    attributes: {
+        position: null
+    },
+    uniforms: {
+        viewMatrix: null,
+        projectionMatrix: null,
+        modelMatrix: null,
+        color: null
+    }
+};
+
+// Camera Objects
+const camera = {
+    x: -300,
+    y: -200,
+    zoom: 1.0,
+    panSpeed: 10,
+    zoomSpeed: 0.1,
+    viewMatrix: null,
+    projectionMatrix: null
+};
+
+const controls = {
+    panUp: false,
+    panLeft: false,
+    panDown: false,
+    panRight: false,
+    panZoomIn: false,
+    panZoomOut: false
+};
+
 // Scene Objects
-// =============================================================
-
 const grid = {
     shader: null,
     vao: null,
@@ -55,69 +105,74 @@ const rectangle = {
     vbo: null,
     drawMode: null,
     drawOffset: 0,
-    drawCount: 0
+    drawCount: 0,
+    positionX: 50,
+    positionY: 50,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+    modelMatrix: null
 };
 
-// =============================================================
-// Camera Objects
-// =============================================================
+// Animation
+const animationInfo = {
+    startTime: 0,
+    elapsedTime: 0,
 
-const camera = {
-    x: -300,
-    y: -200,
-    zoom: 1.0,
-    panSpeed: 50,
-    zoomSpeed: 0.1,
-    projectionMatrix: null
-};
+    positionX: 0,
+    positionY: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
 
-// =============================================================
-// Shader Objects
-// =============================================================
-
-const shaderInfo = {
-    vertexShaderSource: `#version 300 es
-    in vec2 a_position;
-
-    uniform vec2 u_cameraPosition;
-    uniform float u_cameraZoom;
-    uniform mat3 u_projectionMatrix;
-
-    void main() {
-        // ---------------------------------------------------------
-        // WORLD -> CAMERA
-        // ---------------------------------------------------------
-        vec2 viewPosition = a_position - u_cameraPosition;
-        viewPosition *= u_cameraZoom;
-
-        // ---------------------------------------------------------
-        // CAMERA -> CLIP
-        // ---------------------------------------------------------
-        vec3 clipPosition = u_projectionMatrix * vec3(viewPosition, 1.0);
-
-        gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
-    }
-`,
-    fragmentShaderSource: `#version 300 es
-    precision mediump float;
-
-    uniform vec4 u_color;
-
-    out vec4 out_color;
-
-    void main() {
-        out_color = u_color;
-    }
-`,
-    program: null,
-    attributes: {
-        position: null
+    translationParams: {
+        amplitudeX: 200,
+        amplitudeY: 100,
+        frequencyX: 1,
+        frequencyY: 1
     },
-    uniforms: {
-        camera: null,
-        zoom: null,
-        projectionMatrix: null,
-        color: null
+
+    rotationParams: {
+        speed: 1
+    },
+
+    scaleParams: {
+        amplitudeX: 0.5,
+        amplitudeY: 0.5,
+        frequencyX: 1,
+        frequencyY: 1
+    },
+
+    update(time) {
+        if(this.startTime === 0) {
+            this.startTime = time;
+        }
+
+        this.elapsedTime = (time - this.startTime) * 0.001;
+
+        // 15e.1 — Translation
+        this.positionX =
+            Math.sin(this.elapsedTime * this.translationParams.frequencyX) *
+            this.translationParams.amplitudeX;
+
+        this.positionY =
+            Math.sin(this.elapsedTime * this.translationParams.frequencyY) *
+            this.translationParams.amplitudeY;
+
+        // 15e.2 — Rotation
+        this.rotation =
+            this.elapsedTime * this.rotationParams.speed;
+
+        // 15e.3 — Scale
+        this.scaleX =
+            1 +
+            Math.sin(this.elapsedTime * this.scaleParams.frequencyX) *
+            this.scaleParams.amplitudeX;
+
+        this.scaleY =
+            1 +
+            Math.sin(this.elapsedTime * this.scaleParams.frequencyY) *
+            this.scaleParams.amplitudeY;
     }
 };
 
@@ -155,20 +210,16 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 function setupShader(gl, shader) {
-    // Shaders
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
 
-    // Program
     shader.program = createProgram(gl, vertexShader, fragmentShader);
 
-    // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
 
-    // Uniforms
-    shader.uniforms.camera = gl.getUniformLocation(shader.program, "u_cameraPosition");
-    shader.uniforms.zoom = gl.getUniformLocation(shader.program, "u_cameraZoom");
+    shader.uniforms.viewMatrix = gl.getUniformLocation(shader.program, "u_viewMatrix");
     shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
+    shader.uniforms.modelMatrix = gl.getUniformLocation(shader.program, "u_modelMatrix");
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
 }
 
@@ -190,26 +241,21 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// Camera-Related Matrix Functions
+// Camera / Matrix Functions
 // =============================================================
 
-function setupProjectionMatrix(gl){
-    // PIXEL SPACE -> CLIP SPACE MATRIX
+function updateCamera() {
+    if(controls.panUp) camera.y += camera.panSpeed;
+    if(controls.panLeft) camera.x -= camera.panSpeed;
+    if(controls.panDown) camera.y -= camera.panSpeed;
+    if(controls.panRight) camera.x += camera.panSpeed;
+    if(controls.panZoomIn) camera.zoom += camera.zoomSpeed;
+    if(controls.panZoomOut) camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
+}
+
+function setupProjectionMatrix(gl) {
     const width = gl.canvas.width;
     const height = gl.canvas.height;
-
-    /*
-        Pixel -> Clip:
-
-        x' = (2 * x / width) - 1
-        y' = (2 * y / height) - 1
-
-        Matrix:
-
-        |  2/w    0     -1 |
-        |   0    2/h    1 |
-        |   0     0      1 |
-    */
 
     camera.projectionMatrix = mat3.fromValues(
         2 / width,  0,           0,
@@ -218,8 +264,25 @@ function setupProjectionMatrix(gl){
     );
 }
 
+function setupViewMatrix() {
+    const matrix = mat3.create();
+    mat3.fromTranslation(matrix, [-camera.x, -camera.y]);
+    mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
+    camera.viewMatrix = matrix;
+}
+
+function setupModelMatrix(object) {
+    const matrix = mat3.create();
+
+    mat3.translate(matrix, matrix, [object.positionX, object.positionY]);
+    mat3.rotate(matrix, matrix, object.rotation);
+    mat3.scale(matrix, matrix, [object.scaleX, object.scaleY]);
+
+    object.modelMatrix = matrix;
+}
+
 // =============================================================
-// Scene Objects Creation Functions
+// Scene Object Creation Functions
 // =============================================================
 
 function setupGrid(gl, shader) {
@@ -229,12 +292,10 @@ function setupGrid(gl, shader) {
     const spacing = 100;
     const range = 10000;
 
-    // Vertical lines
     for(let x = -range; x <= range; x += spacing) {
         positions.push(x, -range, x, range);
     }
 
-    // Horizontal lines
     for(let y = -range; y <= range; y += spacing) {
         positions.push(-range, y, range, y);
     }
@@ -245,7 +306,6 @@ function setupGrid(gl, shader) {
 
     grid.vao = gl.createVertexArray();
     gl.bindVertexArray(grid.vao);
-
     gl.enableVertexAttribArray(grid.shader.attributes.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, grid.vbo);
     gl.vertexAttribPointer(grid.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
@@ -269,7 +329,6 @@ function setupXAxis(gl, shader) {
 
     xAxis.vao = gl.createVertexArray();
     gl.bindVertexArray(xAxis.vao);
-
     gl.enableVertexAttribArray(xAxis.shader.attributes.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, xAxis.vbo);
     gl.vertexAttribPointer(xAxis.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
@@ -293,7 +352,6 @@ function setupYAxis(gl, shader) {
 
     yAxis.vao = gl.createVertexArray();
     gl.bindVertexArray(yAxis.vao);
-
     gl.enableVertexAttribArray(yAxis.shader.attributes.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, yAxis.vbo);
     gl.vertexAttribPointer(yAxis.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
@@ -307,12 +365,10 @@ function setupRectangle(gl, shader) {
     rectangle.shader = shader;
 
     const positions = new Float32Array([
-        200, 150,
-        400, 150,
-        200, 300,
-        200, 300,
-        400, 150,
-        400, 300
+        -50, -50,
+         50, -50,
+        -50,  50,
+         50,  50
     ]);
 
     rectangle.vbo = gl.createBuffer();
@@ -321,63 +377,107 @@ function setupRectangle(gl, shader) {
 
     rectangle.vao = gl.createVertexArray();
     gl.bindVertexArray(rectangle.vao);
-
     gl.enableVertexAttribArray(rectangle.shader.attributes.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
     gl.vertexAttribPointer(rectangle.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
 
-    rectangle.drawMode = gl.TRIANGLES;
+    rectangle.drawMode = gl.TRIANGLE_STRIP;
     rectangle.drawOffset = 0;
-    rectangle.drawCount = 6;
+    rectangle.drawCount = 4;
+}
+
+// =============================================================
+// Apply Animations
+// =============================================================
+function applyAnimation(animation, object) {
+    object.positionX = animation.positionX;
+    object.positionY = animation.positionY;
+    object.rotation = animation.rotation;
+    object.scaleX = animation.scaleX;
+    object.scaleY = animation.scaleY;
 }
 
 // =============================================================
 // GUI Setup Functions
 // =============================================================
 
-function setupGUI(render) {
+function setupGUI() {
     const gui = new lil.GUI();
+
     const cameraFolder = gui.addFolder("Camera");
-
-    const controls = {
-        up: () => {
-            camera.y += camera.panSpeed;
-            render();
-        },
-        left: () => {
-            camera.x -= camera.panSpeed;
-            render();
-        },
-        down: () => {
-            camera.y -= camera.panSpeed;
-            render();
-        },
-        right: () => {
-            camera.x += camera.panSpeed;
-            render();
-        },
-        zoomIn: () => {
-            camera.zoom += camera.zoomSpeed;
-            render();
-        },
-        zoomOut: () => {
-            camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
-            render();
-        }
-    };
-
-    cameraFolder.add(controls, "up").name("↑ Up");
-    cameraFolder.add(controls, "left").name("← Left");
-    cameraFolder.add(controls, "down").name("↓ Down");
-    cameraFolder.add(controls, "right").name("→ Right");
-    cameraFolder.add(controls, "zoomIn").name("Zoom In");
-    cameraFolder.add(controls, "zoomOut").name("Zoom Out");
+    cameraFolder.add(controls, "panUp").name("↑ Up");
+    cameraFolder.add(controls, "panLeft").name("← Left");
+    cameraFolder.add(controls, "panDown").name("↓ Down");
+    cameraFolder.add(controls, "panRight").name("→ Right");
+    cameraFolder.add(controls, "panZoomIn").name("Zoom In");
+    cameraFolder.add(controls, "panZoomOut").name("Zoom Out");
 }
+
+// =============================================================
+// Input / Event Functions
+// =============================================================
+
+window.addEventListener("keydown", event => {
+    switch(event.key) {
+        case "ArrowUp":
+            controls.panUp = true;
+            break;
+        case "ArrowLeft":
+            controls.panLeft = true;
+            break;
+        case "ArrowDown":
+            controls.panDown = true;
+            break;
+        case "ArrowRight":
+            controls.panRight = true;
+            break;
+        case "I":
+        case "i":
+            controls.panZoomIn = true;
+            break;
+        case "O":
+        case "o":
+            controls.panZoomOut = true;
+            break;
+    }
+});
+
+window.addEventListener("keyup", event => {
+    switch(event.key) {
+        case "ArrowUp":
+            controls.panUp = false;
+            break;
+        case "ArrowLeft":
+            controls.panLeft = false;
+            break;
+        case "ArrowDown":
+            controls.panDown = false;
+            break;
+        case "ArrowRight":
+            controls.panRight = false;
+            break;
+        case "I":
+        case "i":
+            controls.panZoomIn = false;
+            break;
+        case "O":
+        case "o":
+            controls.panZoomOut = false;
+            break;
+    }
+});
 
 // =============================================================
 // RENDER
 // =============================================================
-function render(gl) {
+
+function render(gl, time) {
+    //Animations First
+    animationInfo.update(time);
+    applyAnimation(animationInfo,rectangle);
+
+    updateCamera();
+
     resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
@@ -385,55 +485,46 @@ function render(gl) {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(shaderInfo.program);
 
-    // ---------------------------------------------------------
     // PROJECTION MATRIX
-    // ---------------------------------------------------------
     setupProjectionMatrix(gl);
     gl.uniformMatrix3fv(shaderInfo.uniforms.projectionMatrix, false, camera.projectionMatrix);
 
-    // ---------------------------------------------------------
-    // CAMERA PAN/ZOOM
-    // ---------------------------------------------------------
+    // VIEW MATRIX
+    setupViewMatrix();
+    gl.uniformMatrix3fv(shaderInfo.uniforms.viewMatrix, false, camera.viewMatrix);
 
-    gl.uniform2f(shaderInfo.uniforms.camera, camera.x, camera.y);
-    gl.uniform1f(shaderInfo.uniforms.zoom, camera.zoom);
-
-    // ---------------------------------------------------------
     // GRID
-    // ---------------------------------------------------------
-
     gl.bindVertexArray(grid.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
     gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
 
-    // ---------------------------------------------------------
     // X AXIS
-    // ---------------------------------------------------------
-
     gl.bindVertexArray(xAxis.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
     gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
     gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
 
-    // ---------------------------------------------------------
     // Y AXIS
-    // ---------------------------------------------------------
-
     gl.bindVertexArray(yAxis.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, mat3.create());
     gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
     gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
 
-    // ---------------------------------------------------------
     // RECTANGLE
-    // ---------------------------------------------------------
-
+    setupModelMatrix(rectangle);
     gl.bindVertexArray(rectangle.vao);
+    gl.uniformMatrix3fv(shaderInfo.uniforms.modelMatrix, false, rectangle.modelMatrix);
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
     gl.drawArrays(rectangle.drawMode, rectangle.drawOffset, rectangle.drawCount);
+
+    requestAnimationFrame((time) => render(gl, time));
 }
 
 // =============================================================
 // MAIN
 // =============================================================
+
 function main() {
     const canvas = document.querySelector("#c");
 
@@ -454,10 +545,8 @@ function main() {
     setupXAxis(gl, shaderInfo);
     setupYAxis(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
-    setupGUI(() => render(gl));
-    render(gl);
-
-    window.addEventListener("resize", () => render(gl));
+    setupGUI();
+    render(gl, 0);
 }
 
 // =============================================================

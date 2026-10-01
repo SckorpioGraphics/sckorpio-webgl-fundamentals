@@ -1,11 +1,11 @@
 /* #############################################################
-   CHAPTER 14d: 2D Transformations — Rotation Around a Pivot
+   CHAPTER 15a: 2D Transformations — Scale
 
    Topics:
-   - Rotating a letterF around a pivot
-   - Pivot position
-   - Translation to and from the pivot
-   - Visualizing the pivot
+   - Uniform scaling of a letterF
+   - GUI camera controls
+   - Using scale directly
+   - Object scaling
    #############################################################
 */
 
@@ -25,28 +25,18 @@ const shaderInfo = {
     uniform float u_translationX;
     uniform float u_translationY;
     uniform float u_rotation;
-    uniform float u_pivotX;
-    uniform float u_pivotY;
+    uniform float u_scale;
 
     void main() {
-        vec3 localPosition = vec3(a_position, 1.0);
+        float scaledX = a_position.x * u_scale;
+        float scaledY = a_position.y * u_scale;
 
-        mat3 translateToPivot = mat3(
-            1.0,       0.0,       0.0,
-            0.0,       1.0,       0.0,
-            -u_pivotX, -u_pivotY, 1.0
-        );
+        vec3 localPosition = vec3(scaledX, scaledY, 1.0);
 
         mat3 rotationMatrix = mat3(
             cos(u_rotation),  sin(u_rotation), 0.0,
            -sin(u_rotation),  cos(u_rotation), 0.0,
             0.0,              0.0,             1.0
-        );
-
-        mat3 translateBack = mat3(
-            1.0,       0.0,       0.0,
-            0.0,       1.0,       0.0,
-            u_pivotX,   u_pivotY, 1.0
         );
 
         mat3 translationMatrix = mat3(
@@ -55,13 +45,7 @@ const shaderInfo = {
             u_translationX, u_translationY, 1.0
         );
 
-        vec3 worldPosition =
-            translationMatrix *
-            translateBack *
-            rotationMatrix *
-            translateToPivot *
-            localPosition;
-
+        vec3 worldPosition = translationMatrix * rotationMatrix * localPosition;
         vec3 viewPosition = u_viewMatrix * worldPosition;
         vec3 clipPosition = u_projectionMatrix * viewPosition;
 
@@ -87,8 +71,7 @@ const shaderInfo = {
         translationX: null,
         translationY: null,
         rotation: null,
-        pivotX: null,
-        pivotY: null,
+        scale: null,
         viewMatrix: null,
         projectionMatrix: null,
         color: null
@@ -151,20 +134,11 @@ const letterF = {
     drawMode: null,
     drawOffset: 0,
     drawCount: 0,
+    drawType: null,
     positionX: 300,
     positionY: 200,
     rotation: 0,
-    pivotX: 0,
-    pivotY: 0
-};
-
-const pivot = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
+    scale: 1.0
 };
 
 // =============================================================
@@ -211,8 +185,7 @@ function setupShader(gl, shader) {
     shader.uniforms.translationX = gl.getUniformLocation(shader.program, "u_translationX");
     shader.uniforms.translationY = gl.getUniformLocation(shader.program, "u_translationY");
     shader.uniforms.rotation = gl.getUniformLocation(shader.program, "u_rotation");
-    shader.uniforms.pivotX = gl.getUniformLocation(shader.program, "u_pivotX");
-    shader.uniforms.pivotY = gl.getUniformLocation(shader.program, "u_pivotY");
+    shader.uniforms.scale = gl.getUniformLocation(shader.program, "u_scale");
     shader.uniforms.viewMatrix = gl.getUniformLocation(shader.program, "u_viewMatrix");
     shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
     shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
@@ -405,33 +378,6 @@ function setupLetterF(gl, shader) {
     letterF.drawType = gl.UNSIGNED_SHORT;
 }
 
-function setupPivot(gl, shader) {
-    pivot.shader = shader;
-
-    const size = 10;
-
-    const positions = new Float32Array([
-        -size, 0,
-         size, 0,
-         0, -size,
-         0,  size
-    ]);
-
-    pivot.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, pivot.vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
-
-    pivot.vao = gl.createVertexArray();
-    gl.bindVertexArray(pivot.vao);
-    gl.enableVertexAttribArray(pivot.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, pivot.vbo);
-    gl.vertexAttribPointer(pivot.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
-
-    pivot.drawMode = gl.LINES;
-    pivot.drawOffset = 0;
-    pivot.drawCount = 4;
-}
-
 // =============================================================
 // GUI Setup Functions
 // =============================================================
@@ -451,8 +397,7 @@ function setupGUI() {
     letterFFolder.add(letterF, "positionX", -1000, 1000).name("positionX");
     letterFFolder.add(letterF, "positionY", -1000, 1000).name("positionY");
     letterFFolder.add(letterF, "rotation", 0, Math.PI * 2).name("rotation");
-    letterFFolder.add(letterF, "pivotX", -100, 100).name("pivotX");
-    letterFFolder.add(letterF, "pivotY", -100, 100).name("pivotY");
+    letterFFolder.add(letterF, "scale", 0.1, 3.0).name("scale");
 }
 
 // =============================================================
@@ -535,8 +480,7 @@ function render(gl) {
     gl.uniform1f(shaderInfo.uniforms.translationX, 0);
     gl.uniform1f(shaderInfo.uniforms.translationY, 0);
     gl.uniform1f(shaderInfo.uniforms.rotation, 0);
-    gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
-    gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
+    gl.uniform1f(shaderInfo.uniforms.scale, 1);
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
     gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
 
@@ -545,8 +489,7 @@ function render(gl) {
     gl.uniform1f(shaderInfo.uniforms.translationX, 0);
     gl.uniform1f(shaderInfo.uniforms.translationY, 0);
     gl.uniform1f(shaderInfo.uniforms.rotation, 0);
-    gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
-    gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
+    gl.uniform1f(shaderInfo.uniforms.scale, 1);
     gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
     gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
 
@@ -555,8 +498,7 @@ function render(gl) {
     gl.uniform1f(shaderInfo.uniforms.translationX, 0);
     gl.uniform1f(shaderInfo.uniforms.translationY, 0);
     gl.uniform1f(shaderInfo.uniforms.rotation, 0);
-    gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
-    gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
+    gl.uniform1f(shaderInfo.uniforms.scale, 1);
     gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
     gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
 
@@ -565,20 +507,9 @@ function render(gl) {
     gl.uniform1f(shaderInfo.uniforms.translationX, letterF.positionX);
     gl.uniform1f(shaderInfo.uniforms.translationY, letterF.positionY);
     gl.uniform1f(shaderInfo.uniforms.rotation, letterF.rotation);
-    gl.uniform1f(shaderInfo.uniforms.pivotX, letterF.pivotX);
-    gl.uniform1f(shaderInfo.uniforms.pivotY, letterF.pivotY);
+    gl.uniform1f(shaderInfo.uniforms.scale, letterF.scale);
     gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
     gl.drawElements(letterF.drawMode, letterF.drawCount, letterF.drawType, letterF.drawOffset);
-
-    // PIVOT
-    gl.bindVertexArray(pivot.vao);
-    gl.uniform1f(shaderInfo.uniforms.translationX, letterF.positionX + letterF.pivotX);
-    gl.uniform1f(shaderInfo.uniforms.translationY, letterF.positionY + letterF.pivotY);
-    gl.uniform1f(shaderInfo.uniforms.rotation, 0);
-    gl.uniform1f(shaderInfo.uniforms.pivotX, 0);
-    gl.uniform1f(shaderInfo.uniforms.pivotY, 0);
-    gl.uniform4f(shaderInfo.uniforms.color, 1.0, 1.0, 1.0, 1.0);
-    gl.drawArrays(pivot.drawMode, pivot.drawOffset, pivot.drawCount);
 
     requestAnimationFrame(() => render(gl));
 }
@@ -606,7 +537,6 @@ function main() {
     setupXAxis(gl, shaderInfo);
     setupYAxis(gl, shaderInfo);
     setupLetterF(gl, shaderInfo);
-    setupPivot(gl, shaderInfo);
     setupGUI();
     render(gl);
 }

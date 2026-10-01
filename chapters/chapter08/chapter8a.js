@@ -1,14 +1,9 @@
 /* #############################################################
-CHAPTER 8a: Multiple Objects
+CHAPTER 8a: Uniform
 
 Topics:
-- Rendering multiple objects
-- A Traingle and a Rectangle
-- Separate VAO/VBO for each object
-- Different shapes
-- Different colors
-- Multiple draw calls
-- Using the same shader for multiple objects
+- Adding a basic UI to manipulate
+- Brightness of the triangle (as a single float)
 ###############################################################
 */
 
@@ -20,16 +15,11 @@ Topics:
 // Scene Objects
 // =============================================================
 
-const triangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
+const uiState = {
+    intensity: 1.0
 };
 
-const rectangle = {
+const triangle = {
     shader: null,
     vao: null,
     vbo: null,
@@ -42,12 +32,6 @@ const rectangle = {
 // Shader Objects
 // =============================================================
 
-/*
-    No UI in this chapter yet.
-    The focus here is on rendering multiple
-    independent objects.
-*/
-
 const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
@@ -58,11 +42,13 @@ const shaderInfo = {
 `,
     fragmentShaderSource: `#version 300 es
     precision mediump float;
-    uniform vec3 u_color;
+
+    uniform float u_intensity;
+
     out vec4 out_color;
 
     void main() {
-        out_color = vec4(u_color, 1.0);
+        out_color = vec4(0.39, 0.33, 0.58, 1.0) * u_intensity;
     }
 `,
     program: null,
@@ -70,7 +56,7 @@ const shaderInfo = {
         position: null
     },
     uniforms: {
-        color: null
+        intensity: null
     }
 };
 
@@ -116,7 +102,7 @@ function setupShader(gl, shader) {
     // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
     // uniforms
-    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
+    shader.uniforms.intensity = gl.getUniformLocation(shader.program, "u_intensity");
 }
 
 // =============================================================
@@ -143,25 +129,27 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 function setupTriangle(gl, shader) {
     triangle.shader = shader;
 
-    const positions = new Float32Array([
-        -0.7, 0.0,
-        -0.5, 0.5,
-        -0.3, 0.0
-    ]);
-
     triangle.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+
+    const positions = new Float32Array([
+        -0.5, 0.0,
+         0.0, 0.5,
+         0.5, 0.0
+    ]);
+
     gl.bufferData(
         gl.ARRAY_BUFFER,
         positions,
-        gl.STATIC_DRAW
+        gl.DYNAMIC_DRAW
     );
 
     triangle.vao = gl.createVertexArray();
     gl.bindVertexArray(triangle.vao);
 
-    gl.enableVertexAttribArray(triangle.shader.attributes.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+
+    gl.enableVertexAttribArray(triangle.shader.attributes.position);
 
     gl.vertexAttribPointer(
         triangle.shader.attributes.position,
@@ -177,45 +165,19 @@ function setupTriangle(gl, shader) {
     triangle.drawCount = 3;
 }
 
-function setupRectangle(gl, shader) {
-    rectangle.shader = shader;
+// =============================================================
+// GUI Setup Functions
+// =============================================================
 
-    const positions = new Float32Array([
-        0.2, -0.2,
-        0.2, 0.2,
-        0.6, -0.2,
+function setupGUI(render) {
+    const gui = new lil.GUI();
 
-        0.6, -0.2,
-        0.6, 0.2,
-        0.2, 0.2
-    ]);
+    const uniformFolder = gui.addFolder("Uniforms");
 
-    rectangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
-
-    rectangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(rectangle.vao);
-
-    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
-    gl.vertexAttribPointer(
-        rectangle.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
-
-    rectangle.drawMode = gl.TRIANGLES;
-    rectangle.drawOffset = 0;
-    rectangle.drawCount = 6;
+    const intensityFolder = uniformFolder.addFolder("Intensity");
+    intensityFolder.add(uiState, "intensity", 0, 1)
+        .name("Intensity")
+        .onChange(render);
 }
 
 // =============================================================
@@ -228,15 +190,12 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(shaderInfo.program);
+    gl.useProgram(triangle.shader.program);
 
-    // ---------------------------------------------------------
-    // TRIANGLE
-    // ---------------------------------------------------------
-
-    gl.uniform3f(
-        shaderInfo.uniforms.color,
-        1.0, 0.0, 0.0   // Red
+    // Set uniform value from UI
+    gl.uniform1f(
+        triangle.shader.uniforms.intensity,
+        uiState.intensity
     );
 
     gl.bindVertexArray(triangle.vao);
@@ -245,23 +204,6 @@ function render(gl) {
         triangle.drawMode,
         triangle.drawOffset,
         triangle.drawCount
-    );
-
-    // ---------------------------------------------------------
-    // RECTANGLE
-    // ---------------------------------------------------------
-
-    gl.uniform3f(
-        shaderInfo.uniforms.color,
-        0.0, 1.0, 0.0   // Green
-    );
-
-    gl.bindVertexArray(rectangle.vao);
-
-    gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
     );
 }
 
@@ -282,9 +224,8 @@ function main() {
     }
 
     setupShader(gl, shaderInfo);
-
     setupTriangle(gl, shaderInfo);
-    setupRectangle(gl, shaderInfo);
+    setupGUI(() => render(gl));
 
     render(gl);
     window.addEventListener("resize", () => render(gl));
