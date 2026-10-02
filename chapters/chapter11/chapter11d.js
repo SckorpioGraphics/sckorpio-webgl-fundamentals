@@ -1,9 +1,9 @@
 /* #############################################################
-CHAPTER 11d: 2D World with Axes
+CHAPTER 11d: 2D World with Grid
 
 Topics:
 - Creating a grid in pixel space
-- Also adding X-Axis and Y-Axis
+- Also creating X-Axis and Y-Axis
 - Creating a rectangle in pixel space
 - Vertex data in pixel space
 - projectionMatrix as a uniform mat3
@@ -18,28 +18,27 @@ Topics:
 // =============================================================
 
 // =============================================================
+// Camera
+// =============================================================
+
+const camera = {
+    // Camera bounds
+    width: 0,
+    height: 0,
+
+    // Projection matrix
+    projectionMatrix: mat3.create()
+};
+
+// =============================================================
+// GLOBAL OBJECTS
+// =============================================================
+
+// =============================================================
 // Scene Objects
 // =============================================================
 
 const grid = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-const xAxis = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-const yAxis = {
     shader: null,
     vao: null,
     vbo: null,
@@ -60,12 +59,6 @@ const rectangle = {
 // =============================================================
 // Shader Objects
 // =============================================================
-
-/*
-    No UI in this chapter yet.
-    The focus here is on using a matrix
-    to convert pixel space to clip space.
-*/
 
 const shaderInfo = {
     vertexShaderSource: `#version 300 es
@@ -166,6 +159,22 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
+// Camera Functions
+// =============================================================
+
+function updateCamera(gl) {
+    // Camera bounds
+    camera.width = gl.canvas.width;
+    camera.height = gl.canvas.height;
+
+    // Create projection matrix
+    camera.projectionMatrix = mat3.fromValues(
+        2 / camera.width,  0,                  0,
+        0,                 2 / camera.height,  0,
+        -1,                -1,                 1,
+    );
+}
+// =============================================================
 // Scene Objects Creation Functions
 // =============================================================
 
@@ -224,86 +233,6 @@ function setupGrid(gl, shader) {
     grid.drawCount = positions.length / 2;
 }
 
-function setupXAxis(gl, shader) {
-    xAxis.shader = shader;
-
-    const positions = new Float32Array([
-        -10000, 0,
-         10000, 0
-    ]);
-
-    xAxis.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, xAxis.vbo);
-
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
-
-    xAxis.vao = gl.createVertexArray();
-    gl.bindVertexArray(xAxis.vao);
-
-    gl.enableVertexAttribArray(
-        xAxis.shader.attributes.position
-    );
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, xAxis.vbo);
-
-    gl.vertexAttribPointer(
-        xAxis.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
-
-    xAxis.drawMode = gl.LINES;
-    xAxis.drawOffset = 0;
-    xAxis.drawCount = 2;
-}
-
-function setupYAxis(gl, shader) {
-    yAxis.shader = shader;
-
-    const positions = new Float32Array([
-        0, -10000,
-        0,  10000
-    ]);
-
-    yAxis.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, yAxis.vbo);
-
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
-
-    yAxis.vao = gl.createVertexArray();
-    gl.bindVertexArray(yAxis.vao);
-
-    gl.enableVertexAttribArray(
-        yAxis.shader.attributes.position
-    );
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, yAxis.vbo);
-
-    gl.vertexAttribPointer(
-        yAxis.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
-
-    yAxis.drawMode = gl.LINES;
-    yAxis.drawOffset = 0;
-    yAxis.drawCount = 2;
-}
-
 function setupRectangle(gl, shader) {
     rectangle.shader = shader;
 
@@ -353,107 +282,41 @@ function setupRectangle(gl, shader) {
 // RENDER
 // =============================================================
 function render(gl) {
+    // INITIALISE
     resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
     gl.clearColor(0.32, 0.63, 0.67, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
+    // CAMERA UPDATE
+    updateCamera(gl);
+
+    // SHADER PROGRAM
     gl.useProgram(shaderInfo.program);
-
-    // ---------------------------------------------------------
-    // PIXEL SPACE -> CLIP SPACE MATRIX
-    // ---------------------------------------------------------
-
-    const width = gl.canvas.width;
-    const height = gl.canvas.height;
-
-    /*
-        Pixel -> Clip:
-
-        x' = (2 * x / width) - 1
-        y' = (2 * y / height) - 1
-
-        Matrix:
-
-        |  2/w    0     -1 |
-        |   0    2/h    1 |
-        |   0     0      1 |
-    */
-
-    const projectionMatrix = mat3.fromValues(
-        2 / width,  0,           0,
-        0,          2 / height,  0,
-        -1,        -1,           1
-    );
-
     gl.uniformMatrix3fv(
         shaderInfo.uniforms.projectionMatrix,
         false,
-        projectionMatrix
+        camera.projectionMatrix
     );
 
-    // ---------------------------------------------------------
-    // GRID
-    // ---------------------------------------------------------
+    // OBJECTS
+    //----------------------------
+    // Grid
+    //----------------------------
 
     gl.bindVertexArray(grid.vao);
-
-    gl.uniform4f(
-        shaderInfo.uniforms.color,
-        0.39, 0.33, 0.58, 1.0
-    );
-
+    gl.uniform4f(shaderInfo.uniforms.color,0.39, 0.33, 0.58, 1.0);
     gl.drawArrays(
         grid.drawMode,
         grid.drawOffset,
         grid.drawCount
     );
 
-    // ---------------------------------------------------------
-    // X AXIS
-    // ---------------------------------------------------------
-
-    gl.bindVertexArray(xAxis.vao);
-
-    gl.uniform4f(
-        shaderInfo.uniforms.color,
-        1.0, 0.0, 0.0, 1.0
-    );
-
-    gl.drawArrays(
-        xAxis.drawMode,
-        xAxis.drawOffset,
-        xAxis.drawCount
-    );
-
-    // ---------------------------------------------------------
-    // Y AXIS
-    // ---------------------------------------------------------
-
-    gl.bindVertexArray(yAxis.vao);
-
-    gl.uniform4f(
-        shaderInfo.uniforms.color,
-        0.0, 1.0, 0.0, 1.0
-    );
-
-    gl.drawArrays(
-        yAxis.drawMode,
-        yAxis.drawOffset,
-        yAxis.drawCount
-    );
-
-    // ---------------------------------------------------------
-    // RECTANGLE
-    // ---------------------------------------------------------
-
+    //----------------------------
+    // Rectangle
+    //----------------------------
     gl.bindVertexArray(rectangle.vao);
-
-    gl.uniform4f(
-        shaderInfo.uniforms.color,
-        0.39, 0.33, 0.58, 1.0
-    );
+    gl.uniform4f(shaderInfo.uniforms.color,0.39, 0.33, 0.58, 1.0);
 
     gl.drawArrays(
         rectangle.drawMode,
@@ -480,8 +343,6 @@ function main() {
 
     setupShader(gl, shaderInfo);
     setupGrid(gl, shaderInfo);
-    setupXAxis(gl, shaderInfo);
-    setupYAxis(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
     render(gl);
     window.addEventListener("resize", () => render(gl));

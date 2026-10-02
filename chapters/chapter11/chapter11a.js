@@ -1,19 +1,28 @@
 /* #############################################################
-CHAPTER 11a: 2D Space Using a Projection Matrix
+CHAPTER 11a: 2D Projection Matrix
 
 Topics:
-- Creating a basic rectangle
-- Vertex data in pixel space
-- Matrix as a uniform
-- mat3
-- Pixel space -> clip space
-- Inverted Y
+- Creating a projection matrix in GLSL Shader itself
+- Camera space -> clip space
 ###############################################################
 */
 
 // =============================================================
 // GLOBAL OBJECTS
 // =============================================================
+
+// =============================================================
+// Camera
+// =============================================================
+
+const camera = {
+    // Camera bounds
+    // [left = 0, right = width, bottom = 0, top = height]
+    width: 0,
+    height: 0
+
+    // Clip space is fixed to [-1,1]
+};
 
 // =============================================================
 // Scene Objects
@@ -32,24 +41,32 @@ const rectangle = {
 // Shader Objects
 // =============================================================
 
-/*
-    No UI in this chapter yet.
-    The focus here is on using a matrix
-    to convert pixel space to clip space.
-*/
-
 const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
-
-    uniform mat3 u_projectionMatrix;
+    uniform vec2 u_cameraBounds;
 
     void main() {
-        // Apply pixel space -> clip space matrix
-        vec3 clipPostion = u_projectionMatrix * vec3(a_position, 1.0);
 
-        // Convert to clip-space position
-        gl_Position = vec4(clipPostion.xy, 0.0, 1.0);
+        float width  = u_cameraBounds.x;
+        float height = u_cameraBounds.y;
+
+        // ---------------------------------------------------------
+        // Projection Matrix
+        // ---------------------------------------------------------
+
+        mat3 projectionMatrix = mat3(
+            2.0 / width,  0.0,          0.0,
+            0.0,          2.0 / height, 0.0,
+           -1.0,         -1.0,          1.0
+        );
+
+        // ---------------------------------------------------------
+        // Camera Space -> Clip Space
+        // ---------------------------------------------------------
+
+        vec3 clipPosition = projectionMatrix * vec3(a_position, 1.0);
+        gl_Position = vec4(clipPosition.xy,0.0,1.0);
     }
 `,
     fragmentShaderSource: `#version 300 es
@@ -66,7 +83,7 @@ const shaderInfo = {
         position: null
     },
     uniforms: {
-        projectionMatrix: null
+        cameraBounds: null
     }
 };
 
@@ -112,7 +129,7 @@ function setupShader(gl, shader) {
     // Attributes
     shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
     // uniforms
-    shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
+    shader.uniforms.cameraBounds = gl.getUniformLocation(shader.program, "u_cameraBounds");
 }
 
 // =============================================================
@@ -130,6 +147,16 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     }
 
     return false;
+}
+
+// =============================================================
+// Camera Functions
+// =============================================================
+
+function updateCamera(gl) {
+    // Match the camera's viewing region
+    camera.width = gl.canvas.width;
+    camera.height = gl.canvas.height;
 }
 
 // =============================================================
@@ -184,47 +211,31 @@ function setupRectangle(gl, shader) {
 // =============================================================
 // RENDER
 // =============================================================
-function render(gl) {
-    resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
+function render(gl) {
+    // INITIALISE
+    resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
     gl.clearColor(0.32, 0.63, 0.67, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
+    // UPDATE CAMERA
+    updateCamera(gl);
+
+    // SHADER
     gl.useProgram(rectangle.shader.program);
 
-    // ---------------------------------------------------------
-    // PIXEL SPACE -> CLIP SPACE MATRIX
-    // ---------------------------------------------------------
-
-    const width = gl.canvas.width;
-    const height = gl.canvas.height;
-
-    /*
-        Pixel -> Clip:
-
-        x' = (2 * x / width) - 1
-        y' = (2 * y / height) - 1
-
-        Matrix:
-
-        |  2/w    0     -1 |
-        |   0    2/h    1 |
-        |   0     0      1 |
-    */
-
-    const projectionMatrix = mat3.fromValues(
-        2 / width,  0,           0,
-        0,          2 / height,  0,
-        -1,        -1,            1
+    // Pass camera bounds to shader
+    gl.uniform2f(
+        rectangle.shader.uniforms.cameraBounds,
+        camera.width,
+        camera.height
     );
 
-    gl.uniformMatrix3fv(
-        rectangle.shader.uniforms.projectionMatrix,
-        false,
-        projectionMatrix
-    );
-
+    // OBJECTS
+    //----------------------------
+    // Rectangle
+    //----------------------------
     gl.bindVertexArray(rectangle.vao);
 
     gl.drawArrays(
@@ -237,14 +248,17 @@ function render(gl) {
 // =============================================================
 // MAIN
 // =============================================================
+
 function main() {
     const canvas = document.querySelector("#c");
+
     if(!canvas) {
         console.error("Canvas element not found");
         return;
     }
 
     const gl = canvas.getContext("webgl2");
+
     if(!gl) {
         console.error("WebGL2 is not supported by this browser");
         return;
@@ -252,7 +266,9 @@ function main() {
 
     setupShader(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
+
     render(gl);
+
     window.addEventListener("resize", () => render(gl));
 }
 

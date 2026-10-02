@@ -1,15 +1,12 @@
 /* #############################################################
-CHAPTER 11c: 2D World
+CHAPTER 11c: 2D World with Multiple Rectangles
 
 Topics:
-- Creating a grid in pixel space
-- Also creating X-Axis and Y-Axis
-- Creating a rectangle in pixel space
+- Creating multiple random rectangles
 - Vertex data in pixel space
-- projectionMatrix as a uniform mat3
-- Pixel space -> clip space
-- Inverted Y
-- Multiple objects in pixel space
+- Inverted Y coordinates
+- Pixel space -> clip space using a matrix
+- Reusing the same buffer for multiple rectangles
 ###############################################################
 */
 
@@ -18,17 +15,21 @@ Topics:
 // =============================================================
 
 // =============================================================
-// Scene Objects
+// Camera
 // =============================================================
 
-const grid = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
+const camera = {
+    // Camera bounds
+    width: 0,
+    height: 0,
+
+    // Projection matrix
+    projectionMatrix: mat3.create()
 };
+
+// =============================================================
+// Scene Objects
+// =============================================================
 
 const rectangle = {
     shader: null,
@@ -43,12 +44,6 @@ const rectangle = {
 // Shader Objects
 // =============================================================
 
-/*
-    No UI in this chapter yet.
-    The focus here is on using a matrix
-    to convert pixel space to clip space.
-*/
-
 const shaderInfo = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
@@ -56,11 +51,11 @@ const shaderInfo = {
     uniform mat3 u_projectionMatrix;
 
     void main() {
-        // Apply pixel -> clip space matrix
-        vec3 transformedPosition = u_projectionMatrix * vec3(a_position, 1.0);
+        // Apply pixel space -> clip space matrix
+        vec3 clipPostion = u_projectionMatrix * vec3(a_position, 1.0);
 
         // Convert to clip-space position
-        gl_Position = vec4(transformedPosition.xy, 0.0, 1.0);
+        gl_Position = vec4(clipPostion.xy, 0.0, 1.0);
     }
 `,
     fragmentShaderSource: `#version 300 es
@@ -148,85 +143,31 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// Scene Objects Creation Functions
+// Camera Functions
 // =============================================================
 
-function setupGrid(gl, shader) {
-    grid.shader = shader;
+function updateCamera(gl) {
+    // Camera bounds
+    camera.width = gl.canvas.width;
+    camera.height = gl.canvas.height;
 
-    const positions = [];
-    const spacing = 100;
-    const range = 10000;
-
-    // Vertical lines
-    for(let x = -range; x <= range; x += spacing) {
-        positions.push(
-            x, -range,
-            x, range
-        );
-    }
-
-    // Horizontal lines
-    for(let y = -range; y <= range; y += spacing) {
-        positions.push(
-            -range, y,
-            range, y
-        );
-    }
-
-    grid.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, grid.vbo);
-
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array(positions),
-        gl.STATIC_DRAW
+    // Create projection matrix
+    camera.projectionMatrix = mat3.fromValues(
+        2 / camera.width,  0,                  0,
+        0,                 2 / camera.height,  0,
+        -1,                -1,                 1,
     );
-
-    grid.vao = gl.createVertexArray();
-    gl.bindVertexArray(grid.vao);
-
-    gl.enableVertexAttribArray(
-        grid.shader.attributes.position
-    );
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, grid.vbo);
-
-    gl.vertexAttribPointer(
-        grid.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
-
-    grid.drawMode = gl.LINES;
-    grid.drawOffset = 0;
-    grid.drawCount = positions.length / 2;
 }
+
+// =============================================================
+// Scene Objects Creation Functions
+// =============================================================
 
 function setupRectangle(gl, shader) {
     rectangle.shader = shader;
 
-    const positions = new Float32Array([
-        200, 150,       // Left Bottom
-        400, 150,       // Right Bottom
-        200, 300,       // Left Top
-
-        200, 300,       // Left Top
-        400, 150,       // Right Bottom
-        400, 300        // Right Top
-    ]);
-
     rectangle.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
 
     rectangle.vao = gl.createVertexArray();
     gl.bindVertexArray(rectangle.vao);
@@ -251,83 +192,87 @@ function setupRectangle(gl, shader) {
     rectangle.drawCount = 6;
 }
 
+function randomInt(range) {
+    return Math.floor(Math.random() * range);
+}
+
+function setRectangle(gl, x, y, width, height) {
+    const x1 = x;
+    const x2 = x + width;
+    const y1 = y;
+    const y2 = y + height;
+
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([
+            x1, y1,
+            x2, y1,
+            x1, y2,
+
+            x1, y2,
+            x2, y1,
+            x2, y2
+        ]),
+        gl.STATIC_DRAW
+    );
+}
+
 // =============================================================
 // RENDER
 // =============================================================
 function render(gl) {
+    // INITIALISE
     resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
     gl.clearColor(0.32, 0.63, 0.67, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(shaderInfo.program);
+    // UPDATE CAMERA
+    updateCamera(gl);
 
-    // ---------------------------------------------------------
-    // PIXEL SPACE -> CLIP SPACE MATRIX
-    // ---------------------------------------------------------
-
-    const width = gl.canvas.width;
-    const height = gl.canvas.height;
-
-    /*
-        Pixel -> Clip:
-
-        x' = (2 * x / width) - 1
-        y' = (2 * y / height) - 1
-
-        Matrix:
-
-        |  2/w    0     -1 |
-        |   0    2/h    1 |
-        |   0     0      1 |
-    */
-
-    const projectionMatrix = mat3.fromValues(
-        2 / width,  0,           0,
-        0,          2 / height,  0,
-        -1,        -1,           1
-    );
-
+    // SHADER
+    gl.useProgram(rectangle.shader.program);
+    // Pass projection matrix to shader
     gl.uniformMatrix3fv(
-        shaderInfo.uniforms.projectionMatrix,
+        rectangle.shader.uniforms.projectionMatrix,
         false,
-        projectionMatrix
+        camera.projectionMatrix
     );
 
     // ---------------------------------------------------------
-    // GRID
-    // ---------------------------------------------------------
-
-    gl.bindVertexArray(grid.vao);
-
-    gl.uniform4f(
-        shaderInfo.uniforms.color,
-        0.39, 0.33, 0.58, 1.0
-    );
-
-    gl.drawArrays(
-        grid.drawMode,
-        grid.drawOffset,
-        grid.drawCount
-    );
-
-    // ---------------------------------------------------------
-    // RECTANGLE
+    // RECTANGLES
     // ---------------------------------------------------------
 
     gl.bindVertexArray(rectangle.vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
 
-    gl.uniform4f(
-        shaderInfo.uniforms.color,
-        0.39, 0.33, 0.58, 1.0
-    );
+    // Draw 50 random rectangles
+    for(let i = 0; i < 50; i++) {
 
-    gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
-    );
+        // Generate rectangle in pixel space
+        setRectangle(
+            gl,
+            randomInt(camera.width),
+            randomInt(camera.height),
+            randomInt(200),
+            randomInt(200)
+        );
+
+        // Set random color
+        gl.uniform4f(
+            rectangle.shader.uniforms.color,
+            Math.random(),
+            Math.random(),
+            Math.random(),
+            1.0
+        );
+
+        gl.drawArrays(
+            rectangle.drawMode,
+            rectangle.drawOffset,
+            rectangle.drawCount
+        );
+    }
 }
 
 // =============================================================
@@ -347,7 +292,6 @@ function main() {
     }
 
     setupShader(gl, shaderInfo);
-    setupGrid(gl, shaderInfo);
     setupRectangle(gl, shaderInfo);
     render(gl);
     window.addEventListener("resize", () => render(gl));
