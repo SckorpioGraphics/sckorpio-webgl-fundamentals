@@ -2,6 +2,7 @@
 CHAPTER 6d: Dynamic Filled Polygon
 
 Topics:
+- Learning Topology TRIANGLE_FAN
 - Making a Polygon to Circle
 ###############################################################
 */
