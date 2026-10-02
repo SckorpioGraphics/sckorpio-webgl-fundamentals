@@ -16,8 +16,6 @@ CHAPTER 2 — LESSON TEMPLATE AND STRUCTURED TRIANGLE
 ----------------------------------------------------
 2a - Blank code-organization template; no rendering.
 2b - Complete a working triangle using the structured lesson template.
-2c - Separate WebGL setup from rendering.
-2d - Introduce a reusable render function.
 
 CHAPTER 3 — GEOMETRY AND INDEXING
 ---------------------------------
@@ -32,24 +30,26 @@ CHAPTER 4 — PRIMITIVE TOPOLOGIES I
 4b - Connect vertices into independent line segments with gl.LINES.
 4c - Connect vertices continuously with gl.LINE_STRIP.
 4d - Close a connected sequence with gl.LINE_LOOP.
+4d - Create a hexagon with gl.LINE_LOOP
+4e - [TODO: Create a Circle/Arc/Ellipse/Etc]
 
 CHAPTER 5 — PRIMITIVE TOPOLOGIES II
 -----------------------------------
 5a - Render independent triangles with gl.TRIANGLES.
 5b - Reuse vertices between adjacent triangles with gl.TRIANGLE_STRIP.
-5c - Build connected triangles around a shared center with gl.TRIANGLE_FAN.
-5d - Compare triangle topologies by building the same shape in different ways.
+5c - Build Hexagob by connected triangles around a shared center with gl.TRIANGLE_FAN.
+5d - [TODO: Create a Circle/Arc/Ellipse/Etc]
 
 CHAPTER 6 — DYNAMIC BUFFERS
 ---------------------------
 6a - Update vertex data after buffer creation.
 6b - Build an editable rectangle by changing its vertex positions.
-6c - Update polygon geometry dynamically.
-6d - Generate and update a circle from JavaScript.
+6c - Update polygon to circle geometry dynamically gl.LINE_LOOP
+6d - Update polygon to circle geometry dynamically gl.TRIANGLE_FAN
 
 CHAPTER 7 — VERTEX DATA AND COLOR
 ---------------------------------
-7a - Add color as a second vertex attribute.
+7a - Show interpolation by using vertex pos values as color values
 7b - Store position and color in separate attribute buffers.
 7c - Interleave position and color in one vertex buffer.
 7d - Observe color interpolation across a triangle.
@@ -65,12 +65,10 @@ CHAPTER 8 — UNIFORMS
 
 CHAPTER 9 — MULTIPLE OBJECTS
 ----------------------------
-9a - Render multiple objects from separate vertex data.
-9b - Render multiple objects with separate draw calls.
-9c - Introduce multiple shader programs.
-9d - Render different objects with different geometry and programs.
-9e - Build a grid and objects together in the same scene.
-
+9a - Render multiple objects with separate gpu objects, draw calls but same topology
+9b - Render multiple objects with separate gpu objects, draw calls and diff. topology
+9c - Render different objects with different geometry and programs.
+9d - Build a grid and objects together in the same scene.
 
 ============================================================
 PHASE 2 — 2D COORDINATE AND TRANSFORMATION FUNDAMENTALS
