@@ -6,26 +6,10 @@ CHAPTER 2b: Creating a Basic Triangle — Clean Structure
 */
 
 // =============================================================
-// GLOBAL OBJECTS
+// SHADER OBJECTS
 // =============================================================
-// =============================================================
-// Scene Objects
-// =============================================================
-const triangle = {
-    shader: null,
-
-    vao: null,
-    vbo: null,
-
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// Shader Objects
-// =============================================================
-const shaderInfo = {
+//Shader Object1
+const shader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -50,16 +34,22 @@ const shaderInfo = {
         position: null
     },
 
-    uniforms: {}
+    uniforms: {},
+
+    //FUNCTIONS
+
+    init(gl) {
+        // Compile shaders
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
+        // Create shader program
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        // Get attribute locations
+        this.attributes.position = gl.getAttribLocation(shader.program,"a_position");
+        // Get uniform locations
+        // Future uniforms will be stored here.
+    }
 };
-
-// =============================================================
-// FUNCTIONS
-// =============================================================
-
-// =============================================================
-// Shader Creating Functions
-// =============================================================
 
 // Compile Shader
 function createShader(gl, type, source) {
@@ -90,22 +80,73 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
-function setupShader(gl, shader) {
-    // Compile shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
-    // Create shader program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Get attribute locations
-    shader.attributes.position = gl.getAttribLocation(shader.program,"a_position");
-    // Get uniform locations
-    // Future uniforms will be stored here.
-}
+// =============================================================
+// SCENE OBJECTS
+// =============================================================
+const triangle = {
+    //         v2
+    //         /\
+    //        /  \
+    //       /    \
+    //      /      \
+    //     /        \
+    //    v0--------v1
+
+    // CPU Data
+    positions: new Float32Array([
+        -0.5, 0.0, // v0
+        0.0, 0.5,  // v1
+        0.5, 0.0   // v2
+    ]),
+
+    // GPU Data
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //Functions
+    init(gl, shader) {
+        // Connect shader to object
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER,this.positions,gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,          // size: 2 components (X, Y)
+            gl.FLOAT,   // type: 32-bit float
+            false,      // normalize
+            0,          // stride: tightly packed
+            0           // offset: start of buffer
+        );
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 3;
+    }
+};
 
 // =============================================================
-// Helper Functions
+// HELPER FUNCS
 // =============================================================
-
 // Resize Canvas
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     const width = (canvas.clientWidth * multiplier) | 0;
@@ -121,88 +162,24 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// Scene Objects Creation Functions
-// =============================================================
-function setupTriangle(gl, shader) {
-    // Connect shader to object
-    triangle.shader = shader;
-
-    //         v2
-    //         /\
-    //        /  \
-    //       /    \
-    //      /      \
-    //     /        \
-    //    v0--------v1
-
-    // Vertex data on CPU
-    const positions = new Float32Array([
-        -0.5, 0.0, // v0
-         0.0, 0.5, // v1
-         0.5, 0.0  // v2
-    ]);
-
-    // Vertex Buffer
-    triangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
-
-    // Vertex Array
-    triangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(triangle.vao);
-
-    // Enable position attribute
-    gl.enableVertexAttribArray(
-        triangle.shader.attributes.position
-    );
-
-    // Bind Vertex Buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-
-    // Vertex data format
-    gl.vertexAttribPointer(
-        triangle.shader.attributes.position,
-        2,          // size: 2 components (X, Y)
-        gl.FLOAT,   // type: 32-bit float
-        false,      // normalize
-        0,          // stride: tightly packed
-        0           // offset: start of buffer
-    );
-
-    // Draw data
-    triangle.drawMode = gl.TRIANGLES;
-    triangle.drawOffset = 0;
-    triangle.drawCount = 3;
-}
-
-// =============================================================
 // RENDER
 // =============================================================
 function render(gl) {
-    // CANVAS
+    // Canvas
     resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(
-        0,
-        0,
-        gl.canvas.width,
-        gl.canvas.height
-    );
+    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
-    // BACKGROUND
+    // Background
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // SHADER
-    gl.useProgram(triangle.shader.program);
+    // DRAW THINGS
+    //---------------------------------------------------
+    // Shader
+    gl.useProgram(shader.program);
 
-    // OBJECT
+    // Triangle
     gl.bindVertexArray(triangle.vao);
-
-    // DRAW CALL
     gl.drawArrays(
         triangle.drawMode,
         triangle.drawOffset,
@@ -214,45 +191,30 @@ function render(gl) {
 // MAIN
 // =============================================================
 function main() {
-    // ---------------------------------------------------------
-    // 1. WEBGL CANVAS
-    // ---------------------------------------------------------
+    //Canvas
     const canvas = document.querySelector("#c");
+    if(!canvas) {console.error("Canvas element not found");return;}
 
-    if(!canvas) {
-        console.error("Canvas element not found");
-        return;
-    }
-
+    //Context
     const gl = canvas.getContext("webgl2");
+    if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
 
-    if(!gl) {
-        console.error("WebGL2 is not supported by this browser");
-        return;
-    }
+    //Shader(s) Init
+    shader.init(gl);
 
-    // ---------------------------------------------------------
-    // 2. SETUP
-    // ---------------------------------------------------------
-    setupShader(gl, shaderInfo);
-    setupTriangle(gl, shaderInfo);
+    //Object(s) Init
+    triangle.init(gl, shader);
 
-    // ---------------------------------------------------------
-    // 3. RENDER
-    // ---------------------------------------------------------
-
-
-    // First render
+    //Render
     render(gl);
 
-    // Render again when window is resized
+    //Resize
     window.addEventListener("resize", () => render(gl));
 }
 
 // =============================================================
 // STARTUP AND EXPORTS
 // =============================================================
-
 window.addEventListener("DOMContentLoaded", main);
 
 export {
