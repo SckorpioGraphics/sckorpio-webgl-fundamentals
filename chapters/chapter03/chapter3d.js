@@ -10,31 +10,10 @@ Topics:
 */
 
 // =============================================================
-// GLOBAL OBJECTS
+// SHADER OBJECTS
 // =============================================================
-
-// =============================================================
-// Scene Objects
-// =============================================================
-
-const letterF = {
-    shader: null,
-
-    vao: null,
-    vbo: null,
-    ibo: null,
-
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0,
-    drawType: null
-};
-
-// =============================================================
-// Shader Objects
-// =============================================================
-
-const shaderInfo = {
+//Shader Object1
+const shader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -42,6 +21,7 @@ const shaderInfo = {
         gl_Position = vec4(a_position, 0.0, 1.0);
     }
 `,
+
     fragmentShaderSource: `#version 300 es
     precision mediump float;
     out vec4 out_Color;
@@ -50,36 +30,46 @@ const shaderInfo = {
         // out_Color = vec4(0.0, 1.0, 1.0, 1.0); // Cyan
         out_Color = vec4(0.39, 0.33, 0.58, 1.0); // Sckorpio Purple
     }
-`,
+    `,
+
     program: null,
 
     attributes: {
         position: null
     },
 
-    uniforms: {}
+    uniforms: {},
+
+    //FUNCTIONS
+
+    init(gl) {
+        // Compile shaders
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
+        // Create shader program
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        // Get attribute locations
+        this.attributes.position = gl.getAttribLocation(shader.program,"a_position");
+        // Get uniform locations
+        // Future uniforms will be stored here.
+    }
 };
 
-// =============================================================
-// FUNCTIONS
-// =============================================================
-
-// =============================================================
-// Shader Creating Functions
-// =============================================================
-
+// Compile Shader
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
     const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+
     if(compileStatus) return shader;
 
     console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
 }
 
+// Link Program
 function createProgram(gl, vertexShader, fragmentShader) {
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -87,48 +77,18 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.linkProgram(program);
 
     const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+
     if(linkStatus) return program;
 
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
 }
 
-function setupShader(gl, shader) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    // Future uniforms
-}
-
 // =============================================================
-// Helper Functions
+// SCENE OBJECTS
 // =============================================================
-
-function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
-    const width = (canvas.clientWidth * multiplier) | 0;
-    const height = (canvas.clientHeight * multiplier) | 0;
-
-    if(canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        return true;
-    }
-
-    return false;
-}
-
-// =============================================================
-// Scene Objects Creation Functions
-// =============================================================
-
-function setupLetterF(gl, shader) {
-    letterF.shader = shader;
-
-    /*
+const letterF = {
+  /*
         v2-------v3--------v4
         |\       |\         |
         |\       |   \      |
@@ -144,11 +104,8 @@ function setupLetterF(gl, shader) {
         v0_______v1
     */
 
-    // ---------------------------------------------------------
-    // VERTEX BUFFER
-    // ---------------------------------------------------------
-
-    const positions = new Float32Array([
+    // CPU Data
+    positions: new Float32Array([
         // Left column
         -0.4, -0.6,   // 0
         -0.2, -0.6,   // 1
@@ -165,21 +122,9 @@ function setupLetterF(gl, shader) {
          0.1,  0.2,   // 8
          0.1,  0.0,   // 9
         -0.4,  0.0    // 10
-    ]);
+    ]),
 
-    letterF.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, letterF.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
-
-    // ---------------------------------------------------------
-    // INDEX BUFFER
-    // ---------------------------------------------------------
-
-    const indices = new Uint16Array([
+    indices: new Uint16Array([
         // LEFT COLUMN
         0, 1, 2,
         2, 1, 3,
@@ -191,58 +136,99 @@ function setupLetterF(gl, shader) {
         // MIDDLE BAR
         7, 10, 9,
         7, 9, 8
-    ]);
+    ]),
 
-    letterF.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, letterF.ibo);
-    gl.bufferData(
-        gl.ELEMENT_ARRAY_BUFFER,
-        indices,
-        gl.STATIC_DRAW
-    );
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    ibo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
 
-    // ---------------------------------------------------------
-    // VERTEX ARRAY
-    // ---------------------------------------------------------
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to object
+        this.shader = shader;
 
-    letterF.vao = gl.createVertexArray();
-    gl.bindVertexArray(letterF.vao);
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER,this.positions,gl.STATIC_DRAW);
 
-    gl.enableVertexAttribArray(letterF.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, letterF.vbo);
+        //Index Buffer
+        this.ibo = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, letterF.ibo);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,this.indices,gl.STATIC_DRAW);
 
-    gl.vertexAttribPointer(
-        letterF.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
 
-    // Index buffer binding is stored inside the VAO.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, letterF.ibo);
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
 
-    // Draw data
-    letterF.drawMode = gl.TRIANGLES;
-    letterF.drawOffset = 0;
-    letterF.drawCount = indices.length;
-    letterF.drawType = gl.UNSIGNED_SHORT;
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,          // size: 2 components (X, Y)
+            gl.FLOAT,   // type: 32-bit float
+            false,      // normalize
+            0,          // stride: tightly packed
+            0           // offset: start of buffer
+        );
+
+        // Index buffer — IMPORTANT
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo);
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = this.indices.length;
+        this.drawType = gl.UNSIGNED_SHORT;
+    }
+};
+
+// =============================================================
+// HELPER FUNCS
+// =============================================================
+// Resize Canvas
+function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
+    const width = (canvas.clientWidth * multiplier) | 0;
+    const height = (canvas.clientHeight * multiplier) | 0;
+
+    if(canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        return true;
+    }
+
+    return false;
 }
 
 // =============================================================
 // RENDER
 // =============================================================
 function render(gl) {
+    // Canvas
     resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
+    // Background
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(letterF.shader.program);
-    gl.bindVertexArray(letterF.vao);
+    // DRAW THINGS
+    //---------------------------------------------------
+    // Shader
+    gl.useProgram(shader.program);
 
+    // Rectangle
+    gl.bindVertexArray(letterF.vao);
     gl.drawElements(
         letterF.drawMode,
         letterF.drawCount,
@@ -255,32 +241,30 @@ function render(gl) {
 // MAIN
 // =============================================================
 function main() {
-    // WEBGL CANVAS
+    //Canvas
     const canvas = document.querySelector("#c");
-    if(!canvas) {
-        console.error("Canvas element not found");
-        return;
-    }
+    if(!canvas) {console.error("Canvas element not found");return;}
 
+    //Context
     const gl = canvas.getContext("webgl2");
-    if(!gl) {
-        console.error("WebGL2 is not supported by this browser");
-        return;
-    }
+    if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
 
-    // SETUP
-    setupShader(gl, shaderInfo);
-    setupLetterF(gl, shaderInfo);
+    //Shaders
+    shader.init(gl);
 
-    // RENDER
+    //Objects
+    letterF.init(gl, shader);
+
+    //Render
     render(gl);
+
+    //Resize
     window.addEventListener("resize", () => render(gl));
 }
 
 // =============================================================
 // STARTUP AND EXPORTS
 // =============================================================
-
 window.addEventListener("DOMContentLoaded", main);
 
 export {
