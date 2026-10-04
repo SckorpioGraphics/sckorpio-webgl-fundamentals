@@ -160,7 +160,7 @@ const rectangle = {
         // Draw data
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
-        this.drawCount = indices.length;
+        this.drawCount = this.indices.length;
         this.drawType = gl.UNSIGNED_SHORT;
     }
 };
