@@ -41,8 +41,7 @@ const shader = {
         position: null
     },
     uniforms: {
-        color: null,
-        intensity: null
+        color: null
     },
 
     //FUNCTIONS
