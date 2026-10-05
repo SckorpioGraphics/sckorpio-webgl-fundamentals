@@ -9,39 +9,10 @@ Topics:
 */
 
 // =============================================================
-// GLOBAL OBJECTS
+// SHADER OBJECTS
 // =============================================================
-
-// =============================================================
-// Scene Objects
-// =============================================================
-
-const uiState = {
-    // Vertices
-    aX: -0.5,
-    aY: 0.0,
-    bX: 0.5,
-    bY: 0.0,
-    cX: 0.0,
-    cY: 0.5
-};
-
-const triangle = {
-    shader: null,
-
-    vao: null,
-    vbo: null,
-
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// Shader Objects
-// =============================================================
-
-const shaderInfo = {
+//Shader Object1
+const shader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
     out vec4 v_color;
@@ -51,45 +22,55 @@ const shaderInfo = {
         v_color = gl_Position * 0.5 + 0.5;
     }
 `,
+
     fragmentShaderSource: `#version 300 es
     precision highp float;
-
     in vec4 v_color;
     out vec4 out_color;
 
     void main() {
         out_color = v_color;
     }
-`,
+    `,
+
     program: null,
 
     attributes: {
         position: null
     },
 
-    uniforms: {}
+    uniforms: {},
+
+    //FUNCTIONS
+
+    init(gl) {
+        // Compile shaders
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
+        // Create shader program
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        // Get attribute locations
+        this.attributes.position = gl.getAttribLocation(shader.program,"a_position");
+        // Get uniform locations
+        // Future uniforms will be stored here.
+    }
 };
 
-// =============================================================
-// FUNCTIONS
-// =============================================================
-
-// =============================================================
-// Shader Creating Functions
-// =============================================================
-
+// Compile Shader
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
     const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+
     if(compileStatus) return shader;
 
     console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
 }
 
+// Link Program
 function createProgram(gl, vertexShader, fragmentShader) {
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -97,27 +78,127 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.linkProgram(program);
 
     const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+
     if(linkStatus) return program;
 
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
 }
 
-function setupShader(gl, shader) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    // Future uniforms
-}
+// =============================================================
+// SCENE OBJECTS
+// =============================================================
+const triangle = {
+    //         v2
+    //         /\
+    //        /  \
+    //       /    \
+    //      /      \
+    //     /        \
+    //    v0--------v1
+
+    // CPU DATA
+    positions: new Float32Array([
+        -0.5,  0.0,  // v0
+        0.5, 0.0,    // v1
+        0.0,  0.5,   // v2
+    ]),
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to object
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        // NOTE: Vertex data will be updated from the UI during rendering.
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,          // size: 2 components (X, Y)
+            gl.FLOAT,   // type: 32-bit float
+            false,      // normalize
+            0,          // stride: 0(tightly packed)
+            0           // offset: start of buffer
+        );
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 3;
+    },
+
+    updateData(gl) {
+        gl.bindVertexArray(triangle.vao);
+
+        // Vertex data CPU side
+        this.positions = new Float32Array([
+            gui.state.aX, gui.state.aY, // Point A
+            gui.state.bX, gui.state.bY, // Point B
+            gui.state.cX, gui.state.cY  // Point C
+        ]);
+
+        // Update vertex data on the GPU
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.DYNAMIC_DRAW);
+    }
+};
 
 // =============================================================
-// Helper Functions
+// GUI Setup Functions
 // =============================================================
+const gui = {
+    state: {
+        aX: -0.5, aY: 0.0,
+        bX: 0.5, bY: 0.0,
+        cX: 0.0, cY: 0.5
+    },
 
+    init(render) {
+        const gui = new lil.GUI();
+        const vertexFolder = gui.addFolder("Vertex Positions");
+
+        // Point A
+        const pointAFolder = vertexFolder.addFolder("Point A");
+        pointAFolder.add(this.state, "aX", -1, 1).name("X").onChange(render);
+        pointAFolder.add(this.state, "aY", -1, 1).name("Y").onChange(render);
+
+        // Point B
+        const pointBFolder = vertexFolder.addFolder("Point B");
+        pointBFolder.add(this.state, "bX", -1, 1).name("X").onChange(render);
+        pointBFolder.add(this.state, "bY", -1, 1).name("Y").onChange(render);
+
+        // Point C
+        const pointCFolder = vertexFolder.addFolder("Point C");
+        pointCFolder.add(this.state, "cX", -1, 1).name("X").onChange(render);
+        pointCFolder.add(this.state, "cY", -1, 1).name("Y").onChange(render);
+    }
+};
+
+// =============================================================
+// HELPER FUNCS
+// =============================================================
+// Resize Canvas
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     const width = (canvas.clientWidth * multiplier) | 0;
     const height = (canvas.clientHeight * multiplier) | 0;
@@ -132,98 +213,27 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// Scene Objects Creation Functions
-// =============================================================
-
-function setupTriangle(gl, shader) {
-    triangle.shader = shader;
-
-    // ---------------------------------------------------------
-    // VERTEX BUFFER
-    // ---------------------------------------------------------
-
-    triangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-
-    // Vertex data will be updated from the UI during rendering.
-
-    // ---------------------------------------------------------
-    // VERTEX ARRAY
-    // ---------------------------------------------------------
-
-    triangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(triangle.vao);
-
-    gl.enableVertexAttribArray(triangle.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-
-    gl.vertexAttribPointer(
-        triangle.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
-
-    // Draw data
-    triangle.drawMode = gl.TRIANGLES;
-    triangle.drawOffset = 0;
-    triangle.drawCount = 3;
-}
-
-// =============================================================
-// GUI Setup Functions
-// =============================================================
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-    const vertexFolder = gui.addFolder("Vertex Positions");
-
-    // Point A
-    const pointAFolder = vertexFolder.addFolder("Point A");
-    pointAFolder.add(uiState, "aX", -1, 1).name("X").onChange(render);
-    pointAFolder.add(uiState, "aY", -1, 1).name("Y").onChange(render);
-
-    // Point B
-    const pointBFolder = vertexFolder.addFolder("Point B");
-    pointBFolder.add(uiState, "bX", -1, 1).name("X").onChange(render);
-    pointBFolder.add(uiState, "bY", -1, 1).name("Y").onChange(render);
-
-    // Point C
-    const pointCFolder = vertexFolder.addFolder("Point C");
-    pointCFolder.add(uiState, "cX", -1, 1).name("X").onChange(render);
-    pointCFolder.add(uiState, "cY", -1, 1).name("Y").onChange(render);
-}
-
-// =============================================================
 // RENDER
 // =============================================================
 function render(gl) {
+    // Canvas
     resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
+    // Background
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(triangle.shader.program);
+    // UPDATE THINGS
+    //---------------------------------------------------
+    triangle.updateData(gl);
+
+    // DRAW THINGS
+    //---------------------------------------------------
+    // Shader
+    gl.useProgram(shader.program);
+    // Rectangle
     gl.bindVertexArray(triangle.vao);
-
-    // Vertex data CPU side
-    const positions = new Float32Array([
-        uiState.aX, uiState.aY, // Point A
-        uiState.bX, uiState.bY, // Point B
-        uiState.cX, uiState.cY  // Point C
-    ]);
-
-    // Update vertex data on the GPU
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.DYNAMIC_DRAW
-    );
-
     gl.drawArrays(
         triangle.drawMode,
         triangle.drawOffset,
@@ -235,33 +245,33 @@ function render(gl) {
 // MAIN
 // =============================================================
 function main() {
-    // WEBGL CANVAS
+    //Canvas
     const canvas = document.querySelector("#c");
-    if(!canvas) {
-        console.error("Canvas element not found");
-        return;
-    }
+    if(!canvas) {console.error("Canvas element not found");return;}
 
+    //Context
     const gl = canvas.getContext("webgl2");
-    if(!gl) {
-        console.error("WebGL2 is not supported by this browser");
-        return;
-    }
+    if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
 
-    // SETUP
-    setupShader(gl, shaderInfo);
-    setupTriangle(gl, shaderInfo);
-    // UI
-    setupGUI(() => render(gl));
-    // RENDER
+    //GUI
+    gui.init(() => render(gl));
+
+    //Shaders
+    shader.init(gl);
+
+    //Objects
+    triangle.init(gl, shader);
+
+    //Render
     render(gl);
+
+    //Resize
     window.addEventListener("resize", () => render(gl));
 }
 
 // =============================================================
 // STARTUP AND EXPORTS
 // =============================================================
-
 window.addEventListener("DOMContentLoaded", main);
 
 export {

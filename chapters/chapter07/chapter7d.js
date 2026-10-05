@@ -8,54 +8,12 @@ Topics:
 ###############################################################
 */
 
-// =============================================================
-// GLOBAL OBJECTS
-// =============================================================
 
 // =============================================================
-// Scene Objects
+// SHADER OBJECTS
 // =============================================================
-
-const uiState = {
-    // Vertex Positions
-    aX: -0.5,
-    aY: -0.5,
-    bX: 0.5,
-    bY: -0.5,
-    cX: 0.5,
-    cY: 0.5,
-    dX: -0.5,
-    dY: 0.5,
-
-    // Vertex Colors
-    aR: 1.0,
-    aG: 0.0,
-    aB: 0.0,
-    bR: 0.0,
-    bG: 1.0,
-    bB: 0.0,
-    cR: 0.0,
-    cG: 0.0,
-    cB: 1.0,
-    dR: 1.0,
-    dG: 1.0,
-    dB: 0.0
-};
-
-const rectangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// Shader Objects
-// =============================================================
-
-const shaderInfo = {
+//Shader Object1
+const shader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
     in vec3 a_color;
@@ -78,33 +36,45 @@ const shaderInfo = {
     }
 `,
     program: null,
+
     attributes: {
         position: null,
         color: null
     },
-    uniforms: {}
+
+    uniforms: {},
+
+    //FUNCTIONS
+
+    init(gl) {
+        // Compile shaders
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
+        // Create shader program
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        // Get attribute locations
+        this.attributes.position = gl.getAttribLocation(this.program,"a_position");
+        this.attributes.color = gl.getAttribLocation(this.program, "a_color");
+        // Get uniform locations
+        // Future uniforms will be stored here.
+    }
 };
 
-// =============================================================
-// FUNCTIONS
-// =============================================================
-
-// =============================================================
-// Shader Creating Functions
-// =============================================================
-
+// Compile Shader
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
     const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+
     if(compileStatus) return shader;
 
     console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
 }
 
+// Link Program
 function createProgram(gl, vertexShader, fragmentShader) {
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -112,28 +82,192 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.linkProgram(program);
 
     const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+
     if(linkStatus) return program;
 
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
 }
 
-function setupShader(gl, shader) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    shader.attributes.color = gl.getAttribLocation(shader.program, "a_color");
-    // Future uniforms
-}
+// =============================================================
+// SCENE OBJECTS
+// =============================================================
+const triangle = {
+    //    v3--------v2 
+    //    |  \      |
+    //    |    \    |
+    //    |      \  |
+    //    v0--------v1
+
+    // CPU DATA
+    vertexData: new Float32Array(),
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Shader
+        this.shader = shader;
+
+        // Vertex Buffer (single.. intervleaved pos+colors)
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        // data will be updated from the UI during rendering.
+        
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Vertex Positions attrib
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,
+            gl.FLOAT,
+            false,
+            5 * Float32Array.BYTES_PER_ELEMENT, // Stride (x,y + r,g,b = 5)
+            0 * Float32Array.BYTES_PER_ELEMENT  // Offset (pos starts ar 0)
+        );
+
+        // Vertex Colors attrib
+        gl.enableVertexAttribArray(this.shader.attributes.color);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.vertexAttribPointer(
+            this.shader.attributes.color,
+            3,
+            gl.FLOAT,
+            false,
+            5 * Float32Array.BYTES_PER_ELEMENT, // Stride (x,y + r,g,b = 5)
+            2 * Float32Array.BYTES_PER_ELEMENT  // Offset (pos starts ar 2)
+        );
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 6;
+    },
+
+    updateData(gl) {
+        gl.bindVertexArray(triangle.vao);
+
+        // Interleaved vertex data CPU side
+        // Each vertex = X, Y, R, G, B
+        this.vertexData = new Float32Array([
+            gui.state.aX, gui.state.aY,
+            gui.state.aR, gui.state.aG, gui.state.aB, // Point A
+
+            gui.state.bX, gui.state.bY,
+            gui.state.bR, gui.state.bG, gui.state.bB, // Point B
+
+            gui.state.cX, gui.state.cY,
+            gui.state.cR, gui.state.cG, gui.state.cB, // Point C
+
+            gui.state.aX, gui.state.aY,
+            gui.state.aR, gui.state.aG, gui.state.aB, // Point A
+
+            gui.state.cX, gui.state.cY,
+            gui.state.cR, gui.state.cG, gui.state.cB, // Point C
+
+            gui.state.dX, gui.state.dY,
+            gui.state.dR, gui.state.dG, gui.state.dB  // Point D
+        ]);
+
+        // Update interleaved vertex data on the GPU
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
+    }
+};
 
 // =============================================================
-// Helper Functions
+// GUI Setup Functions
 // =============================================================
+const gui = {
+    state: {
+        // Vertex Positions
+        aX: -0.5, aY: -0.5,
+        bX: 0.5, bY: -0.5,
+        cX: 0.5, cY: 0.5,
+        dX: -0.5, dY: 0.5,
 
+        // Vertex Colors
+        aR: 1.0, aG: 0.0, aB: 0.0,
+        bR: 0.0, bG: 1.0, bB: 0.0,
+        cR: 0.0, cG: 0.0, cB: 1.0,
+        dR: 0.0, dG: 1.0, dB: 1.0
+    },
+
+    init(render) {
+        const gui = new lil.GUI();
+
+        // ---------------------------------------------------------
+        // VERTICES
+        // ---------------------------------------------------------
+
+        const verticesFolder = gui.addFolder("Vertices");
+
+        // Point A
+        const pointAFolder = verticesFolder.addFolder("Point A");
+        pointAFolder.add(this.state, "aX", -1, 1).name("X").onChange(render);
+        pointAFolder.add(this.state, "aY", -1, 1).name("Y").onChange(render);
+
+        // Point B
+        const pointBFolder = verticesFolder.addFolder("Point B");
+        pointBFolder.add(this.state, "bX", -1, 1).name("X").onChange(render);
+        pointBFolder.add(this.state, "bY", -1, 1).name("Y").onChange(render);
+
+        // Point C
+        const pointCFolder = verticesFolder.addFolder("Point C");
+        pointCFolder.add(this.state, "cX", -1, 1).name("X").onChange(render);
+        pointCFolder.add(this.state, "cY", -1, 1).name("Y").onChange(render);
+
+        // Point D
+        const pointDFolder = verticesFolder.addFolder("Point D");
+        pointDFolder.add(this.state, "dX", -1, 1).name("X").onChange(render);
+        pointDFolder.add(this.state, "dY", -1, 1).name("Y").onChange(render);
+
+        // ---------------------------------------------------------
+        // COLORS
+        // ---------------------------------------------------------
+
+        const colorFolder = gui.addFolder("Color");
+
+        // Point A
+        const pointAColorFolder = colorFolder.addFolder("Point A");
+        pointAColorFolder.add(this.state, "aR", 0, 1).name("R").onChange(render);
+        pointAColorFolder.add(this.state, "aG", 0, 1).name("G").onChange(render);
+        pointAColorFolder.add(this.state, "aB", 0, 1).name("B").onChange(render);
+
+        // Point B
+        const pointBColorFolder = colorFolder.addFolder("Point B");
+        pointBColorFolder.add(this.state, "bR", 0, 1).name("R").onChange(render);
+        pointBColorFolder.add(this.state, "bG", 0, 1).name("G").onChange(render);
+        pointBColorFolder.add(this.state, "bB", 0, 1).name("B").onChange(render);
+
+        // Point C
+        const pointCColorFolder = colorFolder.addFolder("Point C");
+        pointCColorFolder.add(this.state, "cR", 0, 1).name("R").onChange(render);
+        pointCColorFolder.add(this.state, "cG", 0, 1).name("G").onChange(render);
+        pointCColorFolder.add(this.state, "cB", 0, 1).name("B").onChange(render);
+
+        // Point D
+        const pointDColorFolder = colorFolder.addFolder("Point D");
+        pointDColorFolder.add(this.state, "dR", 0, 1).name("R").onChange(render);
+        pointDColorFolder.add(this.state, "dG", 0, 1).name("G").onChange(render);
+        pointDColorFolder.add(this.state, "dB", 0, 1).name("B").onChange(render);
+    }
+};
+
+// =============================================================
+// HELPER FUNCS
+// =============================================================
+// Resize Canvas
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     const width = (canvas.clientWidth * multiplier) | 0;
     const height = (canvas.clientHeight * multiplier) | 0;
@@ -148,154 +282,31 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// Scene Objects Creation Functions
-// =============================================================
-
-function setupRectangle(gl, shader) {
-    rectangle.shader = shader;
-
-    rectangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
-    rectangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(rectangle.vao);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
-    // Vertex positions
-    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
-    gl.vertexAttribPointer(
-        rectangle.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        0 * Float32Array.BYTES_PER_ELEMENT
-    );
-
-    // Vertex colors
-    gl.enableVertexAttribArray(rectangle.shader.attributes.color);
-    gl.vertexAttribPointer(
-        rectangle.shader.attributes.color,
-        3,
-        gl.FLOAT,
-        false,
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        2 * Float32Array.BYTES_PER_ELEMENT
-    );
-
-    rectangle.drawMode = gl.TRIANGLES;
-    rectangle.drawOffset = 0;
-    rectangle.drawCount = 6;
-}
-
-// =============================================================
-// GUI Setup Functions
-// =============================================================
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-
-    const verticesFolder = gui.addFolder("Vertices");
-
-    // Point A
-    const pointAFolder = verticesFolder.addFolder("Point A");
-    pointAFolder.add(uiState, "aX", -1, 1).name("X").onChange(render);
-    pointAFolder.add(uiState, "aY", -1, 1).name("Y").onChange(render);
-
-    // Point B
-    const pointBFolder = verticesFolder.addFolder("Point B");
-    pointBFolder.add(uiState, "bX", -1, 1).name("X").onChange(render);
-    pointBFolder.add(uiState, "bY", -1, 1).name("Y").onChange(render);
-
-    // Point C
-    const pointCFolder = verticesFolder.addFolder("Point C");
-    pointCFolder.add(uiState, "cX", -1, 1).name("X").onChange(render);
-    pointCFolder.add(uiState, "cY", -1, 1).name("Y").onChange(render);
-
-    // Point D
-    const pointDFolder = verticesFolder.addFolder("Point D");
-    pointDFolder.add(uiState, "dX", -1, 1).name("X").onChange(render);
-    pointDFolder.add(uiState, "dY", -1, 1).name("Y").onChange(render);
-
-    const colorFolder = gui.addFolder("Color");
-
-    // Point A
-    const pointAColorFolder = colorFolder.addFolder("Point A");
-    pointAColorFolder.add(uiState, "aR", 0, 1).name("R").onChange(render);
-    pointAColorFolder.add(uiState, "aG", 0, 1).name("G").onChange(render);
-    pointAColorFolder.add(uiState, "aB", 0, 1).name("B").onChange(render);
-
-    // Point B
-    const pointBColorFolder = colorFolder.addFolder("Point B");
-    pointBColorFolder.add(uiState, "bR", 0, 1).name("R").onChange(render);
-    pointBColorFolder.add(uiState, "bG", 0, 1).name("G").onChange(render);
-    pointBColorFolder.add(uiState, "bB", 0, 1).name("B").onChange(render);
-
-    // Point C
-    const pointCColorFolder = colorFolder.addFolder("Point C");
-    pointCColorFolder.add(uiState, "cR", 0, 1).name("R").onChange(render);
-    pointCColorFolder.add(uiState, "cG", 0, 1).name("G").onChange(render);
-    pointCColorFolder.add(uiState, "cB", 0, 1).name("B").onChange(render);
-
-    // Point D
-    const pointDColorFolder = colorFolder.addFolder("Point D");
-    pointDColorFolder.add(uiState, "dR", 0, 1).name("R").onChange(render);
-    pointDColorFolder.add(uiState, "dG", 0, 1).name("G").onChange(render);
-    pointDColorFolder.add(uiState, "dB", 0, 1).name("B").onChange(render);
-}
-
-// =============================================================
 // RENDER
 // =============================================================
 function render(gl) {
+    // Canvas
     resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
-    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    // Background
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(rectangle.shader.program);
-    gl.bindVertexArray(rectangle.vao);
+    // UPDATE THINGS
+    //---------------------------------------------------
+    triangle.updateData(gl);
 
-    // Interleaved vertex data CPU side
-    // Each vertex = X, Y, R, G, B
-    //
-    // Triangle 1: A -> B -> C
-    // Triangle 2: A -> C -> D
-    const vertexData = new Float32Array([
-        // Triangle 1
-        uiState.aX, uiState.aY,
-        uiState.aR, uiState.aG, uiState.aB,
-
-        uiState.bX, uiState.bY,
-        uiState.bR, uiState.bG, uiState.bB,
-
-        uiState.cX, uiState.cY,
-        uiState.cR, uiState.cG, uiState.cB,
-
-        // Triangle 2
-        uiState.aX, uiState.aY,
-        uiState.aR, uiState.aG, uiState.aB,
-
-        uiState.cX, uiState.cY,
-        uiState.cR, uiState.cG, uiState.cB,
-
-        uiState.dX, uiState.dY,
-        uiState.dR, uiState.dG, uiState.dB
-    ]);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        vertexData,
-        gl.DYNAMIC_DRAW
-    );
-
+    // DRAW THINGS
+    //---------------------------------------------------
+    // Shader
+    gl.useProgram(shader.program);
+    // Rectangle
+    gl.bindVertexArray(triangle.vao);
     gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
+        triangle.drawMode,
+        triangle.drawOffset,
+        triangle.drawCount
     );
 }
 
@@ -303,30 +314,33 @@ function render(gl) {
 // MAIN
 // =============================================================
 function main() {
+    //Canvas
     const canvas = document.querySelector("#c");
-    if(!canvas) {
-        console.error("Canvas element not found");
-        return;
-    }
+    if(!canvas) {console.error("Canvas element not found");return;}
 
+    //Context
     const gl = canvas.getContext("webgl2");
-    if(!gl) {
-        console.error("WebGL2 is not supported by this browser");
-        return;
-    }
+    if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
 
-    setupShader(gl, shaderInfo);
-    setupRectangle(gl, shaderInfo);
-    setupGUI(() => render(gl));
+    //GUI
+    gui.init(() => render(gl));
 
+    //Shaders
+    shader.init(gl);
+
+    //Objects
+    triangle.init(gl, shader);
+
+    //Render
     render(gl);
+
+    //Resize
     window.addEventListener("resize", () => render(gl));
 }
 
 // =============================================================
 // STARTUP AND EXPORTS
 // =============================================================
-
 window.addEventListener("DOMContentLoaded", main);
 
 export {
