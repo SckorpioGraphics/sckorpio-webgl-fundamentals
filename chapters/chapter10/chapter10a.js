@@ -9,34 +9,12 @@ Topics:
 ###############################################################
 */
 
-// =============================================================
-// GLOBAL OBJECTS
-// =============================================================
 
 // =============================================================
-// Scene Objects
+// SHADER OBJECTS
 // =============================================================
-
-const rectangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// Shader Objects
-// =============================================================
-
-/*
-    No UI in this chapter yet.
-    The focus here is on pixel-space coordinates
-    and their conversion to clip space.
-*/
-
-const shaderInfo = {
+//Shader Object1
+const shader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -70,29 +48,38 @@ const shaderInfo = {
     },
     uniforms: {
         resolution: null
+    },
+
+    //FUNCTIONS
+
+    init(gl) {
+        // Compile shaders
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
+        // Create shader program
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        // Attributes
+        this.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+        // uniforms
+        this.uniforms.resolution = gl.getUniformLocation(shader.program, "u_resolution");
     }
 };
 
-// =============================================================
-// FUNCTIONS
-// =============================================================
-
-// =============================================================
-// Shader Creating Functions
-// =============================================================
-
+// Compile Shader
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
     const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+
     if(compileStatus) return shader;
 
     console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
 }
 
+// Link Program
 function createProgram(gl, vertexShader, fragmentShader) {
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -100,28 +87,83 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.linkProgram(program);
 
     const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+
     if(linkStatus) return program;
 
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
 }
 
-function setupShader(gl, shader) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    // uniforms
-    shader.uniforms.resolution = gl.getUniformLocation(shader.program, "u_resolution");
-}
+// =============================================================
+// SCENE OBJECTS
+// =============================================================
+const rectangle = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
+
+    // CPU DATA (In Pixel Space)
+    vertexData: new Float32Array([
+        20, 20,       // Left Bottom
+        200, 20,      // Right Bottom
+        20, 100,      // Left Top
+
+        20, 100,      // Left Top
+        200, 20,      // Right Bottom
+        200, 100      // Right Top
+    ]),
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to object
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,          // size: 2 components (X, Y)
+            gl.FLOAT,   // type: 32-bit float
+            false,      // normalize
+            0,          // stride: 0(tightly packed)
+            0           // offset: start of buffer
+        );
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 6;
+    }
+};
 
 // =============================================================
-// Helper Functions
+// HELPER FUNCS
 // =============================================================
-
+// Resize Canvas
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     const width = (canvas.clientWidth * multiplier) | 0;
     const height = (canvas.clientHeight * multiplier) | 0;
@@ -136,75 +178,25 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// Scene Objects Creation Functions
-// =============================================================
-
-function setupRectangle(gl, shader) {
-    rectangle.shader = shader;
-
-    const positions = new Float32Array([
-        20, 20,       // Left Bottom
-        200, 20,      // Right Bottom
-        20, 100,      // Left Top
-
-        20, 100,      // Left Top
-        200, 20,      // Right Bottom
-        200, 100      // Right Top
-    ]);
-
-    rectangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
-
-    rectangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(rectangle.vao);
-
-    gl.enableVertexAttribArray(
-        rectangle.shader.attributes.position
-    );
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
-    gl.vertexAttribPointer(
-        rectangle.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
-
-    rectangle.drawMode = gl.TRIANGLES;
-    rectangle.drawOffset = 0;
-    rectangle.drawCount = 6;
-}
-
-// =============================================================
 // RENDER
 // =============================================================
 function render(gl) {
+    // Canvas
     resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
-    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    // Background
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(rectangle.shader.program);
+    // DRAW THINGS
+    //---------------------------------------------------
+    // Shader
+    gl.useProgram(shader.program);
+    gl.uniform2f(shader.uniforms.resolution,gl.canvas.width,gl.canvas.height);
 
-    // Pass canvas resolution to shader
-    gl.uniform2f(
-        rectangle.shader.uniforms.resolution,
-        gl.canvas.width,
-        gl.canvas.height
-    );
-
+    // Rectangle
     gl.bindVertexArray(rectangle.vao);
-
     gl.drawArrays(
         rectangle.drawMode,
         rectangle.drawOffset,
@@ -216,28 +208,30 @@ function render(gl) {
 // MAIN
 // =============================================================
 function main() {
+    //Canvas
     const canvas = document.querySelector("#c");
-    if(!canvas) {
-        console.error("Canvas element not found");
-        return;
-    }
+    if(!canvas) {console.error("Canvas element not found");return;}
 
+    //Context
     const gl = canvas.getContext("webgl2");
-    if(!gl) {
-        console.error("WebGL2 is not supported by this browser");
-        return;
-    }
+    if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
 
-    setupShader(gl, shaderInfo);
-    setupRectangle(gl, shaderInfo);
+    //Shaders
+    shader.init(gl);
+
+    //Objects
+    rectangle.init(gl, shader);
+
+    //Render
     render(gl);
+
+    //Resize
     window.addEventListener("resize", () => render(gl));
 }
 
 // =============================================================
 // STARTUP AND EXPORTS
 // =============================================================
-
 window.addEventListener("DOMContentLoaded", main);
 
 export {
