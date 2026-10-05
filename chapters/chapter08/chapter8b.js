@@ -8,38 +8,12 @@ Topics:
 ###############################################################
 */
 
-// =============================================================
-// GLOBAL OBJECTS
-// =============================================================
 
 // =============================================================
-// Scene Objects
+// SHADER OBJECTS
 // =============================================================
-
-const uiState = {
-    // Color
-    r: 0.39,
-    g: 0.33,
-    b: 0.58,
-
-    // Intensity
-    intensity: 1.0
-};
-
-const triangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// Shader Objects
-// =============================================================
-
-const shaderInfo = {
+//Shader Object1
+const shader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -58,12 +32,7 @@ const shaderInfo = {
     out vec4 out_color;
 
     void main() {
-        out_color = vec4(
-            u_colorR,
-            u_colorG,
-            u_colorB,
-            1.0
-        ) * u_intensity;
+        out_color = vec4(u_colorR,u_colorG,u_colorB,1.0) * u_intensity;
     }
 `,
     program: null,
@@ -75,29 +44,41 @@ const shaderInfo = {
         colorG: null,
         colorB: null,
         intensity: null
+    },
+
+    //FUNCTIONS
+
+    init(gl) {
+        // Compile shaders
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
+        // Create shader program
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        // Attributes
+        this.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+        // uniforms
+        this.uniforms.colorR = gl.getUniformLocation(shader.program, "u_colorR");
+        this.uniforms.colorG = gl.getUniformLocation(shader.program, "u_colorG");
+        this.uniforms.colorB = gl.getUniformLocation(shader.program, "u_colorB");
+        this.uniforms.intensity = gl.getUniformLocation(shader.program, "u_intensity");
     }
 };
 
-// =============================================================
-// FUNCTIONS
-// =============================================================
-
-// =============================================================
-// Shader Creating Functions
-// =============================================================
-
+// Compile Shader
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
     const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+
     if(compileStatus) return shader;
 
     console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
 }
 
+// Link Program
 function createProgram(gl, vertexShader, fragmentShader) {
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -105,31 +86,105 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.linkProgram(program);
 
     const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+
     if(linkStatus) return program;
 
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
 }
 
-function setupShader(gl, shader) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    // uniforms
-    shader.uniforms.colorR = gl.getUniformLocation(shader.program, "u_colorR");
-    shader.uniforms.colorG = gl.getUniformLocation(shader.program, "u_colorG");
-    shader.uniforms.colorB = gl.getUniformLocation(shader.program, "u_colorB");
-    shader.uniforms.intensity = gl.getUniformLocation(shader.program, "u_intensity");
-}
+// =============================================================
+// SCENE OBJECTS
+// =============================================================
+const triangle = {
+    //         v2
+    //         /\
+    //        /  \
+    //       /    \
+    //      /      \
+    //     /        \
+    //    v0--------v1
+
+    // CPU DATA
+    positions: new Float32Array([
+        -0.5,  0.0,  // v0
+        0.5, 0.0,    // v1
+        0.0,  0.5,   // v2
+    ]),
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to object
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,          // size: 2 components (X, Y)
+            gl.FLOAT,   // type: 32-bit float
+            false,      // normalize
+            0,          // stride: 0(tightly packed)
+            0           // offset: start of buffer
+        );
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 3;
+    }
+};
 
 // =============================================================
-// Helper Functions
+// GUI Setup Functions
 // =============================================================
+const gui = {
+    state: {
+        // Color
+        r: 0.39, g: 0.33, b: 0.58,
+        // Intensity
+        intensity: 1.0
+    },
 
+    init(render) {
+        const gui = new lil.GUI();
+        const uniformFolder = gui.addFolder("Uniforms");
+        const colorFolder = uniformFolder.addFolder("Color");
+        colorFolder.add(this.state, "r", 0, 1).name("R").onChange(render);
+        colorFolder.add(this.state, "g", 0, 1).name("G").onChange(render);
+        colorFolder.add(this.state, "b", 0, 1).name("B").onChange(render);
+
+        const intensityFolder = uniformFolder.addFolder("Intensity");
+        intensityFolder.add(this.state, "intensity", 0, 1).name("Intensity").onChange(render);
+    }
+};
+
+// =============================================================
+// HELPER FUNCS
+// =============================================================
+// Resize Canvas
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     const width = (canvas.clientWidth * multiplier) | 0;
     const height = (canvas.clientHeight * multiplier) | 0;
@@ -144,104 +199,30 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// Scene Objects Creation Functions
-// =============================================================
-
-function setupTriangle(gl, shader) {
-    triangle.shader = shader;
-
-    triangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-
-    const positions = new Float32Array([
-        -0.5, 0.0,
-         0.0, 0.5,
-         0.5, 0.0
-    ]);
-
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.DYNAMIC_DRAW
-    );
-
-    triangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(triangle.vao);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-
-    gl.enableVertexAttribArray(triangle.shader.attributes.position);
-
-    gl.vertexAttribPointer(
-        triangle.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
-
-    triangle.drawMode = gl.TRIANGLES;
-    triangle.drawOffset = 0;
-    triangle.drawCount = 3;
-}
-
-// =============================================================
-// GUI Setup Functions
-// =============================================================
-
-function setupGUI(render) {
-    const gui = new lil.GUI();
-
-    const uniformFolder = gui.addFolder("Uniforms");
-
-    const colorFolder = uniformFolder.addFolder("Color");
-    colorFolder.add(uiState, "r", 0, 1).name("R").onChange(render);
-    colorFolder.add(uiState, "g", 0, 1).name("G").onChange(render);
-    colorFolder.add(uiState, "b", 0, 1).name("B").onChange(render);
-
-    const intensityFolder = uniformFolder.addFolder("Intensity");
-    intensityFolder.add(uiState, "intensity", 0, 1)
-        .name("Intensity")
-        .onChange(render);
-}
-
-// =============================================================
 // RENDER
 // =============================================================
 function render(gl) {
+    // Canvas
     resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
-    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    // Background
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
+    // DRAW THINGS
+    //---------------------------------------------------
+    // Shader
     gl.useProgram(triangle.shader.program);
 
-    // Set color uniforms
-    gl.uniform1f(
-        triangle.shader.uniforms.colorR,
-        uiState.r
-    );
+    // Set uniform value from UI
+    gl.uniform1f(triangle.shader.uniforms.colorR, gui.state.r);
+    gl.uniform1f(triangle.shader.uniforms.colorG, gui.state.g);
+    gl.uniform1f(triangle.shader.uniforms.colorB, gui.state.b);
+    gl.uniform1f(triangle.shader.uniforms.intensity, gui.state.intensity);
 
-    gl.uniform1f(
-        triangle.shader.uniforms.colorG,
-        uiState.g
-    );
-
-    gl.uniform1f(
-        triangle.shader.uniforms.colorB,
-        uiState.b
-    );
-
-    // Set intensity uniform
-    gl.uniform1f(
-        triangle.shader.uniforms.intensity,
-        uiState.intensity
-    );
-
+    // Triangle
     gl.bindVertexArray(triangle.vao);
-
     gl.drawArrays(
         triangle.drawMode,
         triangle.drawOffset,
@@ -253,30 +234,33 @@ function render(gl) {
 // MAIN
 // =============================================================
 function main() {
+    //Canvas
     const canvas = document.querySelector("#c");
-    if(!canvas) {
-        console.error("Canvas element not found");
-        return;
-    }
+    if(!canvas) {console.error("Canvas element not found");return;}
 
+    //Context
     const gl = canvas.getContext("webgl2");
-    if(!gl) {
-        console.error("WebGL2 is not supported by this browser");
-        return;
-    }
+    if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
 
-    setupShader(gl, shaderInfo);
-    setupTriangle(gl, shaderInfo);
-    setupGUI(() => render(gl));
+    //GUI
+    gui.init(() => render(gl));
 
+    //Shaders
+    shader.init(gl);
+
+    //Objects
+    triangle.init(gl, shader);
+
+    //Render
     render(gl);
+
+    //Resize
     window.addEventListener("resize", () => render(gl));
 }
 
 // =============================================================
 // STARTUP AND EXPORTS
 // =============================================================
-
 window.addEventListener("DOMContentLoaded", main);
 
 export {
