@@ -13,43 +13,12 @@ Topics:
 ###############################################################
 */
 
-// =============================================================
-// GLOBAL OBJECTS
-// =============================================================
 
 // =============================================================
-// Scene Objects
+// SHADER OBJECTS
 // =============================================================
-
-const triangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-const hexagon = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-// =============================================================
-// Shader Objects
-// =============================================================
-
-/*
-    No UI in this chapter yet.
-    The focus here is on rendering multiple
-    independent objects with different topologies.
-*/
-
-const shaderInfo = {
+//Shader Object1
+const shader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -59,7 +28,9 @@ const shaderInfo = {
 `,
     fragmentShaderSource: `#version 300 es
     precision mediump float;
+
     uniform vec3 u_color;
+
     out vec4 out_color;
 
     void main() {
@@ -71,30 +42,40 @@ const shaderInfo = {
         position: null
     },
     uniforms: {
-        color: null
+        color: null,
+        intensity: null
+    },
+
+    //FUNCTIONS
+
+    init(gl) {
+        // Compile shaders
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
+        // Create shader program
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        // Attributes
+        this.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+        // uniforms
+        this.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
     }
 };
 
-// =============================================================
-// FUNCTIONS
-// =============================================================
-
-// =============================================================
-// Shader Creating Functions
-// =============================================================
-
+// Compile Shader
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
     const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+
     if(compileStatus) return shader;
 
     console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
 }
 
+// Link Program
 function createProgram(gl, vertexShader, fragmentShader) {
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -102,28 +83,145 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.linkProgram(program);
 
     const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+
     if(linkStatus) return program;
 
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
 }
 
-function setupShader(gl, shader) {
-    // Shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
-    // Program
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
-    // Attributes
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
-    // uniforms
-    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
-}
+// =============================================================
+// SCENE OBJECTS
+// =============================================================
+const triangle = {
+    //         v2
+    //         /\
+    //        /  \
+    //       /    \
+    //      /      \
+    //     /        \
+    //    v0--------v1
+
+    // CPU DATA
+    vertexData: new Float32Array([
+        -0.5, 0.0,
+        -0.3, 0.4,
+        -0.1, 0.0
+    ]),
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to object
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,          // size: 2 components (X, Y)
+            gl.FLOAT,   // type: 32-bit float
+            false,      // normalize
+            0,          // stride: 0(tightly packed)
+            0           // offset: start of buffer
+        );
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 3;
+    }
+};
+
+const hexagon = {
+    /*
+             #5---#4
+           /         \
+         #0           #3
+           \         /
+             #1---#2
+    */
+
+    // CPU DATA
+    vertexData: new Float32Array([
+        0.6,  0.0,
+        0.45, 0.26,
+        0.15, 0.26,
+        0.0,  0.0,
+        0.15,-0.26,
+        0.45,-0.26
+    ]),
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to object
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,          // size: 2 components (X, Y)
+            gl.FLOAT,   // type: 32-bit float
+            false,      // normalize
+            0,          // stride: 0(tightly packed)
+            0           // offset: start of buffer
+        );
+
+        // Draw data
+        this.drawMode = gl.LINE_LOOP;
+        this.drawOffset = 0;
+        this.drawCount = 6;
+    }
+};
 
 // =============================================================
-// Helper Functions
+// HELPER FUNCS
 // =============================================================
-
+// Resize Canvas
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     const width = (canvas.clientWidth * multiplier) | 0;
     const height = (canvas.clientHeight * multiplier) | 0;
@@ -138,126 +236,34 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// Scene Objects Creation Functions
-// =============================================================
-
-function setupTriangle(gl, shader) {
-    triangle.shader = shader;
-
-    const positions = new Float32Array([
-        -0.7, 0.0,
-        -0.5, 0.5,
-        -0.3, 0.0
-    ]);
-
-    triangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
-
-    triangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(triangle.vao);
-
-    gl.enableVertexAttribArray(triangle.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-
-    gl.vertexAttribPointer(
-        triangle.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
-
-    triangle.drawMode = gl.TRIANGLES;
-    triangle.drawOffset = 0;
-    triangle.drawCount = 3;
-}
-
-function setupHexagon(gl, shader) {
-    hexagon.shader = shader;
-
-    const positions = new Float32Array([
-         0.6,  0.0,
-         0.45, 0.26,
-         0.15, 0.26,
-         0.0,  0.0,
-         0.15,-0.26,
-         0.45,-0.26
-    ]);
-
-    hexagon.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexagon.vbo);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        positions,
-        gl.STATIC_DRAW
-    );
-
-    hexagon.vao = gl.createVertexArray();
-    gl.bindVertexArray(hexagon.vao);
-
-    gl.enableVertexAttribArray(hexagon.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexagon.vbo);
-
-    gl.vertexAttribPointer(
-        hexagon.shader.attributes.position,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
-
-    hexagon.drawMode = gl.LINE_LOOP;
-    hexagon.drawOffset = 0;
-    hexagon.drawCount = 6;
-}
-
-// =============================================================
 // RENDER
 // =============================================================
 function render(gl) {
+    // Canvas
     resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
-    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    // Background
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(shaderInfo.program);
+    // DRAW THINGS
+    //---------------------------------------------------
+    // Shader
+    gl.useProgram(shader.program);
 
-    // ---------------------------------------------------------
-    // TRIANGLE
-    // ---------------------------------------------------------
-
-    gl.uniform3f(
-        shaderInfo.uniforms.color,
-        1.0, 0.0, 0.0   // Red
-    );
-
+    // Triangle
+    gl.uniform3fv(triangle.shader.uniforms.color,[1.0,0.0,0.0]);
     gl.bindVertexArray(triangle.vao);
-
     gl.drawArrays(
         triangle.drawMode,
         triangle.drawOffset,
         triangle.drawCount
     );
 
-    // ---------------------------------------------------------
-    // HEXAGON
-    // ---------------------------------------------------------
-
-    gl.uniform3f(
-        shaderInfo.uniforms.color,
-        1.0, 0.0, 1.0   // Magenta
-    );
-
+    // Hexagon
+    gl.uniform3fv(hexagon.shader.uniforms.color,[0.0,1.0,0.0]);
     gl.bindVertexArray(hexagon.vao);
-
     gl.drawArrays(
         hexagon.drawMode,
         hexagon.drawOffset,
@@ -269,31 +275,31 @@ function render(gl) {
 // MAIN
 // =============================================================
 function main() {
+    //Canvas
     const canvas = document.querySelector("#c");
-    if(!canvas) {
-        console.error("Canvas element not found");
-        return;
-    }
+    if(!canvas) {console.error("Canvas element not found");return;}
 
+    //Context
     const gl = canvas.getContext("webgl2");
-    if(!gl) {
-        console.error("WebGL2 is not supported by this browser");
-        return;
-    }
+    if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
 
-    setupShader(gl, shaderInfo);
+    //Shaders
+    shader.init(gl);
 
-    setupTriangle(gl, shaderInfo);
-    setupHexagon(gl, shaderInfo);
+    //Objects
+    triangle.init(gl, shader);
+    hexagon.init(gl, shader);
 
+    //Render
     render(gl);
+
+    //Resize
     window.addEventListener("resize", () => render(gl));
 }
 
 // =============================================================
 // STARTUP AND EXPORTS
 // =============================================================
-
 window.addEventListener("DOMContentLoaded", main);
 
 export {

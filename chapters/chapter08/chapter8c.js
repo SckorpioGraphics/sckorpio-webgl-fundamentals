@@ -99,7 +99,7 @@ const triangle = {
     //    v0--------v1
 
     // CPU DATA
-    positions: new Float32Array([
+    vertexData: new Float32Array([
         -0.5,  0.0,  // v0
         0.5, 0.0,    // v1
         0.0,  0.5,   // v2
@@ -121,7 +121,7 @@ const triangle = {
         // Vertex Buffer
         this.vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
 
         // Vertex Array
         this.vao = gl.createVertexArray();

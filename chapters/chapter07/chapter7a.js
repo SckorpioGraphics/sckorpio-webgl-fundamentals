@@ -4,7 +4,7 @@ CHAPTER 7a: Varying Vertex Color
 Topics:
 - Using Vertex data itself for Vertex Color
 - Adding a basic UI to manipulate
-- Vertex positions
+- Vertex vertexData
 ###############################################################
 */
 
@@ -98,7 +98,7 @@ const triangle = {
     //    v0--------v1
 
     // CPU DATA
-    positions: new Float32Array([
+    vertexData: new Float32Array([
         -0.5,  0.0,  // v0
         0.5, 0.0,    // v1
         0.0,  0.5,   // v2
@@ -152,7 +152,7 @@ const triangle = {
         gl.bindVertexArray(triangle.vao);
 
         // Vertex data CPU side
-        this.positions = new Float32Array([
+        this.vertexData = new Float32Array([
             gui.state.aX, gui.state.aY, // Point A
             gui.state.bX, gui.state.bY, // Point B
             gui.state.cX, gui.state.cY  // Point C
@@ -160,7 +160,7 @@ const triangle = {
 
         // Update vertex data on the GPU
         gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.DYNAMIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
     }
 };
 
