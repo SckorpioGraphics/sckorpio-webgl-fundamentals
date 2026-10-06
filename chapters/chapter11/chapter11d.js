@@ -140,13 +140,13 @@ const rectangle = {
 
     // CPU DATA (In Pixel Space)
     vertexData: new Float32Array([
-        20, 20,       // Left Bottom
-        200, 20,      // Right Bottom
-        20, 100,      // Left Top
+        100, 100,      // Left Bottom
+        300, 100,      // Right Bottom
+        100, 200,      // Left Top
 
-        20, 100,      // Left Top
-        200, 20,      // Right Bottom
-        200, 100      // Right Top
+        100, 200,      // Left Top
+        300, 100,      // Right Bottom
+        300, 200       // Right Top
     ]),
 
     //GPU DATA
@@ -318,7 +318,7 @@ function render(gl) {
 
 
     // Rectangle
-    gl.uniform3f(shader.uniforms.color,1.0, 0.0, 1.0);  // Magenta
+    gl.uniform3f(shader.uniforms.color,0.39, 0.33, 0.58);  // Magenta
     gl.bindVertexArray(rectangle.vao);
     gl.drawArrays(
         rectangle.drawMode,
