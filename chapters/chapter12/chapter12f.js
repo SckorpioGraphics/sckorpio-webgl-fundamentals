@@ -500,12 +500,9 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    console.log(camera.state.panLeft,camera.state.panRight);
     // Camera 
     camera.updateProjectionMatrix(gl);
     camera.updateViewMatrix(gl);
-
-    console.log(camera.positionX,camera.positionY);
 
     // Shader
     gl.useProgram(shader.program);

@@ -9,36 +9,30 @@
    #############################################################
 */
 
-// =============================================================
-// GLOBAL DATA
-// =============================================================
 
-// Canvas / WebGL Context
-
-// Shader Objects
-const shaderInfo = {
+// =============================================================
+// SHADER OBJECTS
+// =============================================================
+//Shader Object1
+const shader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
-
     uniform mat3 u_viewMatrix;
     uniform mat3 u_projectionMatrix;
 
     void main() {
         vec3 viewPosition = u_viewMatrix * vec3(a_position, 1.0);
         vec3 clipPosition = u_projectionMatrix * viewPosition;
-
         gl_Position = vec4(clipPosition.xy, 0.0, 1.0);
     }
 `,
     fragmentShaderSource: `#version 300 es
     precision mediump float;
-
-    uniform vec4 u_color;
-
+    uniform vec3 u_color;
     out vec4 out_color;
 
     void main() {
-        out_color = u_color;
+        out_color = vec4(u_color,1.0);
     }
 `,
     program: null,
@@ -49,90 +43,39 @@ const shaderInfo = {
         viewMatrix: null,
         projectionMatrix: null,
         color: null
+    },
+
+    //FUNCTIONS
+    init(gl) {
+        // Compile shaders
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, this.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, this.fragmentShaderSource);
+        // Create shader program
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        // Attributes
+        this.attributes.position = gl.getAttribLocation(this.program, "a_position");
+        // uniforms
+        this.uniforms.viewMatrix = gl.getUniformLocation(this.program, "u_viewMatrix");
+        this.uniforms.projectionMatrix = gl.getUniformLocation(this.program, "u_projectionMatrix");
+        this.uniforms.color = gl.getUniformLocation(this.program, "u_color");
     }
 };
 
-// Camera Objects
-const camera = {
-    x: -300,
-    y: -200,
-    zoom: 1.0,
-    panSpeed: 10,
-    zoomSpeed: 0.1,
-    viewMatrix: null,
-    projectionMatrix: null
-};
-
-const controls = {
-    panUp: false,
-    panLeft: false,
-    panDown: false,
-    panRight: false,
-    panZoomIn: false,
-    panZoomOut: false
-};
-
-// Scene Objects
-const grid = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-const xAxis = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-const yAxis = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0
-};
-
-const rectangle = {
-    shader: null,
-    vao: null,
-    vbo: null,
-    drawMode: null,
-    drawOffset: 0,
-    drawCount: 0,
-    positionX: 200,
-    positionY: 150,
-    width: 200,
-    height: 100
-};
-
-// =============================================================
-// FUNCTIONS
-// =============================================================
-
-// =============================================================
-// Shader Creating Functions
-// =============================================================
-
+// Compile Shader
 function createShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
     const compileStatus = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+
     if(compileStatus) return shader;
 
     console.error("Shader Compilation Error:", gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
 }
 
+// Link Program
 function createProgram(gl, vertexShader, fragmentShader) {
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -140,29 +83,419 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.linkProgram(program);
 
     const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+
     if(linkStatus) return program;
 
     console.error("Program Linking Error:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
 }
 
-function setupShader(gl, shader) {
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
+// =============================================================
+// CAMERA
+// =============================================================
+const camera = {
+    // Camera Data
+    width: 0,
+    height: 0,
+    positionX: -300,
+    positionY: -200,
+    zoom: 1.0,
+    panSpeed: 20,
+    zoomSpeed: 0.1,
 
-    shader.program = createProgram(gl, vertexShader, fragmentShader);
+    // Control state
+    state: {
+        panUp: false,
+        panDown: false,
+        panLeft: false,
+        panRight: false,
+        zoomIn: false,
+        zoomOut: false
+    },
 
-    shader.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+    // View Matrix
+    viewMatrix: mat3.create(),
+    // Projection matrix
+    projectionMatrix: mat3.create(),
 
-    shader.uniforms.viewMatrix = gl.getUniformLocation(shader.program, "u_viewMatrix");
-    shader.uniforms.projectionMatrix = gl.getUniformLocation(shader.program, "u_projectionMatrix");
-    shader.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
-}
+    // FUNCTIONs
+    update(gl) {
+        // Match the camera's viewing region
+        this.width = gl.canvas.width;
+        this.height = gl.canvas.height;
+        // Update the pos and zooms
+        if(this.state.panUp) this.positionY += this.panSpeed;
+        if(this.state.panDown) this.positionY -= this.panSpeed;
+        if(this.state.panLeft) this.positionX -= this.panSpeed;
+        if(this.state.panRight) this.positionX += this.panSpeed;
+        if(this.state.zoomIn) this.zoom += this.zoomSpeed;
+        if(this.state.zoomOut) this.zoom = Math.max(0.1, this.zoom - this.zoomSpeed);
+    },
+    updateViewMatrix(gl) {
+        // Update Camera values first
+        this.update(gl);
+        // Create View matrix
+        const matrix = mat3.create();
+        mat3.fromTranslation(matrix, [-camera.positionX, -camera.positionY]);
+        mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
+        camera.viewMatrix = matrix;
+    },
+    updateProjectionMatrix(gl) {
+        // Camera bounds
+        this.width = gl.canvas.width;
+        this.height = gl.canvas.height;
+
+        // Create projection matrix
+        this.projectionMatrix = mat3.fromValues(
+            2 / this.width,  0,                  0,
+            0,               2 / this.height,    0,
+            -1,              -1,                 1,
+        );
+    }
+};
 
 // =============================================================
-// Helper Functions
+// SCENE OBJECTS
 // =============================================================
+const rectangle = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
 
+    // CPU DATA (In Pixel Space)
+    vertexData: new Float32Array(),
+    translationX: 200,
+    translationY: 150,
+    width: 200,
+    height: 100,
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        // Connect shader to object
+        this.shader = shader;
+
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Enable position attribute
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        // Bind Vertex Buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Vertex data format
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,          // size: 2 components (X, Y)
+            gl.FLOAT,   // type: 32-bit float
+            false,      // normalize
+            0,          // stride: 0(tightly packed)
+            0           // offset: start of buffer
+        );
+
+        // Draw data
+        this.drawMode = gl.TRIANGLES;
+        this.drawOffset = 0;
+        this.drawCount = 6;
+
+        // Call once
+        this.update(gl);
+    },
+    update(gl){
+        const halfWidth = this.width / 2;
+        const halfHeight = this.height / 2;
+
+        const x = this.translationX;
+        const y = this.translationY;
+
+        this.vertexData = new Float32Array([
+            x - halfWidth, y - halfHeight,
+            x + halfWidth, y - halfHeight,
+            x - halfWidth, y + halfHeight,
+            x - halfWidth, y + halfHeight,
+            x + halfWidth, y - halfHeight,
+            x + halfWidth, y + halfHeight
+        ]);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
+    }
+};
+
+const grid = {
+    //    v1------------v2
+    //    |--|--|--|--|--|
+    //    |--|--|--|--|--|
+    //    |--|--|--|--|--|
+    //    |--|--|--|--|--|
+    //    |--|--|--|--|--|
+    //    v0------------v1
+
+    // CPU DATA (In Pixel Space)
+    vertexData: new Float32Array(),
+    spacing: 100,
+    range: 10000,
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        this.shader = shader;
+
+        const positions = [];
+    
+        // Vertical lines
+        for(let x = -this.range; x <= this.range; x += this.spacing) {
+            positions.push(
+                x, -this.range,
+                x, this.range
+            );
+        }
+
+        // Horizontal lines
+        for(let y = -this.range; y <= this.range; y += this.spacing) {
+            positions.push(
+                -this.range, y,
+                this.range, y
+            );
+        }
+
+        this.vertexData = new Float32Array(positions);
+        // Vertex Buffer
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER,this.vertexData,gl.STATIC_DRAW);
+
+        // Vertex Array
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        // Attrib
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,
+            gl.FLOAT,
+            false,
+            0,
+            0
+        );
+
+        //Draw Data
+        this.drawMode = gl.LINES;
+        this.drawOffset = 0;
+        this.drawCount = positions.length / 2;
+    }
+};
+
+const xAxis = {
+    //    -x------0------+x
+
+    // CPU DATA (In Pixel Space)
+    vertexData: new Float32Array([
+        -grid.range, 0,
+        grid.range, 0
+    ]),
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        this.shader = shader;
+
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER,this.vertexData,gl.STATIC_DRAW);
+
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,
+            gl.FLOAT,
+            false,
+            0,
+            0
+        );
+
+        this.drawMode = gl.LINES;
+        this.drawOffset = 0;
+        this.drawCount = 2;
+    }
+};
+
+const yAxis = {
+    //      +y
+    //      |
+    //      |
+    //      0
+    //      |
+    //      |
+    //      -y
+
+    // CPU DATA (In Pixel Space)
+    vertexData: new Float32Array([
+        0, -grid.range,
+        0, grid.range
+    ]),
+
+    //GPU DATA
+    shader: null,
+    vao: null,
+    vbo: null,
+    drawMode: null,
+    drawOffset: 0,
+    drawCount: 0,
+
+    //FUNCTIONS
+    init(gl, shader) {
+        this.shader = shader;
+
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER,this.vertexData,gl.STATIC_DRAW);
+
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        gl.enableVertexAttribArray(this.shader.attributes.position);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        gl.vertexAttribPointer(
+            this.shader.attributes.position,
+            2,
+            gl.FLOAT,
+            false,
+            0,
+            0
+        );
+
+        this.drawMode = gl.LINES;
+        this.drawOffset = 0;
+        this.drawCount = 2;
+    }
+};
+
+// =============================================================
+// GUI 
+// =============================================================
+const gui = {
+    init(gl) {
+        const gui = new lil.GUI();
+        const cameraFolder = gui.addFolder("Camera");
+
+        cameraFolder.add(camera.state, "panUp").name("↑ Up");
+        cameraFolder.add(camera.state, "panLeft").name("← Left");
+        cameraFolder.add(camera.state, "panDown").name("↓ Down");
+        cameraFolder.add(camera.state, "panRight").name("→ Right");
+        cameraFolder.add(camera.state, "zoomIn").name("Zoom In");
+        cameraFolder.add(camera.state, "zoomOut").name("Zoom Out");
+
+        const rectangleFolder = gui.addFolder("Rectangle");
+        rectangleFolder.add(rectangle, "translationX", -1000, 1000).name("translationX").onChange(() => rectangle.update(gl));
+        rectangleFolder.add(rectangle, "translationY", -1000, 1000).name("translationY").onChange(() => rectangle.update(gl));
+
+    }
+};
+
+// =============================================================
+// KEY EVENTS 
+// =============================================================
+const keyEvent = {
+    init(render) {
+        window.addEventListener("keydown", event => {
+            switch(event.key) {
+                case "ArrowUp":
+                    camera.state.panUp = true;
+                    break;
+                case "ArrowLeft":
+                    camera.state.panLeft = true;
+                    break;
+                case "ArrowDown":
+                    camera.state.panDown = true;
+                    break;
+                case "ArrowRight":
+                    camera.state.panRight = true;
+                    break;
+                case "I":
+                case "i":
+                    camera.state.zoomIn = true;
+                    break;
+                case "O":
+                case "o":
+                    camera.state.zoomOut = true;
+                    break;
+                default:
+            }
+        });
+
+        window.addEventListener("keyup", event => {
+            switch(event.key) {
+                case "ArrowUp":
+                    camera.state.panUp = false;
+                    break;
+                case "ArrowLeft":
+                    camera.state.panLeft = false;
+                    break;
+                case "ArrowDown":
+                    camera.state.panDown = false;
+                    break;
+                case "ArrowRight":
+                    camera.state.panRight = false;
+                    break;
+                case "I":
+                case "i":
+                    camera.state.zoomIn = false;
+                    break;
+                case "O":
+                case "o":
+                    camera.state.zoomOut = false;
+                    break;
+                default:
+            }
+        });
+    }
+};
+
+// =============================================================
+// HELPER FUNCS
+// =============================================================
+// Resize Canvas
 function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
     const width = (canvas.clientWidth * multiplier) | 0;
     const height = (canvas.clientHeight * multiplier) | 0;
@@ -177,268 +510,51 @@ function resizeCanvasToDisplaySize(canvas, multiplier = 1) {
 }
 
 // =============================================================
-// Camera / Matrix Functions
-// =============================================================
-
-function setupViewMatrix() {
-    const matrix = mat3.create();
-    mat3.fromTranslation(matrix, [-camera.x, -camera.y]);
-    mat3.scale(matrix, matrix, [camera.zoom, camera.zoom]);
-    camera.viewMatrix = matrix;
-}
-
-function updateCamera() {
-    if(controls.panUp) camera.y += camera.panSpeed;
-    if(controls.panLeft) camera.x -= camera.panSpeed;
-    if(controls.panDown) camera.y -= camera.panSpeed;
-    if(controls.panRight) camera.x += camera.panSpeed;
-    if(controls.panZoomIn) camera.zoom += camera.zoomSpeed;
-    if(controls.panZoomOut) camera.zoom = Math.max(0.1, camera.zoom - camera.zoomSpeed);
-}
-
-function setupProjectionMatrix(gl) {
-    const width = gl.canvas.width;
-    const height = gl.canvas.height;
-
-    camera.projectionMatrix = mat3.fromValues(
-        2 / width,  0,           0,
-        0,          2 / height,  0,
-        -1,        -1,           1
-    );
-}
-
-// =============================================================
-// Scene Object Creation Functions
-// =============================================================
-
-function setupGrid(gl, shader) {
-    grid.shader = shader;
-
-    const positions = [];
-    const spacing = 100;
-    const range = 10000;
-
-    for(let x = -range; x <= range; x += spacing) {
-        positions.push(x, -range, x, range);
-    }
-
-    for(let y = -range; y <= range; y += spacing) {
-        positions.push(-range, y, range, y);
-    }
-
-    grid.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, grid.vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-    grid.vao = gl.createVertexArray();
-    gl.bindVertexArray(grid.vao);
-    gl.enableVertexAttribArray(grid.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, grid.vbo);
-    gl.vertexAttribPointer(grid.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
-
-    grid.drawMode = gl.LINES;
-    grid.drawOffset = 0;
-    grid.drawCount = positions.length / 2;
-}
-
-function setupXAxis(gl, shader) {
-    xAxis.shader = shader;
-
-    const positions = new Float32Array([
-        -10000, 0,
-         10000, 0
-    ]);
-
-    xAxis.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, xAxis.vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
-
-    xAxis.vao = gl.createVertexArray();
-    gl.bindVertexArray(xAxis.vao);
-    gl.enableVertexAttribArray(xAxis.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, xAxis.vbo);
-    gl.vertexAttribPointer(xAxis.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
-
-    xAxis.drawMode = gl.LINES;
-    xAxis.drawOffset = 0;
-    xAxis.drawCount = 2;
-}
-
-function setupYAxis(gl, shader) {
-    yAxis.shader = shader;
-
-    const positions = new Float32Array([
-        0, -10000,
-        0,  10000
-    ]);
-
-    yAxis.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, yAxis.vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
-
-    yAxis.vao = gl.createVertexArray();
-    gl.bindVertexArray(yAxis.vao);
-    gl.enableVertexAttribArray(yAxis.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, yAxis.vbo);
-    gl.vertexAttribPointer(yAxis.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
-
-    yAxis.drawMode = gl.LINES;
-    yAxis.drawOffset = 0;
-    yAxis.drawCount = 2;
-}
-
-function setupRectangle(gl, shader) {
-    rectangle.shader = shader;
-
-    rectangle.vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-    // Vertex Data Filled Dynamically by updateRectangle()
-
-    rectangle.vao = gl.createVertexArray();
-    gl.bindVertexArray(rectangle.vao);
-    gl.enableVertexAttribArray(rectangle.shader.attributes.position);
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-    gl.vertexAttribPointer(rectangle.shader.attributes.position, 2, gl.FLOAT, false, 0, 0);
-
-    rectangle.drawMode = gl.TRIANGLES;
-    rectangle.drawOffset = 0;
-    rectangle.drawCount = 6;
-}
-
-function updateRectangle(gl) {
-    const halfWidth = rectangle.width / 2;
-    const halfHeight = rectangle.height / 2;
-
-    const x = rectangle.positionX;
-    const y = rectangle.positionY;
-
-    const positions = new Float32Array([
-        x - halfWidth, y - halfHeight,
-        x + halfWidth, y - halfHeight,
-        x - halfWidth, y + halfHeight,
-        x - halfWidth, y + halfHeight,
-        x + halfWidth, y - halfHeight,
-        x + halfWidth, y + halfHeight
-    ]);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
-}
-
-// =============================================================
-// GUI Setup Functions
-// =============================================================
-
-function setupGUI(gl) {
-    const gui = new lil.GUI();
-    const cameraFolder = gui.addFolder("Camera");
-
-    cameraFolder.add(controls, "panUp").name("↑ Up");
-    cameraFolder.add(controls, "panLeft").name("← Left");
-    cameraFolder.add(controls, "panDown").name("↓ Down");
-    cameraFolder.add(controls, "panRight").name("→ Right");
-    cameraFolder.add(controls, "panZoomIn").name("Zoom In");
-    cameraFolder.add(controls, "panZoomOut").name("Zoom Out");
-
-    const rectangleFolder = gui.addFolder("Rectangle");
-    rectangleFolder.add(rectangle, "positionX", -1000, 1000).name("positionX").onChange(() => updateRectangle(gl));
-    rectangleFolder.add(rectangle, "positionY", -1000, 1000).name("positionY").onChange(() => updateRectangle(gl));
-}
-
-// =============================================================
-// Input / Event Functions
-// =============================================================
-
-window.addEventListener("keydown", event => {
-    switch(event.key) {
-        case "ArrowUp":
-            controls.panUp = true;
-            break;
-        case "ArrowLeft":
-            controls.panLeft = true;
-            break;
-        case "ArrowDown":
-            controls.panDown = true;
-            break;
-        case "ArrowRight":
-            controls.panRight = true;
-            break;
-        case "I":
-        case "i":
-            controls.panZoomIn = true;
-            break;
-        case "O":
-        case "o":
-            controls.panZoomOut = true;
-            break;
-    }
-});
-
-window.addEventListener("keyup", event => {
-    switch(event.key) {
-        case "ArrowUp":
-            controls.panUp = false;
-            break;
-        case "ArrowLeft":
-            controls.panLeft = false;
-            break;
-        case "ArrowDown":
-            controls.panDown = false;
-            break;
-        case "ArrowRight":
-            controls.panRight = false;
-            break;
-        case "I":
-        case "i":
-            controls.panZoomIn = false;
-            break;
-        case "O":
-        case "o":
-            controls.panZoomOut = false;
-            break;
-    }
-});
-
-// =============================================================
 // RENDER
 // =============================================================
 function render(gl) {
-    updateCamera();
-
+    // Canvas
     resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
-    gl.clearColor(0.32, 0.63, 0.67, 1.0);
+    // Background
+    gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.useProgram(shaderInfo.program);
 
-    // PROJECTION MATRIX
-    setupProjectionMatrix(gl);
-    gl.uniformMatrix3fv(shaderInfo.uniforms.projectionMatrix, false, camera.projectionMatrix);
+    // Camera 
+    camera.updateProjectionMatrix(gl);
+    camera.updateViewMatrix(gl);
 
-    // VIEW MATRIX
-    setupViewMatrix();
-    gl.uniformMatrix3fv(shaderInfo.uniforms.viewMatrix, false, camera.viewMatrix);
-
-    // GRID
+    // Shader
+    gl.useProgram(shader.program);
+    
+    // Pass projection matrix to shader
+    gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
+    // Pass View matrix to shader
+    gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
+    
+    
+    // DRAW THINGS
+    //---------------------------------------------------
+    // Grid
+    gl.uniform3f(shader.uniforms.color,0.39, 0.33, 0.58);   // Sckorpio Purple
     gl.bindVertexArray(grid.vao);
-    gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
-    gl.drawArrays(grid.drawMode, grid.drawOffset, grid.drawCount);
+    gl.drawArrays(grid.drawMode,grid.drawOffset,grid.drawCount);
 
-    // X AXIS
+    // X-Axis
+    gl.uniform3f(shader.uniforms.color,1.0, 0.0, 0.0);   // Red
     gl.bindVertexArray(xAxis.vao);
-    gl.uniform4f(shaderInfo.uniforms.color, 1.0, 0.0, 0.0, 1.0);
-    gl.drawArrays(xAxis.drawMode, xAxis.drawOffset, xAxis.drawCount);
+    gl.drawArrays(xAxis.drawMode,xAxis.drawOffset,xAxis.drawCount);
 
-    // Y AXIS
+    // Y-Axis
+    gl.uniform3f(shader.uniforms.color,0.0, 1.0, 0.0);   // Green
     gl.bindVertexArray(yAxis.vao);
-    gl.uniform4f(shaderInfo.uniforms.color, 0.0, 1.0, 0.0, 1.0);
-    gl.drawArrays(yAxis.drawMode, yAxis.drawOffset, yAxis.drawCount);
+    gl.drawArrays(yAxis.drawMode,yAxis.drawOffset,yAxis.drawCount);
 
-    // RECTANGLE
+    // Rectangle
+    gl.uniform3f(shader.uniforms.color,0.39, 0.33, 0.58);   // Sckorpio Purple
     gl.bindVertexArray(rectangle.vao);
-    gl.uniform4f(shaderInfo.uniforms.color, 0.39, 0.33, 0.58, 1.0);
-    gl.drawArrays(rectangle.drawMode, rectangle.drawOffset, rectangle.drawCount);
+    gl.drawArrays(rectangle.drawMode,rectangle.drawOffset,rectangle.drawCount);
 
     requestAnimationFrame(() => render(gl));
 }
@@ -447,34 +563,39 @@ function render(gl) {
 // MAIN
 // =============================================================
 function main() {
+    //Canvas
     const canvas = document.querySelector("#c");
+    if(!canvas) {console.error("Canvas element not found");return;}
 
-    if(!canvas) {
-        console.error("Canvas element not found");
-        return;
-    }
-
+    //Context
     const gl = canvas.getContext("webgl2");
+    if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
 
-    if(!gl) {
-        console.error("WebGL2 is not supported by this browser");
-        return;
-    }
+    //GUI
+    gui.init(gl);
 
-    setupShader(gl, shaderInfo);
-    setupGrid(gl, shaderInfo);
-    setupXAxis(gl, shaderInfo);
-    setupYAxis(gl, shaderInfo);
-    setupRectangle(gl, shaderInfo);
-    updateRectangle(gl);
-    setupGUI(gl);
+    //KeyEvents
+    keyEvent.init(() => render(gl));
+
+    //Shaders
+    shader.init(gl);
+
+    //Objects
+    rectangle.init(gl, shader);
+    grid.init(gl, shader);
+    xAxis.init(gl, shader);
+    yAxis.init(gl, shader);
+
+    //Render
     render(gl);
+
+    //Resize
+    window.addEventListener("resize", () => render(gl));
 }
 
 // =============================================================
 // STARTUP AND EXPORTS
 // =============================================================
-
 window.addEventListener("DOMContentLoaded", main);
 
 export {
