@@ -1,45 +1,51 @@
-PHASE 1 — FOUNDATIONS
-Ch 0: Introduction
-Ch 1: First Draw
-Ch 2: Structure
-Ch 3: Geometry
-Ch 4: Topologies I
-Ch 5: Topologies II
-Ch 6: Dynamic Buffers
-Ch 7: Vertex Color
+PHASE 1 — WEBGL FOUNDATIONS
+Ch 0: Series introduction and goals
+Ch 1: First WebGL draw
+Ch 2: Lesson template and structured triangle setup
+Ch 3: Geometry and indexing
+Ch 4: Primitive topologies I
+Ch 5: Primitive topologies II
+Ch 6: Dynamic buffers
+Ch 7: Vertex data and color
 Ch 8: Uniforms
-Ch 9: Objects
+Ch 9: Multiple objects
 
-PHASE 2 — TRANSFORMATIONS
-Ch 10: 2D Camera
-Ch 11: Projection
-Ch 12: View Matrix
+PHASE 2 — 2D COORDINATE AND TRANSFORMATION FUNDAMENTALS
+Ch 10: 2D camera / screen space to clip space
+Ch 11: Projection matrix
+Ch 12: View matrix and camera movement
 Ch 13: Translation
 Ch 14: Rotation
 Ch 15: Scale
-Ch 16: Model Matrix
+Ch 16: Model matrix and transformation composition
 
-PHASE 3 — RENDERING
+PHASE 3 — TEXTURE AND RENDERING FUNDAMENTALS
 Ch 17: Textures I
 Ch 18: Textures II
-Ch 19: Texture Sampling
+Ch 19: Texture sampling
 Ch 20: Blending
-Ch 21: Render Order
+Ch 21: Render order
 
 PHASE 4 — ANIMATION
-Ch 22: Time & Animation
-Ch 23: Transform Animation
-Ch 24: Color & Alpha
-Ch 25: Texture Animation
+Ch 22: Time and animation
+Ch 23: Transform animation
+Ch 24: Color and alpha animation
+Ch 25: Texture animation
 
 PHASE 5 — INTERACTION
 Ch 26: Interaction
 Ch 27: Physics
 Ch 28: Collision
-Ch 29: Collision Response
+Ch 29: Collision response
 
-PHASE 6 — WORLD
-Ch 30: 2D World
+PHASE 6 — WORLD BUILDING
+Ch 30: Building the 2D world and game scene
 
 SPECIAL
 🦂 Sckorpio Game
+
+LESSON TEMPLATE (used across Chapters 1–16)
+- shader object owns source, program creation, attributes, and uniforms
+- camera object owns viewport bounds, transforms, and matrices
+- scene objects own geometry, state, and render logic
+- the code pattern is object-centered: state + behavior together

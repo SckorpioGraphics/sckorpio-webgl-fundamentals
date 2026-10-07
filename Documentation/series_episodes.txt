@@ -14,7 +14,8 @@ CHAPTER 1 — FIRST WEBGL DRAW
 
 CHAPTER 2 — LESSON TEMPLATE AND STRUCTURED TRIANGLE
 ----------------------------------------------------
-2a - Blank code-organization template; no rendering.
+2a - Define the reusable lesson template: object data + object behavior, shader
+    ownership, camera ownership, and scene organization.
 2b - Complete a working triangle using the structured lesson template.
 
 CHAPTER 3 — GEOMETRY AND INDEXING
@@ -84,6 +85,9 @@ CHAPTER 10 — 2D CAMERA
 10d - Build a larger 2D scene using the same coordinate system.
 10e - Add a grid and X/Y axes to visualize the coordinate system.
 10f - Build a small scene and observe the limitations of the manual approach.
+
+Template note: Chapters 10–16 continue to use the same lesson structure:
+shader objects, camera objects, and scene objects working together.
 
 CHAPTER 11 — PROJECTION MATRIX
 ------------------------------
