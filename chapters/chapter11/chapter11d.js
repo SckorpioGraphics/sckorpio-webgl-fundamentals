@@ -148,6 +148,7 @@ const rectangle = {
         300, 100,      // Right Bottom
         300, 200       // Right Top
     ]),
+    color: [0.39, 0.33, 0.58], // Sckorpio Purple
 
     //GPU DATA
     shader: null,
@@ -191,6 +192,11 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    draw(gl) {
+        gl.uniform3fv(this.shader.uniforms.color,this.color);   
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -207,6 +213,7 @@ const grid = {
     vertexData: new Float32Array(),
     spacing: 100,
     range: 10000,
+    color: [0.39, 0.33, 0.58], // Sckorpio Purple
 
     //GPU DATA
     shader: null,
@@ -264,6 +271,11 @@ const grid = {
         this.drawMode = gl.LINES;
         this.drawOffset = 0;
         this.drawCount = positions.length / 2;
+    },
+    draw(gl) {
+        gl.uniform3fv(this.shader.uniforms.color,this.color);   
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -299,32 +311,19 @@ function render(gl) {
     // Camera 
     camera.updateProjectionMatrix(gl);
 
+    // COMMON UNIFORMS
+    //---------------------------------------------------
     // Shader
     gl.useProgram(shader.program);
-    
     // Pass projection matrix to shader
     gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
     
     // DRAW THINGS
     //---------------------------------------------------
     // Grid
-    gl.uniform3f(shader.uniforms.color,0.39, 0.33, 0.58);   // Sckorpio Purple
-    gl.bindVertexArray(grid.vao);
-    gl.drawArrays(
-        grid.drawMode,
-        grid.drawOffset,
-        grid.drawCount
-    );
-
-
+    grid.draw(gl);
     // Rectangle
-    gl.uniform3f(shader.uniforms.color,0.39, 0.33, 0.58);  // Magenta
-    gl.bindVertexArray(rectangle.vao);
-    gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
-    );
+    rectangle.draw(gl);
 }
 
 // =============================================================

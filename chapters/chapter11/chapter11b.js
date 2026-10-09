@@ -185,6 +185,14 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // Vao
+        gl.bindVertexArray(this.vao);
+        // draw call
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -220,21 +228,17 @@ function render(gl) {
     // Camera 
     camera.updateProjectionMatrix(gl);
 
-    // DRAW THINGS
+    // COMMON UNIFORMS
     //---------------------------------------------------
     // Shader
     gl.useProgram(shader.program);
-    
     // Pass projection matrix to shader
     gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
     
+    // DRAW THINGS
+    //---------------------------------------------------
     // Rectangle
-    gl.bindVertexArray(rectangle.vao);
-    gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
-    );
+    rectangle.draw(gl);
 }
 
 // =============================================================

@@ -181,6 +181,14 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // Vao
+        gl.bindVertexArray(this.vao);
+        // draw calls
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -216,20 +224,17 @@ function render(gl) {
     // Camera 
     camera.update(gl);
 
-    // DRAW THINGS
+    // COMMON UNIFORMS
     //---------------------------------------------------
     // Shader
     gl.useProgram(shader.program);
-    // Pass camera bounds to shader
+    // Uniform: Pass camera bounds(w/h)
     gl.uniform2f(shader.uniforms.cameraBounds,camera.width,camera.height);
-    
+
+    // DRAW THINGS
+    //---------------------------------------------------
     // Rectangle
-    gl.bindVertexArray(rectangle.vao);
-    gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
-    );
+    rectangle.draw(gl);
 }
 
 // =============================================================

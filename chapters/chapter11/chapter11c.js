@@ -201,6 +201,36 @@ const rectangle = {
             ]),
             gl.DYNAMIC_DRAW
         );
+    },
+    draw(gl){
+        // vao
+        gl.bindVertexArray(this.vao);
+        // vbo
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        // Draw 50 random rectangles
+        for(let i = 0; i < 50; i++) {
+            // Generate rectangle in pixel space
+            this.setRectangle(
+                gl,
+                randomInt(camera.width),
+                randomInt(camera.height),
+                randomInt(200),
+                randomInt(200)
+            );
+            // Set random color
+            gl.uniform3f(
+                this.shader.uniforms.color,
+                Math.random(),
+                Math.random(),
+                Math.random()
+            );
+            // Draw Call
+            gl.drawArrays(
+                this.drawMode,
+                this.drawOffset,
+                this.drawCount
+            );
+        }
     }
 };
 
@@ -240,46 +270,17 @@ function render(gl) {
     // Camera 
     camera.updateProjectionMatrix(gl);
 
+    // COMMON UNIFORMS
+    //---------------------------------------------------
     // Shader
     gl.useProgram(shader.program);
-
     // Pass projection matrix to shader
     gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
     
-
     // DRAW THINGS
     //---------------------------------------------------
     // RANDOM 50 RECTANGLES
-
-    gl.bindVertexArray(rectangle.vao);
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangle.vbo);
-
-    // Draw 50 random rectangles
-    for(let i = 0; i < 50; i++) {
-
-        // Generate rectangle in pixel space
-        rectangle.setRectangle(
-            gl,
-            randomInt(camera.width),
-            randomInt(camera.height),
-            randomInt(200),
-            randomInt(200)
-        );
-
-        // Set random color
-        gl.uniform3f(
-            rectangle.shader.uniforms.color,
-            Math.random(),
-            Math.random(),
-            Math.random()
-        );
-
-        gl.drawArrays(
-            rectangle.drawMode,
-            rectangle.drawOffset,
-            rectangle.drawCount
-        );
-    }
+    rectangle.draw(gl);
 }
 
 // =============================================================
