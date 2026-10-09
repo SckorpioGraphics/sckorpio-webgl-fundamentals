@@ -12,7 +12,6 @@ Topics:
 ###############################################################*/
 
 
-
 // =============================================================
 // SHADER OBJECTS
 // =============================================================
@@ -29,7 +28,7 @@ const shader = {
         vec2 viewPosition = a_position - cameraPosition;
         
         // CAMERA -> CLIP
-        // Apply projection matrix
+        // Apply pixel space -> clip space matrix
         vec3 clipPostion = u_projectionMatrix * vec3(viewPosition, 1.0);
 
         // Convert to clip-space position
@@ -152,6 +151,7 @@ const rectangle = {
         300, 100,      // Right Bottom
         300, 200       // Right Top
     ]),
+    color: [0.39, 0.33, 0.58], // Sckorpio Purple
 
     //GPU DATA
     shader: null,
@@ -195,6 +195,11 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    draw(gl) {
+        gl.uniform3fv(this.shader.uniforms.color,this.color);   
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -211,6 +216,7 @@ const grid = {
     vertexData: new Float32Array(),
     spacing: 100,
     range: 10000,
+    color: [0.39, 0.33, 0.58], // Sckorpio Purple
 
     //GPU DATA
     shader: null,
@@ -268,6 +274,11 @@ const grid = {
         this.drawMode = gl.LINES;
         this.drawOffset = 0;
         this.drawCount = positions.length / 2;
+    },
+    draw(gl) {
+        gl.uniform3fv(this.shader.uniforms.color,this.color);   
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -279,6 +290,7 @@ const xAxis = {
         -grid.range, 0,
         grid.range, 0
     ]),
+    color: [1.0, 0.0, 0.0], // Red
 
     //GPU DATA
     shader: null,
@@ -315,6 +327,11 @@ const xAxis = {
         this.drawMode = gl.LINES;
         this.drawOffset = 0;
         this.drawCount = 2;
+    },
+    draw(gl) {
+        gl.uniform3fv(this.shader.uniforms.color,this.color);   
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -332,6 +349,7 @@ const yAxis = {
         0, -grid.range,
         0, grid.range
     ]),
+    color: [0.0, 1.0, 0.0], // Green
 
     //GPU DATA
     shader: null,
@@ -368,6 +386,11 @@ const yAxis = {
         this.drawMode = gl.LINES;
         this.drawOffset = 0;
         this.drawCount = 2;
+    },
+    draw(gl) {
+        gl.uniform3fv(this.shader.uniforms.color,this.color);   
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -403,49 +426,23 @@ function render(gl) {
     // Camera 
     camera.updateProjectionMatrix(gl);
 
+    // COMMON UNIFORMS
+    //---------------------------------------------------
     // Shader
     gl.useProgram(shader.program);
-    
     // Pass projection matrix to shader
     gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
     
     // DRAW THINGS
     //---------------------------------------------------
     // Grid
-    gl.uniform3f(shader.uniforms.color,0.39, 0.33, 0.58);   // Sckorpio Purple
-    gl.bindVertexArray(grid.vao);
-    gl.drawArrays(
-        grid.drawMode,
-        grid.drawOffset,
-        grid.drawCount
-    );
-
+    grid.draw(gl);
     // X-Axis
-    gl.uniform3f(shader.uniforms.color,1.0, 0.0, 0.0);   // Red
-    gl.bindVertexArray(xAxis.vao);
-    gl.drawArrays(
-        xAxis.drawMode,
-        xAxis.drawOffset,
-        xAxis.drawCount
-    );
-
+    xAxis.draw(gl);
     // Y-Axis
-    gl.uniform3f(shader.uniforms.color,0.0, 1.0, 0.0);   // Green
-    gl.bindVertexArray(yAxis.vao);
-    gl.drawArrays(
-        yAxis.drawMode,
-        yAxis.drawOffset,
-        yAxis.drawCount
-    );
-
+    yAxis.draw(gl);
     // Rectangle
-    gl.uniform3f(shader.uniforms.color,0.39, 0.33, 0.58);   // Sckorpio Purple
-    gl.bindVertexArray(rectangle.vao);
-    gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
-    );
+    rectangle.draw(gl);
 }
 
 // =============================================================
