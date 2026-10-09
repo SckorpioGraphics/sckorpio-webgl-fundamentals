@@ -116,8 +116,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 const camera = {
     //camera pixel bounds
     left: 0,
-    right: 600,
-    bottom: 800,
+    right: 800,
+    bottom: 600,
     top: 0,
 
     //clip bounds
@@ -197,6 +197,14 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // vao
+        gl.bindVertexArray(this.vao);
+        // draw calls
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -232,7 +240,7 @@ function render(gl) {
     // Camera 
     camera.update(gl);
 
-    // DRAW THINGS
+    // COMMON UNIFORMS
     //---------------------------------------------------
     // Shader
     gl.useProgram(shader.program);
@@ -240,14 +248,11 @@ function render(gl) {
     gl.uniform4f(shader.uniforms.cameraBounds,camera.left,camera.right,camera.bottom,camera.top);
     // Pass clip-space bounds to shader
     gl.uniform4f(shader.uniforms.clipBounds,camera.clipLeft,camera.clipRight,camera.clipBottom,camera.clipTop);
-
+    
+    // DRAW THINGS
+    //---------------------------------------------------
     // Rectangle
-    gl.bindVertexArray(rectangle.vao);
-    gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
-    );
+    rectangle.draw(gl);
 }
 
 // =============================================================

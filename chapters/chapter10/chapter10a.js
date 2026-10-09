@@ -157,6 +157,14 @@ const rectangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // vao
+        gl.bindVertexArray(this.vao);
+        // draw call
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -189,19 +197,18 @@ function render(gl) {
     gl.clearColor(0.32, 0.63, 0.67, 1.0); // Sckorpio Cyan
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // DRAW THINGS
+    // COMMON UNIFORMS
     //---------------------------------------------------
     // Shader
     gl.useProgram(shader.program);
+    // Uniform: canvas resolution 
     gl.uniform2f(shader.uniforms.resolution,gl.canvas.width,gl.canvas.height);
+        
 
+    // DRAW THINGS
+    //---------------------------------------------------
     // Rectangle
-    gl.bindVertexArray(rectangle.vao);
-    gl.drawArrays(
-        rectangle.drawMode,
-        rectangle.drawOffset,
-        rectangle.drawCount
-    );
+    rectangle.draw(gl);
 }
 
 // =============================================================
