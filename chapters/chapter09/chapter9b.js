@@ -2,10 +2,10 @@
 CHAPTER 9b: Multiple Objects
 
 Topics:
+- But now using draw() in each object
 - Rendering multiple objects
-- A Triangle and a Line Loop
+- A Traingle and a Rectangle
 - Separate VAO/VBO for each object
-- Different topologies
 - Different shapes
 - Different colors
 - Multiple draw calls
@@ -107,6 +107,7 @@ const triangle = {
         -0.3, 0.4,
         -0.1, 0.0
     ]),
+    color: [1.0,0.0,0.0],
 
     //GPU DATA
     shader: null,
@@ -150,27 +151,37 @@ const triangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 3;
+    },
+    draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // Uniform
+        gl.uniform3fv(this.shader.uniforms.color,this.color);
+        // Bind VAO
+        gl.bindVertexArray(this.vao);
+        // Draw Call
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
-const hexagon = {
-    /*
-             #5---#4
-           /         \
-         #0           #3
-           \         /
-             #1---#2
-    */
+const rectangle = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
 
     // CPU DATA
     vertexData: new Float32Array([
-        0.6,  0.0,
-        0.45, 0.26,
-        0.15, 0.26,
-        0.0,  0.0,
-        0.15,-0.26,
-        0.45,-0.26
+        0.2, -0.2,
+        0.2, 0.2,
+        0.6, -0.2,
+
+        0.6, -0.2,
+        0.6, 0.2,
+        0.2, 0.2
     ]),
+    color: [0.0,1.0,0.0],
 
     //GPU DATA
     shader: null,
@@ -211,9 +222,19 @@ const hexagon = {
         );
 
         // Draw data
-        this.drawMode = gl.LINE_LOOP;
+        this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 6;
+    },
+    draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // Uniform
+        gl.uniform3fv(this.shader.uniforms.color,this.color);
+        // Bind VAO
+        gl.bindVertexArray(this.vao);
+        // Draw Call
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -248,26 +269,10 @@ function render(gl) {
 
     // DRAW THINGS
     //---------------------------------------------------
-    // Shader
-    gl.useProgram(shader.program);
-
     // Triangle
-    gl.uniform3fv(triangle.shader.uniforms.color,[1.0,0.0,0.0]);
-    gl.bindVertexArray(triangle.vao);
-    gl.drawArrays(
-        triangle.drawMode,
-        triangle.drawOffset,
-        triangle.drawCount
-    );
-
-    // Hexagon
-    gl.uniform3fv(hexagon.shader.uniforms.color,[0.0,1.0,0.0]);
-    gl.bindVertexArray(hexagon.vao);
-    gl.drawArrays(
-        hexagon.drawMode,
-        hexagon.drawOffset,
-        hexagon.drawCount
-    );
+    triangle.draw(gl);
+    // Rectangle
+    rectangle.draw(gl);
 }
 
 // =============================================================
@@ -287,7 +292,7 @@ function main() {
 
     //Objects
     triangle.init(gl, shader);
-    hexagon.init(gl, shader);
+    rectangle.init(gl, shader);
 
     //Render
     render(gl);

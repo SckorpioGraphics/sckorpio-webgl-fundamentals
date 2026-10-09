@@ -3,21 +3,20 @@ CHAPTER 9d: Multiple Objects
 
 Topics:
 - Rendering multiple objects
-- A Grid and a Triangle
+- A Triangle and a Rectangle
 - Separate VAO/VBO for each object
-- Using GL_LINES for the grid
-- Using GL_TRIANGLES for the triangle
+- Different shaders
+- Different colors
 - Multiple draw calls
-- Clip space coordinates [-1, +1]
+- Using vertex colors and uniform colors
 ###############################################################
 */
-
 
 // =============================================================
 // SHADER OBJECTS
 // =============================================================
 //Shader Object1
-const shader = {
+const basicShader = {
     vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
@@ -48,14 +47,61 @@ const shader = {
 
     init(gl) {
         // Compile shaders
-        const vertexShader = createShader(gl, gl.VERTEX_SHADER, shader.vertexShaderSource);
-        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shader.fragmentShaderSource);
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, this.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, this.fragmentShaderSource);
         // Create shader program
         this.program = createProgram(gl, vertexShader, fragmentShader);
         // Attributes
-        this.attributes.position = gl.getAttribLocation(shader.program, "a_position");
+        this.attributes.position = gl.getAttribLocation(this.program, "a_position");
         // uniforms
-        this.uniforms.color = gl.getUniformLocation(shader.program, "u_color");
+        this.uniforms.color = gl.getUniformLocation(this.program, "u_color");
+    }
+};
+
+//Shader Object2
+const colorVertexShader = {
+    vertexShaderSource: `#version 300 es
+    in vec2 a_position;
+    in vec3 a_color;
+
+    out vec4 v_color;
+
+    void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+        v_color = vec4(a_color, 1.0);
+    }
+`,
+    fragmentShaderSource: `#version 300 es
+    precision highp float;
+
+    in vec4 v_color;
+
+    out vec4 out_color;
+
+    void main() {
+        out_color = v_color;
+    }
+`,
+    program: null,
+    attributes: {
+        position: null,
+        color: null
+    },
+    uniforms: {
+    },
+
+    //FUNCTIONS
+
+    init(gl) {
+        // Compile shaders
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, this.vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, this.fragmentShaderSource);
+        // Create shader program
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        // Attributes
+        this.attributes.position = gl.getAttribLocation(this.program, "a_position");
+        this.attributes.color = gl.getAttribLocation(this.program, "a_color");
+        // uniforms
     }
 };
 
@@ -106,6 +152,7 @@ const triangle = {
         -0.3, 0.4,
         -0.1, 0.0
     ]),
+    color: [1.0,0.0,0.0],
 
     //GPU DATA
     shader: null,
@@ -149,41 +196,35 @@ const triangle = {
         this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
         this.drawCount = 3;
+    },
+    draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // Uniform
+        gl.uniform3fv(this.shader.uniforms.color,this.color);
+        // Bind VAO
+        gl.bindVertexArray(this.vao);
+        // Draw Call
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
-const grid = {
-    //    v1------------v2
-    //    |--|--|--|--|--|
-    //    |--|--|--|--|--|
-    //    |--|--|--|--|--|
-    //    |--|--|--|--|--|
-    //    |--|--|--|--|--|
-    //    v0------------v1
+const rectangle = {
+    //    v1--------v2
+    //    | \        |
+    //    |    \     |
+    //    |       \  |
+    //    v0--------v1
 
     // CPU DATA
     vertexData: new Float32Array([
-        // Vertical lines
-        -0.8, -1.0,  -0.8, 1.0,
-        -0.6, -1.0,  -0.6, 1.0,
-        -0.4, -1.0,  -0.4, 1.0,
-        -0.2, -1.0,  -0.2, 1.0,
-         0.0, -1.0,   0.0, 1.0,
-         0.2, -1.0,   0.2, 1.0,
-         0.4, -1.0,   0.4, 1.0,
-         0.6, -1.0,   0.6, 1.0,
-         0.8, -1.0,   0.8, 1.0,
+        0.2, -0.2,  1.0, 0.0, 0.0,  // X,Y , R,G,B
+        0.2,  0.2,  0.0, 1.0, 0.0,
+        0.6, -0.2,  0.0, 0.0, 1.0,
 
-        // Horizontal lines
-        -1.0, -0.8,   1.0, -0.8,
-        -1.0, -0.6,   1.0, -0.6,
-        -1.0, -0.4,   1.0, -0.4,
-        -1.0, -0.2,   1.0, -0.2,
-        -1.0,  0.0,   1.0,  0.0,
-        -1.0,  0.2,   1.0,  0.2,
-        -1.0,  0.4,   1.0,  0.4,
-        -1.0,  0.6,   1.0,  0.6,
-        -1.0,  0.8,   1.0,  0.8
+        0.6, -0.2,  0.0, 0.0, 1.0,
+        0.6,  0.2,  1.0, 1.0, 0.0,
+        0.2,  0.2,  0.0, 1.0, 0.0
     ]),
 
     //GPU DATA
@@ -196,38 +237,56 @@ const grid = {
 
     //FUNCTIONS
     init(gl, shader) {
-        // Connect shader to object
+        // Shader
         this.shader = shader;
 
-        // Vertex Buffer
+        // Vertex Buffer (single.. intervleaved pos+colors)
         this.vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
         gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
-
+        
         // Vertex Array
         this.vao = gl.createVertexArray();
         gl.bindVertexArray(this.vao);
 
-        // Enable position attribute
+        // Vertex Positions attrib
         gl.enableVertexAttribArray(this.shader.attributes.position);
-
-        // Bind Vertex Buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-
-        // Vertex data format
         gl.vertexAttribPointer(
             this.shader.attributes.position,
-            2,          // size: 2 components (X, Y)
-            gl.FLOAT,   // type: 32-bit float
-            false,      // normalize
-            0,          // stride: 0(tightly packed)
-            0           // offset: start of buffer
+            2,
+            gl.FLOAT,
+            false,
+            5 * Float32Array.BYTES_PER_ELEMENT, // Stride (x,y + r,g,b = 5)
+            0 * Float32Array.BYTES_PER_ELEMENT  // Offset (pos starts at 0)
+        );
+
+        // Vertex Colors attrib
+        gl.enableVertexAttribArray(this.shader.attributes.color);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.vertexAttribPointer(
+            this.shader.attributes.color,
+            3,
+            gl.FLOAT,
+            false,
+            5 * Float32Array.BYTES_PER_ELEMENT, // Stride (x,y + r,g,b = 5)
+            2 * Float32Array.BYTES_PER_ELEMENT  // Offset (pos starts at 2)
         );
 
         // Draw data
-        this.drawMode = gl.LINES;
+        this.drawMode = gl.TRIANGLES;
         this.drawOffset = 0;
-        this.drawCount = this.vertexData.length / 2;
+        this.drawCount = 6;
+    },
+    draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // No uniforms
+        
+        // Bind VAO
+        gl.bindVertexArray(this.vao);
+        // Draw Call
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -262,26 +321,10 @@ function render(gl) {
 
     // DRAW THINGS
     //---------------------------------------------------
-    // Shader
-    gl.useProgram(shader.program);
-
-    // Grid
-    gl.uniform3fv(grid.shader.uniforms.color,[0.39, 0.33, 0.58]);
-    gl.bindVertexArray(grid.vao);
-    gl.drawArrays(
-        grid.drawMode,
-        grid.drawOffset,
-        grid.drawCount
-    );
-
     // Triangle
-    gl.uniform3fv(triangle.shader.uniforms.color,[1.0,0.0,0.0]);
-    gl.bindVertexArray(triangle.vao);
-    gl.drawArrays(
-        triangle.drawMode,
-        triangle.drawOffset,
-        triangle.drawCount
-    );
+    triangle.draw(gl);
+    // Rectangle
+    rectangle.draw(gl);
 }
 
 // =============================================================
@@ -297,11 +340,12 @@ function main() {
     if(!gl) {console.error("WebGL2 is not supported by this browser");return;}
 
     //Shaders
-    shader.init(gl);
+    basicShader.init(gl);
+    colorVertexShader.init(gl);
 
     //Objects
-    triangle.init(gl, shader);
-    grid.init(gl, shader);
+    triangle.init(gl, basicShader);
+    rectangle.init(gl, colorVertexShader);
 
     //Render
     render(gl);

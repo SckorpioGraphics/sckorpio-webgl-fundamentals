@@ -1,15 +1,14 @@
 /* #############################################################
-CHAPTER 9c: Multiple Objects
+CHAPTER 9e: Multiple Objects
 
 Topics:
 - Rendering multiple objects
-- A Triangle and a Line Loop
+- A Grid and a Triangle
 - Separate VAO/VBO for each object
-- Different topologies
-- Different shapes
-- Different colors
+- Using GL_LINES for the grid
+- Using GL_TRIANGLES for the triangle
 - Multiple draw calls
-- Using the same shader for multiple objects
+- Clip space coordinates [-1, +1]
 ###############################################################
 */
 
@@ -164,25 +163,40 @@ const triangle = {
     }
 };
 
-const hexagon = {
-    /*
-             #5---#4
-           /         \
-         #0           #3
-           \         /
-             #1---#2
-    */
+const grid = {
+    //    v1------------v2
+    //    |--|--|--|--|--|
+    //    |--|--|--|--|--|
+    //    |--|--|--|--|--|
+    //    |--|--|--|--|--|
+    //    |--|--|--|--|--|
+    //    v0------------v1
 
     // CPU DATA
     vertexData: new Float32Array([
-        0.6,  0.0,
-        0.45, 0.26,
-        0.15, 0.26,
-        0.0,  0.0,
-        0.15,-0.26,
-        0.45,-0.26
+        // Vertical lines
+        -0.8, -1.0,  -0.8, 1.0,
+        -0.6, -1.0,  -0.6, 1.0,
+        -0.4, -1.0,  -0.4, 1.0,
+        -0.2, -1.0,  -0.2, 1.0,
+         0.0, -1.0,   0.0, 1.0,
+         0.2, -1.0,   0.2, 1.0,
+         0.4, -1.0,   0.4, 1.0,
+         0.6, -1.0,   0.6, 1.0,
+         0.8, -1.0,   0.8, 1.0,
+
+        // Horizontal lines
+        -1.0, -0.8,   1.0, -0.8,
+        -1.0, -0.6,   1.0, -0.6,
+        -1.0, -0.4,   1.0, -0.4,
+        -1.0, -0.2,   1.0, -0.2,
+        -1.0,  0.0,   1.0,  0.0,
+        -1.0,  0.2,   1.0,  0.2,
+        -1.0,  0.4,   1.0,  0.4,
+        -1.0,  0.6,   1.0,  0.6,
+        -1.0,  0.8,   1.0,  0.8
     ]),
-    color: [0.0,1.0,0.0],
+    color: [0.39, 0.33, 0.58],
 
     //GPU DATA
     shader: null,
@@ -223,9 +237,9 @@ const hexagon = {
         );
 
         // Draw data
-        this.drawMode = gl.LINE_LOOP;
+        this.drawMode = gl.LINES;
         this.drawOffset = 0;
-        this.drawCount = 6;
+        this.drawCount = this.vertexData.length / 2;
     },
     draw(gl) {
         // Shader
@@ -270,10 +284,10 @@ function render(gl) {
 
     // DRAW THINGS
     //---------------------------------------------------
+    // Grid
+    grid.draw(gl);
     // Triangle
     triangle.draw(gl);
-    // hexagon
-    hexagon.draw(gl);
 }
 
 // =============================================================
@@ -293,7 +307,7 @@ function main() {
 
     //Objects
     triangle.init(gl, shader);
-    hexagon.init(gl, shader);
+    grid.init(gl, shader);
 
     //Render
     render(gl);
