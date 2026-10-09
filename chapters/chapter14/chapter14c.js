@@ -15,7 +15,7 @@
 // =============================================================
 //Shader Object1
 const shader = {
-    vertexShaderSource: `#version 300 es
+vertexShaderSource: `#version 300 es
     in vec2 a_position;
 
     uniform mat3 u_viewMatrix;
@@ -202,7 +202,7 @@ const letterF = {
         v0_______v1
     */
 
-    // CPU DATA (In Pixel Space)
+    // CPU DATA
     vertexData: new Float32Array([
         -100, -100,
         -60 , -100,
@@ -233,10 +233,10 @@ const letterF = {
         7, 10, 9,
         7, 9, 8
     ]),
-
     translationX: 200,
     translationY: 100,
     rotation: 0,
+    color: [0.39, 0.33, 0.58], // Sckorpio Purple
 
     //GPU DATA
     shader: null,
@@ -276,6 +276,21 @@ const letterF = {
         this.drawOffset = 0;
         this.drawCount = this.indices.length;
         this.drawType = gl.UNSIGNED_SHORT;
+    },
+    draw(gl) {
+        // Shader
+        gl.useProgram(this.shader.program);
+        // Pass translateX & translateY
+        gl.uniform1f(this.shader.uniforms.translationX, this.translationX);
+        gl.uniform1f(this.shader.uniforms.translationY, this.translationY);
+        // Pass Rotation
+        gl.uniform1f(this.shader.uniforms.rotation, this.rotation);
+        // Pass Color
+        gl.uniform3fv(this.shader.uniforms.color,this.color);
+        // VAO
+        gl.bindVertexArray(this.vao);
+        // draw call
+        gl.drawElements(this.drawMode,this.drawCount,this.drawType,this.drawOffset);
     }
 };
 
@@ -288,10 +303,11 @@ const grid = {
     //    |--|--|--|--|--|
     //    v0------------v1
 
-    // CPU DATA (In Pixel Space)
+    // CPU DATA
     vertexData: new Float32Array(),
     spacing: 100,
     range: 10000,
+    color: [0.39, 0.33, 0.58], // Sckorpio Purple
 
     //GPU DATA
     shader: null,
@@ -349,17 +365,22 @@ const grid = {
         this.drawMode = gl.LINES;
         this.drawOffset = 0;
         this.drawCount = positions.length / 2;
+    },
+    draw(gl) {
+        gl.uniform3fv(this.shader.uniforms.color,this.color);   
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
 const xAxis = {
     //    -x------0------+x
-
-    // CPU DATA (In Pixel Space)
+    // CPU DATA
     vertexData: new Float32Array([
         -grid.range, 0,
         grid.range, 0
     ]),
+    color: [1.0, 0.0, 0.0], // Red
 
     //GPU DATA
     shader: null,
@@ -396,6 +417,11 @@ const xAxis = {
         this.drawMode = gl.LINES;
         this.drawOffset = 0;
         this.drawCount = 2;
+    },
+    draw(gl) {
+        gl.uniform3fv(this.shader.uniforms.color,this.color);   
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -408,11 +434,12 @@ const yAxis = {
     //      |
     //      -y
 
-    // CPU DATA (In Pixel Space)
+    // CPU DATA
     vertexData: new Float32Array([
         0, -grid.range,
         0, grid.range
     ]),
+    color: [0.0, 1.0, 0.0], // Green
 
     //GPU DATA
     shader: null,
@@ -449,6 +476,11 @@ const yAxis = {
         this.drawMode = gl.LINES;
         this.drawOffset = 0;
         this.drawCount = 2;
+    },
+    draw(gl) {
+        gl.uniform3fv(this.shader.uniforms.color,this.color);   
+        gl.bindVertexArray(this.vao);
+        gl.drawArrays(this.drawMode,this.drawOffset,this.drawCount);
     }
 };
 
@@ -566,49 +598,32 @@ function render(gl) {
     camera.updateProjectionMatrix(gl);
     camera.updateViewMatrix(gl);
 
+    // COMMON UNIFORMS
+    //---------------------------------------------------
     // Shader
     gl.useProgram(shader.program);
-    
     // Pass projection matrix to shader
     gl.uniformMatrix3fv(shader.uniforms.projectionMatrix,false,camera.projectionMatrix);
     // Pass View matrix to shader
     gl.uniformMatrix3fv(shader.uniforms.viewMatrix,false,camera.viewMatrix);
-    
+    // Use default translateX/Y & Rotations
+    gl.uniform1f(shader.uniforms.translationX, 0);
+    gl.uniform1f(shader.uniforms.translationY, 0);
+    gl.uniform1f(shader.uniforms.rotation, 0);
     
     // DRAW THINGS
     //---------------------------------------------------
     // Grid
-    gl.uniform1f(shader.uniforms.translationX, 0);
-    gl.uniform1f(shader.uniforms.translationY, 0);
-    gl.uniform1f(shader.uniforms.rotation, 0);
-    gl.uniform3f(shader.uniforms.color, 0.39, 0.33, 0.58);   // Sckorpio Purple
-    gl.bindVertexArray(grid.vao);
-    gl.drawArrays(grid.drawMode,grid.drawOffset,grid.drawCount);
-
+    grid.draw(gl);
     // X-Axis
-    gl.uniform1f(shader.uniforms.translationX, 0);
-    gl.uniform1f(shader.uniforms.translationY, 0);
-    gl.uniform1f(shader.uniforms.rotation, 0);
-    gl.uniform3f(shader.uniforms.color,1.0, 0.0, 0.0);   // Red
-    gl.bindVertexArray(xAxis.vao);
-    gl.drawArrays(xAxis.drawMode,xAxis.drawOffset,xAxis.drawCount);
-
+    xAxis.draw(gl);
     // Y-Axis
-    gl.uniform1f(shader.uniforms.translationX, 0);
-    gl.uniform1f(shader.uniforms.translationY, 0);
-    gl.uniform1f(shader.uniforms.rotation, 0);
-    gl.uniform3f(shader.uniforms.color,0.0, 1.0, 0.0);   // Green
-    gl.bindVertexArray(yAxis.vao);
-    gl.drawArrays(yAxis.drawMode,yAxis.drawOffset,yAxis.drawCount);
+    yAxis.draw(gl);
+    // Letter-F
+    letterF.draw(gl);
 
-    // Rectangle
-    gl.uniform1f(shader.uniforms.translationX, letterF.translationX);
-    gl.uniform1f(shader.uniforms.translationY, letterF.translationY);
-    gl.uniform1f(shader.uniforms.rotation, letterF.rotation);
-    gl.uniform3f(shader.uniforms.color,0.39, 0.33, 0.58);   // Sckorpio Purple
-    gl.bindVertexArray(letterF.vao);
-    gl.drawElements(letterF.drawMode,letterF.drawCount,letterF.drawType,letterF.drawOffset);
-
+    //---------------------------------------------------
+    // LOOP
     requestAnimationFrame(() => render(gl));
 }
 

@@ -238,7 +238,7 @@ const letterF = {
         // Vertex Buffer (...will be changed dynamically)
         this.vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW);
 
         // Index Buffer
         this.ibo = gl.createBuffer();
@@ -260,35 +260,6 @@ const letterF = {
         this.drawOffset = 0;
         this.drawCount = this.indices.length;
         this.drawType = gl.UNSIGNED_SHORT;
-
-        // update once start
-        this.update(gl);
-    },
-    update(gl){
-        const x = letterF.translationX;
-        const y = letterF.translationY;
-
-        this.vertexData = new Float32Array([
-            // Left column
-            -100 + x, -100 + y,
-            -60 + x, -100 + y,
-            -100 + x,  100 + y,
-            -60 + x,  100 + y,
-
-            // Top bar
-            40 + x,  100 + y,
-            40 + x,   60 + y,
-            -100+ x,   60 + y,
-
-            // Middle bar
-            -100 + x,  20 + y,
-            0 + x,  20 + y,
-            0 + x, -20 + y,
-            -100 + x, -20 + y
-        ]);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, letterF.vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.DYNAMIC_DRAW);
     },
     draw(gl) {
         // Shader
